@@ -18,12 +18,14 @@
     trials?: number;
     seconds?: number;
     source?: string;
+    /** Focus a drill's pool (Blind A/B pairs by topic). */
+    topic?: string;
     onfinish?: (s: DrillSession) => void;
   }
-  let { drill, mode = "round", trials = 5, seconds = 75, source = "eye-trainer", onfinish }: Props = $props();
+  let { drill, mode = "round", trials = 5, seconds = 75, source = "eye-trainer", topic, onfinish }: Props = $props();
 
-  const def = $derived(drills[drill]!);
-  const Trial = $derived(trialComponents[drill]!);
+  const def = $derived(drills[drill]);
+  const Trial = $derived(trialComponents[drill]);
 
   let phase = $state<"intro" | "trial" | "reveal" | "done">("intro");
   let spec = $state<unknown>(null);
@@ -63,7 +65,7 @@
   }
 
   function next() {
-    spec = def.make(rand, level);
+    spec = def!.make(rand, level, { topic });
     result = null;
     trialKey++;
     phase = "trial";
@@ -71,7 +73,7 @@
 
   function answer(a: unknown) {
     if (phase !== "trial") return;
-    const scored = def.score(spec as never, a as never);
+    const scored = def!.score(spec as never, a as never);
     result = scored;
     results = [...results, { spec: $state.snapshot(spec), scored }];
     if (scored.correct) {
@@ -123,6 +125,9 @@
 
 <svelte:window onkeydown={key} />
 
+{#if !def || !Trial}
+  <div class="runner"><p class="fine">This drill is still being built. It will appear here and in the Eye Trainer.</p></div>
+{:else}
 <div class="runner" data-drill={drill}>
   <header class="r-head">
     <div class="r-title">
@@ -174,6 +179,7 @@
     </div>
   {/if}
 </div>
+{/if}
 
 <style>
   .runner { display: flex; flex-direction: column; gap: 0.9rem; }

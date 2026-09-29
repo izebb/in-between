@@ -1,0 +1,6 @@
+---
+/** <SpringPlot springs={[{ response: 0.5, bounce: 0.3, label: "bouncy" }, { response: 0.5, bounce: 0, label: "critical" }]} /> */
+import SpringFigure from "../figures/SpringFigure.svelte";
+const props = Astro.props as any;
+---
+<SpringFigure client:visible {...props} />

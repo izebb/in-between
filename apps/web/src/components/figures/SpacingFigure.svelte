@@ -40,7 +40,7 @@
 <div class="spacing-figure" use:figurePlay={{ transport, onstill: (s) => (still = s) }}>
   <SpacingTrack rows={built} time={still ? end : transport.time} {fps} {still} ghosts={still ? "always" : ghosts} {chart} {object} {readout} />
   {#if stepper}
-    <div class="tb"><TimeBar {transport} /></div>
+    <div class="tb"><TimeBar {transport} showMs={readout} /></div>
   {/if}
 </div>
 

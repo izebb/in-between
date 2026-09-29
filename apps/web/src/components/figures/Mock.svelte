@@ -26,6 +26,8 @@
     exitDuration?: number;
     /** 0 duration = no motion at all: the state just changes. */
     none?: boolean;
+    /** transform-origin for the scaling part (menu, dialog, panel), e.g. "top left" or "center". */
+    origin?: string;
   }
 </script>
 
@@ -73,7 +75,7 @@
       case "toast":
         return [{ sel: ".m-toast", frames: [{ opacity: 0, transform: `translateY(${d * 2}px)` }, { opacity: 1, transform: "none" }] }];
       case "menu":
-        return [{ sel: ".m-menu", frames: [{ opacity: 0, transform: "scaleY(0.7)" }, { opacity: 1, transform: "none" }], origin: "top" }];
+        return [{ sel: ".m-menu", frames: [{ opacity: 0, transform: "scale(0.8)" }, { opacity: 1, transform: "none" }], origin: "top left" }];
       case "list":
         return [0, 1, 2, 3, 4].map((i) => ({
           sel: `.m-row:nth-child(${i + 1})`,
@@ -125,7 +127,7 @@
     const anims: Animation[] = [];
     for (const p of parts) {
       root.querySelectorAll<HTMLElement>(p.sel).forEach((el) => {
-        if (p.origin) el.style.transformOrigin = p.origin;
+        if (p.origin || (motion.origin && /menu|dialog|panel|badge/.test(p.sel))) el.style.transformOrigin = motion.origin ?? p.origin!;
         const frames = dir === "enter" ? p.frames : [...p.frames].reverse().map((f) => ({ ...f, offset: f.offset != null ? 1 - (f.offset as number) : undefined }));
         const a = el.animate(frames, {
           duration: none ? 0 : t.duration,
@@ -150,6 +152,9 @@
       await run("enter");
       await new Promise<void>((r) => (timer = setTimeout(r, 700)));
       await run("exit");
+      // Rest in the shown state again, so a still specimen never looks empty.
+      await new Promise<void>((r) => (timer = setTimeout(r, 500)));
+      stop();
     }
   }
 

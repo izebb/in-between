@@ -50,7 +50,7 @@
     <text class="label" x={X(0) - 6} y={Y(0) + 3} text-anchor="end">0</text>
     <text class="label" x={X(0) - 6} y={Y(1) + 3} text-anchor="end">1×</text>
     <text class="label upper" x={X(1)} y={height - 6} text-anchor="end">time →</text>
-    <text class="label upper" x={X(1)} y={M.t + 2} text-anchor="end">velocity</text>
+    <text class="label upper" x={peak.x > 0.55 ? X(0) + 6 : X(1)} y={M.t + 2} text-anchor={peak.x > 0.55 ? "start" : "end"}>velocity</text>
 
     <path class="area reveal-ghosts" d={area} />
     {#if velB}<path class="path dashed reveal-ghosts" d={pathOf(velB)} />{/if}

@@ -6,6 +6,12 @@
 import SpacingChart from "../lab/SpacingChart.svelte";
 import CurveBench from "../lab/CurveBench.svelte";
 import FrameStepper from "../lab/FrameStepper.svelte";
+import SpringBench from "../lab/SpringBench.svelte";
+import CanvasSandbox from "../lab/CanvasSandbox.svelte";
+import ExposureSheet from "../lab/ExposureSheet.svelte";
+import DataStage from "../lab/DataStage.svelte";
+import SpecimenJournal from "../lab/SpecimenJournal.svelte";
+import ExportDesk from "../lab/ExportDesk.svelte";
 import { labPreset, type LabShorthand } from "~/lib/labpresets";
 import type { InstrumentId } from "~/lib/curriculum";
 interface Props extends LabShorthand {
@@ -19,6 +25,12 @@ const preset = labPreset(id, short) as any;
   {id === "spacing-chart" && <SpacingChart client:visible embedded {preset} showCode={code} />}
   {id === "curve-bench" && <CurveBench client:visible embedded {preset} showCode={code} />}
   {id === "frame-stepper" && <FrameStepper client:visible embedded {preset} />}
+  {id === "spring-bench" && <SpringBench client:visible embedded {preset} showCode={code} />}
+  {id === "canvas-sandbox" && <CanvasSandbox client:visible embedded {preset} />}
+  {id === "exposure-sheet" && <ExposureSheet client:visible embedded {preset} showCode={code} />}
+  {id === "data-stage" && <DataStage client:visible embedded {preset} />}
+  {id === "specimen-journal" && <SpecimenJournal client:visible />}
+  {id === "export-desk" && <ExportDesk client:visible {preset} />}
 </div>
 <style>
   .lab-embed { margin-block: 2.5rem !important; }

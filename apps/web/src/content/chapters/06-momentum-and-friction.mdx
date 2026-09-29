@@ -1,0 +1,336 @@
+---
+number: 6
+lede: "A thrown thing keeps its speed and loses it slowly, so where it stops is known the moment you let go."
+---
+
+export const decayCurve = (stops) =>
+  `linear(${Array.from({ length: stops + 1 }, (_, i) => +((1 - Math.exp((-Math.log(100) * i) / stops)) / 0.99).toFixed(4)).join(", ")})`;
+
+export const decay = decayCurve(40);
+
+export const decayCss = decayCurve(20);
+
+export const pager = `// Flick the puck. The blue ring is where the throw
+// would stop; the page nearest it is where it goes.
+const RATE = 0.998;  // 0.998 normal, 0.99 fast
+const PAGES = 5;
+const lambda = -Math.log(RATE) * 1000;  // per second
+
+function setup(w, h) {
+  return { x: 40, v: 0, y: Math.min(h / 2, 130), idle: 1,
+    gap: (w - 80) / (PAGES - 1), samples: [] };
+}
+
+// Release velocity, px/s: the least-squares slope
+// of the last 100ms of pointer samples.
+function velocity(samples) {
+  const n = samples.length, t0 = samples[0].t;
+  let st = 0, sx = 0, stt = 0, stx = 0;
+  for (const p of samples) {
+    const t = (p.t - t0) / 1000;
+    st += t; sx += p.x; stt += t * t; stx += t * p.x;
+  }
+  const d = n * stt - st * st;
+  return d === 0 ? 0 : (n * stx - st * sx) / d;
+}
+
+function release(s, v) {
+  s.natural = s.x + v / lambda;     // would stop here
+  const i = Math.round((s.natural - 40) / s.gap);
+  s.target = 40 + clamp(i, 0, PAGES - 1) * s.gap;
+  s.v = (s.target - s.x) * lambda;  // stops on the page
+}
+
+function update(s, dt) {
+  if (s.idle > 0 && (s.idle -= dt) <= 0) release(s, 900);
+  if (s.drag) return;
+  const k = Math.exp(-lambda * dt);  // speed kept
+  s.x += (s.v * (1 - k)) / lambda;   // exact step
+  s.v *= k;
+}
+
+function onPointer(s, p, type) {
+  if (type === "down" && Math.abs(p.x - s.x) < 40)
+    Object.assign(s, { drag: true, grab: p.x - s.x,
+      idle: 0, samples: [], natural: null });
+  if (!s.drag) return;
+  const t = performance.now();
+  s.samples.push({ x: p.x, t });
+  while (s.samples.length > 2 && t - s.samples[0].t > 100)
+    s.samples.shift();
+  s.x = clamp(p.x - s.grab, 40, 40 + s.gap * (PAGES - 1));
+  if (type === "up") {
+    s.drag = false;
+    release(s, velocity(s.samples));
+  }
+}
+
+function draw(ctx, s, w, h) {
+  const y = s.y, P = pencils;
+  ctx.clearRect(0, 0, w, h);
+  segment(ctx, 40, y, w - 40, y, P.rule);
+  for (let i = 0; i < PAGES; i++) {
+    const x = 40 + i * s.gap, name = "page " + (i + 1);
+    segment(ctx, x, y + 20, x, y + 28, P.graphite);
+    label(ctx, name, x, y + 42, P.graphite, "center");
+  }
+  if (s.natural != null) {
+    const x = clamp(s.natural, 34, w - 34);
+    circle(ctx, x, y, 16, null, P.blue);
+    label(ctx, "would stop", x, y - 26, P.blue, "center");
+    const tx = s.target;
+    segment(ctx, tx, y + 18, tx, y + 30, P.blue, 3);
+  }
+  circle(ctx, s.x, y, 14, P.red);
+  label(ctx, "rate " + RATE, 20, y + 76);
+}
+`;
+
+Drag a list and let go, and it keeps moving. Nothing pushes it after your finger leaves the glass. It carries the speed you gave it, and friction takes that speed away a little at a time until it comes to rest. That is momentum and friction, and it is why a good scroll feels like something you threw rather than something you moved.
+
+Friction has a useful habit: it always takes the same share of what is left. That makes the stop predictable. The moment you let go, the whole glide is already decided, and an interface can use that to choose where things go before they get there.
+
+<Beat kind="see">One throw, three frictions</Beat>
+
+Three dots leave the hand at the same speed. Hover the figure to see every frame. Only the friction differs.
+
+<Figure n="6.1" caption="One throw, three frictions">
+  <SpacingChart rows={[
+    { label: "no friction", easing: "linear", duration: 500, to: 500, tone: "blue" },
+    { label: "light friction", easing: decay, duration: 2300, to: 495 },
+    { label: "heavy friction", easing: decay, duration: 460, to: 99 }
+  ]} readout={false} />
+</Figure>
+
+- **No friction:** even gaps. Nothing takes its speed away, so it would sail off the page.
+- **Light friction:** each gap is a little shorter than the one before. It coasts a long way and eases to rest.
+- **Heavy friction:** each gap is much shorter than the one before. The same throw is spent almost at once.
+
+The first gap is the same in every row, because the throw was the same. After that, friction alone decides how far each dot goes.
+
+<Beat kind="feel">Which one was thrown?</Beat>
+
+<FeelAB
+  question="Someone flicked the dot. Which one feels thrown?"
+  kind="dot"
+  options={[
+    { motion: { easing: "linear", duration: 260 }, caption: "260ms · linear: full speed, then a dead stop" },
+    { motion: { easing: decay, duration: 1200 }, caption: "1200ms · exponential decay, 0.996 of its speed kept per ms" }
+  ]}
+  answer={1}
+  explain="Both leave at the same speed. A keeps all of it and stops dead, as if it hit a wall. B loses a little speed every moment and glides to rest. That is what the eye expects of anything thrown: speed runs out, it is never switched off."
+/>
+
+<Beat kind="more">Friction takes a share</Beat>
+
+<Margin kind="def">
+  <p><b>Deceleration rate.</b> The share of its speed a scroll view keeps every millisecond after you let go. UIKit names two: <code>UIScrollView.DecelerationRate.normal</code> (<code>0.998</code>) and <code>.fast</code> (<code>0.99</code>).</p>
+</Margin>
+
+Friction doesn't remove a fixed amount of speed. It removes a fixed share. iOS writes this as a **deceleration rate** `r`: every millisecond, a scrolling list keeps `r` of the speed it had. The default is `0.998`, so each millisecond it keeps 99.8%. Over one 60Hz frame that compounds to 96.7%, which is why each gap in the light-friction row of Fig. 6.1 is about 0.967 of the one before. The heavy-friction row uses the other rate, `0.99`, and keeps 84.6% per frame. Those two rows are iOS's `normal` and `fast`.
+
+Taking the same share every moment is exponential decay. With the rate turned into a friction per second, `λ = −ln(r) × 1000`, the speed after `t` seconds is
+
+<p><code>v(t) = v<sub>0</sub> · e<sup>−λt</sup></code></p>
+
+For `normal`, `λ` is about 2 per second; for `fast`, about 10. The speed never quite reaches zero, but it shrinks quickly: at `normal` it halves every 350ms or so, at `fast` every 70ms. That long, thinning tail is the glide.
+
+<Beat kind="more">Where it will land</Beat>
+
+Add up every step of a decay and the total is short enough to do in your head:
+
+<p><code>landing = x<sub>0</sub> + v<sub>0</sub> / λ</code></p>
+
+The glide covers the release speed divided by the friction, measured from wherever you let go. Released at 1000 px/s with `normal` friction, it travels about 1000 ÷ 2 = 500px. With `fast`, about 100px. It is known the moment the finger lifts, before a single frame of the glide is drawn.
+
+<Figure n="6.2" caption="Flick with friction: the landing is known at release">
+  <Canvas program="flick" />
+</Figure>
+
+Drag the puck and let go. The blue ring appears at once, at <code>x<sub>0</sub> + v<sub>0</sub> / λ</code>, and the puck glides into it. Switch to Fast and throw the same way: the same hand, a fifth of the distance. When nobody is throwing, the figure throws for itself.
+
+<Margin kind="wild">
+  <p>Apple's WWDC 2018 talk <i>Designing Fluid Interfaces</i> gives this projection as one line of Swift and uses it to send a thrown picture-in-picture video to the nearest corner of the screen.</p>
+</Margin>
+
+Apple writes the same landing per millisecond: the speed per millisecond, `v / 1000`, summed over every millisecond that follows, each keeping `r` of the last. That sum is `(v / 1000) · r / (1 − r)`. For these two rates it agrees with <code>v<sub>0</sub> / λ</code> to within half a percent.
+
+<Beat kind="more">The landing picks the target</Beat>
+
+Because you know where a throw will stop, you can change where it stops. A carousel shouldn't come to rest between two pages. So:
+
+1. **Project.** Work out the landing: <code>x<sub>0</sub> + v<sub>0</sub> / λ</code>.
+2. **Choose.** Pick the page, card, corner or detent nearest that point.
+3. **Carry.** Glide there. A decay stops exactly on the target if it leaves at <code>v = (target − x<sub>0</sub>) · λ</code>. Or hand the release speed to a spring (chapter 05), which keeps the hand's velocity and settles on the target.
+
+<Margin kind="wild">
+  <p>UIKit does the projection for you. When a drag ends, a scroll view tells its delegate, in <code>scrollViewWillEndDragging</code>, the offset where deceleration will stop. The delegate can move that target, to a page edge for example, before the glide starts.</p>
+</Margin>
+
+Choose by the landing, not by the finger. A quick, short flick often lifts before the finger has crossed halfway. Snap to the page nearest the finger and the content slides back, as if the flick was ignored. The projection sees where it was heading and turns the page. A slow drag past halfway, set down with no speed, still turns the page too, because its landing is where it already is.
+
+Flick-to-dismiss makes the same choice. A sheet thrown down hard projects past its dismiss line and goes, even if the finger only moved a little. A sheet nudged and let go gently lands where it is, and settles back.
+
+<Beat kind="more">Measure the throw, not the drag</Beat>
+
+Everything above depends on one number, the release speed, so measure it carefully. A drag can last seconds. It speeds up, slows down, pauses. Its average speed describes the whole trip, not the flick at the end. Only the last moments say where the finger was heading when it let go.
+
+So keep a short window of pointer samples, about the last 100ms, and fit a straight line through them. The slope of that line is the release velocity. A least-squares fit is steadier than subtracting the first sample from the last, because one late or jittery event can't swing it much.
+
+If the finger stops before it lifts, the window holds only still samples, the velocity is zero, and nothing is thrown. That's right: a finger that stops has put the thing down.
+
+<Beat kind="more">Normal and fast</Beat>
+
+| | `normal` | `fast` |
+|---|---|---|
+| Speed kept per ms | `0.998` | `0.99` |
+| Speed kept per 60Hz frame | 96.7% | 84.6% |
+| Friction `λ`, per second | about 2 | about 10 |
+| Speed halves every | about 350ms | about 70ms |
+| A 1000 px/s flick travels | about 500px | about 100px |
+| 99% of the way after | 2.3s | 0.46s |
+
+- **Normal glides.** It feels loose and light. The content carries on well after your finger has gone, and a hard flick crosses a lot of ground. It suits long lists and feeds, where a throw is about getting far.
+- **Fast stops.** It feels firm and controlled. The content stays near where you let go. It suits pickers, pages and sheets, where a throw is about direction and every resting place matters.
+
+The same hand, five times the distance. Pick the rate by what the content is for.
+
+<Beat kind="tune">Choose a page by throwing</Beat>
+
+Flick the puck along the five pages. The blue ring is where the throw would stop, and the thick blue tick is the page it goes to instead. With `RATE` at `0.998`, a light flick crosses several pages. Change it to `0.99` and throw the same way: now a flick moves about one page. Find the rate where one ordinary flick is one page.
+
+Then, in `release()`, change `s.natural = s.x + v / lambda` to `s.natural = s.x`, the page nearest the finger. Flick quickly and briefly. The puck slides back. That is the flick being ignored, and the reason to choose by the landing.
+
+<Lab id="canvas-sandbox" source={pager} title="Flick to a page" />
+
+<Beat kind="write">The notation</Beat>
+
+CSS can't simulate friction. A transition only knows a start, an end and a duration, and it can't react to a throw. But every decay has the same shape, stretched in time, so once JS has worked out where the throw lands, CSS can replay the glide. A long ease-out is the rough version; `linear()` sampled from <code>1 − e<sup>−λt</sup></code> is close to exact, and `cubic-bezier(.18, .8, .4, 1)` stays within 1% of it.
+
+In JS the glide is the real thing. Per frame, it is `v *= Math.exp(-lambda * dt)` then `x += v * dt`, which is what Fig. 6.2 does. The cards below compute position from the time since release instead, so the glide ends exactly on the projection at any frame rate.
+
+<div class="snippets">
+<Snippet title="06 · Friction: a decay, replayed in CSS" lab="spacing-chart" easing={decayCss} duration={460} distance={100}>
+
+```css
+/* Every decay is one curve, 1 − e^(−λt), stretched in time.
+   Stops without a % are spread evenly: one every 5%, up to 99% of the way.
+   Only the duration changes, 4.6 / λ: 2300ms at 0.998, 460ms at 0.99.
+   At release, JS clears the drag transform, sets --landing
+   (x0 + v0 / λ, in px) and adds .is-thrown. */
+.strip.is-thrown {
+  transform: translateX(var(--landing));
+  transition: transform 460ms linear(
+    0, 0.208, 0.373, 0.504, 0.608, 0.691, 0.756, 0.809, 0.85, 0.883, 0.909,
+    0.93, 0.946, 0.959, 0.97, 0.978, 0.985, 0.99, 0.994, 0.997, 1
+  );
+}
+
+/* Within 1% of the same curve, as a bezier:
+   transition-timing-function: cubic-bezier(.18, .8, .4, 1); */
+```
+
+</Snippet>
+
+<Snippet title="06 · Momentum: release velocity from the last 100ms" lab="canvas-sandbox" source={pager}>
+
+```js
+// Only the last 100ms of a drag say where it was heading.
+const samples = [];
+
+function track(x, t) {
+  samples.push({ x, t });
+  while (samples.length > 2 && t - samples[0].t > 100) samples.shift();
+}
+
+// Px per second: the slope of a least-squares line through the samples.
+function releaseVelocity() {
+  const n = samples.length;
+  if (n < 2) return 0;
+  let st = 0, sx = 0, stt = 0, stx = 0;
+  for (const s of samples) {
+    const t = (s.t - samples[0].t) / 1000;
+    st += t; sx += s.x; stt += t * t; stx += t * s.x;
+  }
+  const d = n * stt - st * st;
+  return d === 0 ? 0 : (n * stx - st * sx) / d;
+}
+```
+
+</Snippet>
+
+<Snippet title="06 · Momentum: throw, then glide with friction" lab="canvas-sandbox" source={pager}>
+
+```js
+// Uses track() and releaseVelocity() from the card above.
+const el = document.querySelector('.strip');
+const rate = 0.998;                     // kept per ms: 0.998 normal, 0.99 fast
+const lambda = -Math.log(rate) * 1000;  // the same friction, per second
+let x = 0, grab = 0, raf = 0;
+
+function moveTo(to) {
+  x = to;
+  el.style.transform = `translateX(${x}px)`;
+}
+
+function glide(v0) {
+  const x0 = x, start = performance.now();
+  const landing = x0 + v0 / lambda;     // known the moment you let go
+  const frame = (now) => {
+    const t = Math.max(0, now - start) / 1000;
+    moveTo(landing - (landing - x0) * Math.exp(-lambda * t));
+    if (Math.abs(landing - x) > 0.5) raf = requestAnimationFrame(frame);
+  };
+  raf = requestAnimationFrame(frame);
+}
+
+el.style.touchAction = 'none';          // drags move the strip, not the page
+el.addEventListener('pointerdown', (e) => {
+  cancelAnimationFrame(raf);            // catch it mid-glide
+  el.setPointerCapture(e.pointerId);
+  samples.length = 0;
+  grab = e.clientX - x;
+  track(e.clientX, e.timeStamp);
+});
+el.addEventListener('pointermove', (e) => {
+  if (!el.hasPointerCapture(e.pointerId)) return;
+  moveTo(e.clientX - grab);
+  track(e.clientX, e.timeStamp);
+});
+el.addEventListener('pointerup', (e) => {
+  if (!el.hasPointerCapture(e.pointerId)) return;
+  track(e.clientX, e.timeStamp);
+  glide(releaseVelocity());
+});
+```
+
+</Snippet>
+
+<Snippet title="06 · Momentum: the landing picks the page" lab="canvas-sandbox" source={pager}>
+
+```js
+// Uses rate, lambda, x and glide() from the cards above.
+// Apple's projection (WWDC 2018): the same landing, summed per millisecond.
+const project = (v) => ((v / 1000) * rate) / (1 - rate);
+
+function snapToPage(v, pageWidth, pageCount) {
+  const landing = x + project(v);          // where the throw would stop
+  const nearest = Math.round(-landing / pageWidth);
+  const page = Math.min(pageCount - 1, Math.max(0, nearest));
+  const target = -page * pageWidth;        // the strip slides left
+  glide((target - x) * lambda);            // the speed that stops there
+}
+
+// In pointerup, instead of glide(releaseVelocity()):
+//   const pageWidth = el.parentElement.clientWidth;
+//   snapToPage(releaseVelocity(), pageWidth, el.children.length);
+```
+
+</Snippet>
+</div>
+
+<Beat kind="drill">Blind A/B</Beat>
+
+Two versions of the same change. Pick the one that feels right, then say why in one word. Watch the endings: does it run out of speed, or hit a wall?
+
+<Drill kind="blind-ab" trials={5} chapter={6} />

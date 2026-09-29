@@ -4,7 +4,8 @@
  */
 import type { InstrumentId } from "./curriculum";
 import { toMove } from "./spec";
-import type { Property } from "@inbetween/core";
+import { fromResponse, type Property } from "@inbetween/core";
+import { programs } from "./canvas/programs";
 
 export interface LabShorthand {
   title?: string;
@@ -26,6 +27,9 @@ export interface LabShorthand {
   stiffness?: number;
   damping?: number;
   mass?: number;
+  /** Canvas sandbox: start from a registered program. */
+  program?: string;
+  hz?: number;
   /** Any instrument-specific extras. */
   extra?: Record<string, unknown>;
 }
@@ -56,6 +60,36 @@ export function labPreset(id: InstrumentId, s: LabShorthand): Record<string, unk
         dialect: s.dialect,
         ...s.extra,
       });
+    case "spring-bench": {
+      const physics = s.stiffness != null;
+      const p = physics ? { stiffness: s.stiffness!, damping: s.damping ?? 10, mass: s.mass ?? 1 } : fromResponse(s.response ?? 0.5, s.bounce ?? 0.15, s.mass ?? 1);
+      return clean({
+        scene: { title: s.title ?? "Spring bench", moves: [toMove({ easing: { type: "spring", ...p, velocity: 0 }, to: s.to ?? s.distance ?? 320, property: s.property })] },
+        mode: physics ? "physics" : "design",
+        compare: typeof s.compare === "string" ? s.compare : undefined,
+        dialect: s.dialect,
+        ...s.extra,
+      });
+    }
+    case "canvas-sandbox": {
+      const prog = s.program ? programs[s.program] : undefined;
+      return clean({
+        code: s.source ?? prog?.source,
+        example: s.program,
+        title: s.title ?? prog?.title,
+        params: prog ? Object.fromEntries((prog.params ?? []).map((x) => [x.key, x.value])) : undefined,
+        hz: s.hz,
+        ...s.extra,
+      });
+    }
+    case "exposure-sheet":
+      // use: "list" | "overlap" | "unison" | "cascade"; stagger overrides the step.
+      return clean({ use: s.extra?.use ?? s.source, stagger: s.extra?.stagger, layout: s.extra?.layout, order: s.extra?.order, ...s.extra });
+    case "data-stage":
+      // extra: { from, to, keying: "data"|"index", staging: "together"|"staged", stagger, duration, easing, renderer }
+      return clean({ duration: s.duration, easing: s.easing, ...s.extra });
+    case "export-desk":
+      return clean({ scene: { title: s.title ?? "Export", moves: [move()] } });
     case "frame-stepper":
       return clean({ mode: s.source ? "code" : undefined, code: s.source, dialect: s.dialect, ...s.extra });
     default:

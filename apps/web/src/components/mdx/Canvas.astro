@@ -1,0 +1,6 @@
+---
+/** <Canvas program="bouncing-ball" /> — a live canvas program. Programs: src/lib/canvas/programs.ts */
+import CanvasFigure from "../figures/CanvasFigure.svelte";
+const props = Astro.props as any;
+---
+<CanvasFigure client:visible {...props} />

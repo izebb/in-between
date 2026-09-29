@@ -1,0 +1,6 @@
+---
+/** <Principles /> — the twelve principles as UI clips (hover to play). `only={["arcs", "timing"]}` to pick some. */
+import PrinciplesFigure from "../figures/PrinciplesFigure.svelte";
+const props = Astro.props as any;
+---
+<PrinciplesFigure client:visible {...props} />

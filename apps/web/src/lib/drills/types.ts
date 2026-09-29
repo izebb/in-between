@@ -28,7 +28,7 @@ export interface DrillDef<S = unknown, A = unknown> {
   /** "estimate" drills feed the calibration scatter; "choice" drills feed accuracy. */
   kind: "estimate" | "choice";
   unit?: string;
-  make(rand: () => number, level: number): S;
+  make(rand: () => number, level: number, opts?: { topic?: string }): S;
   score(spec: S, answer: A): Scored;
 }
 

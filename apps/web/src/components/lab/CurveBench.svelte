@@ -77,7 +77,7 @@
 
   const rows = $derived([
     { move: m, label: current?.label ?? "A" },
-    ...(bSpec ? [{ move: { ...m, easing: bSpec }, label: `B · ${lab.compare}`, tone: "blue" as const }] : []),
+    ...(bSpec ? [{ move: { ...m, easing: bSpec }, label: `B · ${cubicPresets.find((p) => p.id === lab.compare)?.label ?? lab.compare}`, tone: "blue" as const }] : []),
   ]);
   const snapshot = $derived(JSON.parse(JSON.stringify(lab)));
   const e = $derived(m.easing.type === "cubic" ? m.easing : null);

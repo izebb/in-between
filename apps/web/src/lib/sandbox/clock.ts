@@ -22,6 +22,8 @@ export interface ClockHandle {
   fastForward(ms: number, fps?: number): void;
   /** Called after every virtual frame. */
   onFrame(cb: (t: number, dt: number) => void): void;
+  /** Simulate a display refresh rate: frames of exactly 1000/hz ms. null = follow the real display. */
+  setHz(hz: number | null): void;
   /** Stop driving (restores nothing; the page is discarded after). */
   destroy(): void;
 }
@@ -41,6 +43,8 @@ export function installClock(win: Window & typeof globalThis, opts: { playing?: 
   let pending = new Map<number, FrameRequestCallback>();
   const births = new WeakMap<Animation, number>();
   const listeners: ((t: number, dt: number) => void)[] = [];
+  let hz: number | null = null;
+  let acc = 0;
 
   win.requestAnimationFrame = (cb: FrameRequestCallback) => {
     pending.set(++seq, cb);
@@ -99,7 +103,17 @@ export function installClock(win: Window & typeof globalThis, opts: { playing?: 
     const now = realNow();
     const dt = Math.min(now - lastReal, 1000 / 20);
     lastReal = now;
-    if (isPlaying) frame(dt * rate);
+    if (isPlaying && hz) {
+      // Fixed refresh rate: at 30Hz some display frames show nothing new; at 120Hz some show two.
+      acc += dt * rate;
+      const step = 1000 / hz;
+      let n = 0;
+      while (acc >= step && n < 8) {
+        acc -= step;
+        frame(step);
+        n++;
+      }
+    } else if (isPlaying) frame(dt * rate);
     else driveAnimations(); // keep newly created animations frozen
     realRAF(tick);
   }
@@ -120,7 +134,7 @@ export function installClock(win: Window & typeof globalThis, opts: { playing?: 
     },
     step(n = 1, fps = 60) {
       isPlaying = false;
-      for (let i = 0; i < n; i++) frame(1000 / fps);
+      for (let i = 0; i < n; i++) frame(1000 / (hz ?? fps));
     },
     fastForward(ms: number, fps = 60) {
       const dt = 1000 / fps;
@@ -129,6 +143,10 @@ export function installClock(win: Window & typeof globalThis, opts: { playing?: 
     },
     onFrame(cb) {
       listeners.push(cb);
+    },
+    setHz(next: number | null) {
+      hz = next;
+      acc = 0;
     },
     destroy() {
       alive = false;

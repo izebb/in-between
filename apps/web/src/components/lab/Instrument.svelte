@@ -26,8 +26,10 @@
     /** Extra header actions. */
     actions?: Snippet;
     minHeight?: string;
+    /** "code-first": editor on the left, stage on the right (Canvas Sandbox). */
+    layout?: "standard" | "code-first";
   }
-  let { id, code, name, embedded = false, snapshot, link = new LinkState(), params, stage, time, codePanel, actions, minHeight }: Props = $props();
+  let { id, code, name, embedded = false, snapshot, link = new LinkState(), params, stage, time, codePanel, actions, minHeight, layout = "standard" }: Props = $props();
 
   let root: HTMLElement;
   let saving = $state(false);
@@ -114,7 +116,7 @@
       </div>
     </form>
   {/if}
-  <div class="instrument" class:no-code={!codePanel} bind:this={root} style={minHeight ? `min-height:${minHeight}` : undefined}>
+  <div class="instrument" class:no-code={!codePanel} class:code-first={layout === "code-first"} bind:this={root} style={minHeight ? `min-height:${minHeight}` : undefined}>
     <div class="i-params" onpointerover={hoverFrom("knob")} onpointerleave={leave} role="group" aria-label="Parameters">
       {@render params()}
     </div>

@@ -6,11 +6,13 @@ interface Props {
   kind: DrillId;
   trials?: number;
   chapter?: number;
+  /** Blind A/B: focus the pairs on a topic (easing, timing, stagger, springs, momentum, continuity, …). */
+  topic?: string;
 }
-const { kind, trials = 5, chapter } = Astro.props;
+const { kind, trials = 5, chapter, topic } = Astro.props;
 ---
 <section class="drill-plate wide" aria-label="Drill">
-  <DrillRunner client:visible drill={kind} mode="short" {trials} source={chapter ? `chapter-${chapter}` : "chapter"} />
+  <DrillRunner client:visible drill={kind} mode="short" {trials} {topic} source={chapter ? `chapter-${chapter}` : "chapter"} />
   <a class="more smallcaps" href={`/lab/eye-trainer?drill=${kind}`}>Full rounds and your calibration in the Eye Trainer →</a>
 </section>
 <style>

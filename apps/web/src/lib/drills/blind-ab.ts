@@ -1,0 +1,78 @@
+import type { DrillDef } from "./types";
+import { shuffle } from "./types";
+import type { MockKind, MockMotion } from "~/components/figures/Mock.svelte";
+
+export interface ABPair {
+  kind: MockKind;
+  direction?: "enter" | "exit" | "loop";
+  good: MockMotion;
+  bad: MockMotion;
+  word: string;
+  why: string;
+  topics: string[];
+}
+
+export const WORDS = ["arrives", "quicker", "calmer", "clearer", "connected", "physical", "honest", "lighter"] as const;
+
+export const PAIRS: ABPair[] = [
+  { kind: "card", good: { easing: "--ease-out", duration: 320, distance: 24 }, bad: { easing: "ease-in", duration: 320, distance: 24 }, word: "arrives", why: "It slows into place, so it lands. Ease-in is still accelerating when it stops, so it hits a wall.", topics: ["easing", "enter-exit", "spacing"] },
+  { kind: "modal", direction: "exit", good: { easing: "--ease-out", duration: 280, exitEasing: "--ease-in", exitDuration: 180 }, bad: { easing: "--ease-out", duration: 280, exitEasing: "--ease-out", exitDuration: 640 }, word: "quicker", why: "Exits should get out of the way: shorter, and accelerating away.", topics: ["enter-exit", "timing"] },
+  { kind: "menu", good: { easing: "--ease-out", duration: 160 }, bad: { easing: "--ease-out", duration: 700 }, word: "quicker", why: "A menu is opened many times a day. A long animation turns into a wait.", topics: ["timing", "taste", "frequency"] },
+  { kind: "list", good: { easing: "--ease-out", duration: 280, stagger: 30, distance: 12 }, bad: { easing: "--ease-out", duration: 280, stagger: 170, distance: 12 }, word: "calmer", why: "At 30ms apart the rows read as one gesture. At 170ms you wait for the list to finish arriving.", topics: ["stagger", "choreography"] },
+  { kind: "toggle", good: { easing: "spring.snappy" }, bad: { easing: "linear", duration: 600 }, word: "physical", why: "A switch is direct manipulation: a quick, damped spring feels like a physical part. Linear over 600ms feels like a machine.", topics: ["springs", "direct", "physics"] },
+  { kind: "card", good: { easing: "--ease-out", duration: 280, distance: 16 }, bad: { easing: "--ease-out", duration: 280, distance: 140 }, word: "calmer", why: "Small distances keep the page calm. A big travel claims the whole screen for a routine change.", topics: ["taste", "enter-exit"] },
+  { kind: "tabs", good: { easing: "--ease-inout", duration: 300 }, bad: { none: true }, word: "connected", why: "The underline slides: one indicator, moving. With a cut you look for where it went.", topics: ["continuity", "permanence", "information"] },
+  { kind: "expand", good: { easing: "--ease-out", duration: 460 }, bad: { none: true }, word: "connected", why: "The tile grows into the detail view, so you know what you opened.", topics: ["continuity", "permanence", "spatial"] },
+  { kind: "badge", good: { easing: "spring(response .35 bounce .4)" }, bad: { easing: "ease-in-out", duration: 900 }, word: "clearer", why: "A quick pop reads as news. A slow grow is easy to miss and slow to read.", topics: ["attention", "principles", "springs"] },
+  { kind: "drawer", good: { easing: "--ease-out", duration: 380 }, bad: { easing: "linear", duration: 150 }, word: "clearer", why: "A large panel needs enough time to show where it came from; linear and short feels like a jump.", topics: ["spatial", "timing", "enter-exit"] },
+  { kind: "toast", good: { easing: "--ease-out", duration: 280, distance: 16 }, bad: { easing: "cubic-bezier(.3,2.2,.5,1)", duration: 600, distance: 16 }, word: "honest", why: "A toast is routine. A big bounce every time is noise, and it pretends the toast has momentum it doesn't.", topics: ["taste", "springs", "principles"] },
+  { kind: "dot", good: { easing: "cubic-bezier(.1,.7,.1,1)", duration: 900 }, bad: { easing: "linear", duration: 300 }, word: "physical", why: "A thrown thing glides to a stop: speed decays. Stopping dead at full speed looks like a wall.", topics: ["momentum", "physics", "direct"] },
+  { kind: "modal", good: { easing: "spring.soft" }, bad: { easing: "ease-in-out", duration: 700 }, word: "quicker", why: "The dialog is ready almost at once and settles. The slow ease-in-out makes you wait at both ends.", topics: ["timing", "springs", "enter-exit"] },
+  { kind: "drop", good: { easing: "ease-in", duration: 420 }, bad: { easing: "ease-out", duration: 420 }, word: "physical", why: "Falling things accelerate: gravity. Easing out makes the ball brake in mid-air.", topics: ["weight", "physics", "principles"] },
+  { kind: "like", good: { easing: "--ease-out", duration: 340 }, bad: { none: true }, word: "clearer", why: "The press-and-pop confirms the tap. Without it, the only feedback is a colour that may already have been red.", topics: ["feedback", "principles", "information"] },
+  { kind: "list", good: { easing: "--ease-out", duration: 240, stagger: 24, distance: 10 }, bad: { easing: "--ease-out", duration: 240, stagger: 0, distance: 10 }, word: "clearer", why: "A small stagger gives the list a reading order. All at once, it's one block appearing.", topics: ["stagger", "choreography", "hierarchy"] },
+  { kind: "list", good: { easing: "--ease-out", duration: 280, stagger: 35, distance: 12 }, bad: { easing: "--ease-out", duration: 280, stagger: 110, distance: 12 }, word: "quicker", why: "Every row is a wait at 110ms apart; at 35ms the list has arrived before you've finished reading the first row.", topics: ["stagger", "timing"] },
+  { kind: "list", good: { easing: "--ease-out", duration: 320, stagger: 30, distance: 10 }, bad: { easing: "--ease-out", duration: 320, stagger: 30, distance: 60 }, word: "calmer", why: "Same stagger, but each row travels 60px: the cascade becomes a waterfall. Short rises keep the order without the noise.", topics: ["stagger", "choreography", "taste"] },
+  { kind: "list", good: { easing: "--ease-out", duration: 260, stagger: 25, distance: 10 }, bad: { easing: "linear", duration: 260, stagger: 25, distance: 10 }, word: "arrives", why: "With linear timing each row stops dead; with ease-out each one settles, so the list lands row by row.", topics: ["stagger", "easing"] },
+];
+
+export interface BlindSpec {
+  pair: ABPair;
+  /** Which side (0 = A) shows the good version. */
+  goodSide: 0 | 1;
+  words: string[];
+}
+export interface BlindAnswer {
+  pick: 0 | 1;
+  word: string;
+}
+
+/** Two versions. Pick the better one, then say why in one word. */
+export const blindAB: DrillDef<BlindSpec, BlindAnswer> = {
+  id: "blind-ab",
+  name: "Blind A/B",
+  prompt: "Two versions. Which is better? Then say why, in one word.",
+  trains: "Taste: judging, then naming the reason",
+  unlocksAfter: 0,
+  kind: "choice",
+  make(rand, _level, opts) {
+    const pool = opts?.topic ? PAIRS.filter((p) => p.topics.includes(opts.topic!)) : PAIRS;
+    const list = pool.length ? pool : PAIRS;
+    const pair = list[Math.floor(rand() * list.length)];
+    const others = shuffle(rand, WORDS.filter((w) => w !== pair.word)).slice(0, 3);
+    return { pair, goodSide: rand() < 0.5 ? 0 : 1, words: shuffle(rand, [pair.word, ...others]) };
+  },
+  score(spec, a) {
+    const ok = a.pick === spec.goodSide;
+    const wordOk = a.word === spec.pair.word;
+    const L = spec.goodSide === 0 ? "A" : "B";
+    return {
+      correct: ok,
+      points: ok ? (wordOk ? 100 : 80) : 0,
+      truth: spec.goodSide,
+      answer: a.pick,
+      verdict: `${ok ? `Yes, ${L}` : `Most designers pick ${L}`} — "${spec.pair.word}". ${spec.pair.why}`,
+      meta: { word: a.word, expected: spec.pair.word, kind: spec.pair.kind },
+    };
+  },
+};

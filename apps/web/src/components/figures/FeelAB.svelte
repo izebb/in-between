@@ -38,12 +38,18 @@
   let playedOnce = false;
 
   const letters = ["A", "B", "C"];
+  /** The timing that actually plays: exit values when the specimen exits. */
+  const timingOf = (o: Option) =>
+    direction === "exit"
+      ? { easing: o.motion.exitEasing ?? "--ease-in", duration: o.motion.exitDuration ?? Math.round((o.motion.duration ?? 280) * 0.7) }
+      : { easing: o.motion.easing ?? "--ease-out", duration: o.motion.duration ?? 280 };
   const numbers = (o: Option) => {
     if (o.caption) return o.caption;
     if (o.motion.none) return "no motion (0ms)";
-    const spec = parseSpec(o.motion.easing ?? "--ease-out");
-    const d = spec.type === "spring" ? Math.round(resolveMove(toMove({ easing: spec })).duration) : (o.motion.duration ?? 280);
-    return `${d}ms · ${o.motion.easing ?? "--ease-out"}${o.motion.stagger ? ` · stagger ${o.motion.stagger}ms` : ""}`;
+    const t = timingOf(o);
+    const spec = parseSpec(t.easing);
+    const d = spec.type === "spring" ? Math.round(resolveMove(toMove({ easing: spec })).duration) : t.duration;
+    return `${d}ms · ${t.easing}${o.motion.stagger ? ` · stagger ${o.motion.stagger}ms` : ""}`;
   };
 
   function playAll() {
@@ -65,7 +71,7 @@
 
   const stills = $derived(
     options.map((o) => ({
-      move: toMove({ easing: o.motion.none ? "steps(1, jump-start)" : (o.motion.easing ?? "--ease-out"), duration: o.motion.none ? 16 : (o.motion.duration ?? 280), to: 240 }),
+      move: toMove({ easing: o.motion.none ? "steps(1, jump-start)" : timingOf(o).easing, duration: o.motion.none ? 16 : timingOf(o).duration, to: 240 }),
       label: "",
     })),
   );

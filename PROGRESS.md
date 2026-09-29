@@ -10,10 +10,10 @@ Source of truth: `CURRICULUM.md`. Task brief: `PROMPT.md`. This file is enough t
 | M1 | Motion core | ✅ done |
 | M2 | First instruments (L1, L2, L5, Code Panel) | ✅ done |
 | M3 | Part I live (ch 01–03 + 2 drills) | ✅ done |
-| M4 | Physics (L3, L7, ch 04–06) | ⏳ next |
-| M5 | Choreography (L4, ch 07–11) | — |
-| M6 | Interaction + Canvas (ch 12–19) | — |
-| M7 | Craft + Journal (L8, L9, ch 20–22, calibration graph) | — |
+| M4 | Physics (L3, L7, ch 04–06) | ⏳ ch 04, 05 written; 06 in progress (subagent) |
+| M5 | Choreography (L4, ch 07–11) | ⏳ L4 + figures built; ch 07–11 being written by subagents |
+| M6 | Interaction + Canvas (ch 12–19) | ⏳ figures + programs built (Drag, Scroll, Medium, programs2.ts); chapters not started |
+| M7 | Craft + Journal (L8, L9, ch 20–22, calibration graph) | ⏳ L8, L9, calibration built; fix-feeling drill + ch 20–22 todo |
 | M8 | Special Topics (L10, ch 23–25) | — |
 
 ## How to run
@@ -131,6 +131,26 @@ node scripts/shoot.mjs --pages /,/system --out ./screenshots --themes light,dark
 tab switch, stage hover→lines). Last run: all pass.
 
 `drill.mjs` plays drills in ch 02/03 and checks the Eye Trainer stored the session. Last run: pass.
+
+## Workflow for chapters (from M4 on)
+
+Chapters are written by parallel subagents (general-purpose) following `docs/CHAPTER_KIT.md`, one file each, no
+commits; I review each MDX (facts, code correctness, DoD) and screenshots, fix kit gaps they report, then commit.
+Written so far: 01–05 (+06–11 in flight). Kit gaps already fixed from reports: SpacingTrack overshoot range + label
+thinning, VelocityGraph title placement, TimeBar `showMs`, SpringGraph `readout`/label flip, Canvas `readout`,
+heavy-light labels without numbers, shoot.mjs long URLs.
+
+## Built beyond M4 (awaiting their chapters)
+- L4 `ExposureSheet` (+ `XSheet`, `ChoreoStage`, `ChoreoFigure` → `<Choreo>`), `<Principles>` (lib/principles.ts, 12
+  canvas clips) + `spot-principle` drill, `<Flip>`, `<ViewTransition>` (real same-document VT), `<Spatial>`, `<Discrete>`
+  (@starting-style + allow-discrete), Mock `origin`.
+- M6: `<Drag>` (1:1, rubber-band, projection, spring with velocity), `<Scroll>` (real scroll-driven animations +
+  scroll-jacked comparison), `<Medium>` (DOM transform vs left/top vs Canvas, measured fps), programs2.ts:
+  loop-hz, smoothing-trap, integrators, collisions, particles, trails, boids, noise-vs-random, idle.
+- L8 `SpecimenJournal` (vocabulary: per-word median duration / easing kind / ζ), L9 `ExportDesk` (5 dialects +
+  W3C-style token JSON + spec sentence, paste any easing).
+- Drills now: what-it-says, guess-duration, match-curve, which-heavier, tune-to-match, blind-ab (topic filter),
+  spot-principle. Todo: fix-feeling, transition-lies.
 
 ## Next (M4)
 

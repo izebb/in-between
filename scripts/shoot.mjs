@@ -52,7 +52,8 @@ for (const width of widths) {
         if (a.scroll) await page.evaluate((y) => window.scrollTo(0, y), a.scroll);
       }
       await page.waitForTimeout(wait);
-      const name = `${p.replace(/\//g, "_").replace(/^_$/, "_index") || "_index"}-${theme}-${width}${args.tag ? "-" + args.tag : ""}.png`;
+      const slug = (p.split("?")[0].replace(/\//g, "_").replace(/^_$/, "_index") || "_index").slice(0, 80);
+      const name = `${slug}-${theme}-${width}${args.tag ? "-" + args.tag : ""}.png`;
       if (args.selector) {
         const el = await page.$(args.selector);
         if (el) await el.screenshot({ path: resolve(out, name) });

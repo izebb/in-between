@@ -15,8 +15,10 @@
     /** Show rate buttons and step controls (off for tiny embeds). */
     compact?: boolean;
     label?: string;
+    /** Show milliseconds next to the frame count (off before a chapter's FEEL beat). */
+    showMs?: boolean;
   }
-  let { transport, compact = false, label = "Time" }: Props = $props();
+  let { transport, compact = false, label = "Time", showMs = true }: Props = $props();
 
   const frameMs = $derived(1000 / transport.fps);
   const totalFrames = $derived(Math.max(1, Math.round(transport.duration / frameMs)));
@@ -141,7 +143,7 @@
 
   <div class="counter mono" aria-live="off">
     <span><b>{String(frame).padStart(String(totalFrames).length, "0")}</b>/{totalFrames} fr</span>
-    <span class="ms">{Math.round(transport.time)}ms</span>
+    {#if showMs}<span class="ms">{Math.round(transport.time)}ms</span>{/if}
   </div>
 </div>
 

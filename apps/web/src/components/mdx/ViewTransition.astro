@@ -1,0 +1,5 @@
+---
+import ViewTransitionFigure from "../figures/ViewTransitionFigure.svelte";
+const props = Astro.props as any;
+---
+<ViewTransitionFigure client:visible {...props} />

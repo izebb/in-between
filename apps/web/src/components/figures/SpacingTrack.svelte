@@ -54,10 +54,17 @@
     if (!spatial) return { lo: 0, hi: 1 };
     let lo = Infinity;
     let hi = -Infinity;
-    for (const r of rows) {
+    rows.forEach((r, i) => {
       lo = Math.min(lo, r.move.from, r.move.to);
       hi = Math.max(hi, r.move.from, r.move.to);
-    }
+      // Springs and back-curves overshoot: leave room for the whole path.
+      const rr = resolved[i];
+      for (let k = 0; k <= 60; k++) {
+        const v = rr.value(rr.delay + (k / 60) * rr.duration);
+        lo = Math.min(lo, v);
+        hi = Math.max(hi, v);
+      }
+    });
     return hi > lo ? { lo, hi } : { lo: 0, hi: 1 };
   });
 
@@ -73,16 +80,15 @@
       const times = frameTimes(r.end, fps);
       const xs = times.map((t) => xOf(i, t));
       // Thin labels so they never collide where frames bunch up.
-      const labels: { x: number; n: number }[] = [];
-      let lastX = -Infinity;
+      // Overshooting frames can sit past the last one, so check every accepted label, not just the previous.
+      let labels: { x: number; n: number }[] = [];
+      const lastN = xs.length - 1;
+      labels.push({ x: xs[lastN], n: lastN });
       xs.forEach((x, n) => {
-        const isLast = n === xs.length - 1;
-        if (x - lastX >= 16 || isLast) {
-          if (isLast && labels.length && x - labels[labels.length - 1].x < 16 && labels.length > 1) labels.pop();
-          labels.push({ x, n });
-          lastX = x;
-        }
+        if (n === lastN) return;
+        if (labels.every((l) => Math.abs(l.x - x) >= 16)) labels.push({ x, n });
       });
+      labels = labels.sort((a, b) => a.n - b.n);
       const scaleOf = (t: number) => (row.move.property === "scale" ? r.value(t) : 1);
       const opacityOf = (t: number) => (row.move.property === "opacity" ? Math.max(0, Math.min(1, r.value(t))) : 1);
       return { row, r, times, xs, labels, frames: times.length - 1, scaleOf, opacityOf };

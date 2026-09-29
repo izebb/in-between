@@ -8,6 +8,7 @@
  */
 
 import { installClock } from "./clock";
+import { PRELUDE } from "~/lib/canvas/prelude";
 
 export type SandboxDialect = "css" | "waapi" | "motion" | "gsap" | "canvas" | "js";
 
@@ -24,6 +25,10 @@ export interface HarnessOptions {
   originX?: number;
   /** Canvas: keep state across code reloads (L7 hot reload). */
   hot?: boolean;
+  /** Canvas: initial program parameters (the `params` global). */
+  params?: Record<string, unknown>;
+  /** Simulated refresh rate, or null for the real display. */
+  hz?: number | null;
 }
 
 export const ident = (target: string) => {
@@ -64,6 +69,34 @@ function runtime(o: HarnessOptions) {
 
   var canvasApi = null, canvasState = null, ctx = null, W = 0, H = 0;
   window.__ibCanvas = function (api) { canvasApi = api; };
+  window.__ibParams = ${JSON.stringify(o.params ?? {})};
+  window.__ibPointer = { x: -1, y: -1, down: false, vx: 0, vy: 0 };
+  window.__ibPencils = ${JSON.stringify({ ...o.colors })};
+  ${o.hz ? `clock.setHz(${o.hz});` : ""}
+  var ptrSamples = [];
+  function pointerFrom(e, type) {
+    var cv = document.querySelector("canvas.ib-canvas");
+    if (!cv) return;
+    var r = cv.getBoundingClientRect(), p = window.__ibPointer, now = performance.now();
+    var x = e.clientX - r.left, y = e.clientY - r.top;
+    if (type === "down") ptrSamples = [];
+    ptrSamples.push({ x: x, y: y, t: e.timeStamp });
+    while (ptrSamples.length > 2 && ptrSamples[0].t < e.timeStamp - 100) ptrSamples.shift();
+    // Velocity: least-squares slope over the last 100ms, so a release isn't read as zero.
+    if (ptrSamples.length > 1) {
+      var n = ptrSamples.length, t0 = ptrSamples[0].t, st = 0, sx = 0, sy = 0, stt = 0, stx = 0, sty = 0;
+      for (var i = 0; i < n; i++) { var q = ptrSamples[i], tt = (q.t - t0) / 1000; st += tt; sx += q.x; sy += q.y; stt += tt * tt; stx += tt * q.x; sty += tt * q.y; }
+      var d = n * stt - st * st;
+      if (d > 0) { p.vx = (n * stx - st * sx) / d; p.vy = (n * sty - st * sy) / d; }
+    }
+    p.x = x; p.y = y; p.t = now;
+    if (type === "down") p.down = true;
+    if (type === "up") p.down = false;
+    if (canvasApi && canvasApi.onPointer) {
+      try { canvasApi.setup ? canvasApi.onPointer(canvasState, p, type) : canvasApi.onPointer(p, type); } catch (err) { post({ type: "error", message: String(err && err.message || err) }); }
+    }
+  }
+  ["down", "move", "up"].forEach(function (k) { window.addEventListener("pointer" + k, function (e) { pointerFrom(e, k); }); });
 
   function measureDom(name) {
     var el = document.querySelector("." + name);
@@ -124,6 +157,8 @@ function runtime(o: HarnessOptions) {
     if (m.cmd === "ff") { userPaused = true; clock.pause(); clock.fastForward(m.value, m.fps || 60); }
     if (m.cmd === "code" && DIALECT === "canvas") { window.__ibLoad(m.value, true); }
     if (m.cmd === "reset" && DIALECT === "canvas") { canvasState = null; }
+    if (m.cmd === "params") { Object.assign(window.__ibParams, m.value || {}); }
+    if (m.cmd === "hz") { clock.setHz(m.value || null); }
   });
 
   var userPaused = false;
@@ -147,11 +182,14 @@ function runtime(o: HarnessOptions) {
 
 function canvasLoader(o: HarnessOptions) {
   const subjects = o.targets.map((n) => `${JSON.stringify(n)}: typeof ${ident(n)} !== "undefined" ? ${ident(n)} : undefined`).join(", ");
+  const exportsSrc = `;return { update: typeof update === "function" ? update : null, draw: typeof draw === "function" ? draw : null, setup: typeof setup === "function" ? setup : null, onPointer: typeof onPointer === "function" ? onPointer : null, subjects: { ${subjects} } };`;
   return `
 window.__ibLoad = function (code, hot) {
   try {
-    var api = new Function(code + "\\n;return { update: typeof update === 'function' ? update : null, draw: typeof draw === 'function' ? draw : null, setup: typeof setup === 'function' ? setup : null, subjects: { ${subjects.replace(/"/g, '\\"')} } };")();
+    // Helpers (prelude) in the outer scope; your code in an inner one, so it may shadow any of them.
+    var api = new Function("params", "pointer", "pencils", ${JSON.stringify(PRELUDE)} + "\\nreturn (function () {\\n" + code + "\\n" + ${JSON.stringify(exportsSrc)} + "\\n})();")(window.__ibParams, window.__ibPointer, window.__ibPencils);
     window.__ibCanvas(api);
+    parent.postMessage({ ib: 1, type: "loaded", hot: !!hot }, "*");
   } catch (e) {
     parent.postMessage({ ib: 1, type: "error", message: String(e && e.message || e) }, "*");
   }

@@ -4,6 +4,12 @@ import { instruments, instrumentById, chapters, pad2, type InstrumentId } from "
 import SpacingChart from "~/components/lab/SpacingChart.svelte";
 import CurveBench from "~/components/lab/CurveBench.svelte";
 import FrameStepper from "~/components/lab/FrameStepper.svelte";
+import SpringBench from "~/components/lab/SpringBench.svelte";
+import CanvasSandbox from "~/components/lab/CanvasSandbox.svelte";
+import ExposureSheet from "~/components/lab/ExposureSheet.svelte";
+import SpecimenJournal from "~/components/lab/SpecimenJournal.svelte";
+import ExportDesk from "~/components/lab/ExportDesk.svelte";
+import DataStage from "~/components/lab/DataStage.svelte";
 
 export function getStaticPaths() {
   return instruments.filter((i) => i.id !== "eye-trainer").map((i) => ({ params: { id: i.id } }));
@@ -12,7 +18,7 @@ export function getStaticPaths() {
 const id = Astro.params.id as InstrumentId;
 const meta = instrumentById(id);
 const usedIn = chapters.filter((c) => c.instruments.includes(id));
-const built: InstrumentId[] = ["spacing-chart", "curve-bench", "frame-stepper"];
+const built: InstrumentId[] = ["spacing-chart", "curve-bench", "frame-stepper", "spring-bench", "canvas-sandbox", "exposure-sheet", "specimen-journal", "export-desk", "data-stage"];
 ---
 <Base title={`${meta.code} ${meta.name}`} description={meta.does} posture="lab">
   <div class="lab-page">
@@ -28,6 +34,12 @@ const built: InstrumentId[] = ["spacing-chart", "curve-bench", "frame-stepper"];
     {id === "spacing-chart" && <SpacingChart client:only="svelte" />}
     {id === "curve-bench" && <CurveBench client:only="svelte" />}
     {id === "frame-stepper" && <FrameStepper client:only="svelte" />}
+    {id === "spring-bench" && <SpringBench client:only="svelte" />}
+    {id === "canvas-sandbox" && <CanvasSandbox client:only="svelte" />}
+    {id === "exposure-sheet" && <ExposureSheet client:only="svelte" />}
+    {id === "specimen-journal" && <SpecimenJournal client:only="svelte" />}
+    {id === "export-desk" && <ExportDesk client:only="svelte" />}
+    {id === "data-stage" && <DataStage client:only="svelte" />}
     {!built.includes(id) && <p class="soon">This instrument is still on the bench.</p>}
   </div>
 </Base>

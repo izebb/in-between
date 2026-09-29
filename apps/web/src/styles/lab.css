@@ -18,6 +18,15 @@
   .instrument > .i-code { grid-area: code; border-left: 1px solid var(--rule); min-width: 0; display: flex; flex-direction: column; }
   .instrument.no-code { grid-template-columns: minmax(220px, 260px) minmax(0, 1fr); grid-template-areas: "params stage" "time time"; }
 
+  .instrument.code-first {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto auto;
+    grid-template-areas: "code stage" "code time" "code params";
+  }
+  .instrument.code-first > .i-code { border-left: 0; border-right: 1px solid var(--rule); }
+  .instrument.code-first > .i-params { border-right: 0; border-top: 1px solid var(--rule); flex-direction: row; flex-wrap: wrap; align-items: flex-start; }
+  .instrument.code-first > .i-params > * { flex: 1 1 200px; }
+
   .instrument .i-title { display: flex; align-items: baseline; gap: 0.5rem; }
   .instrument .i-title .serif { font-size: 1.35rem; line-height: 1; }
 
@@ -30,6 +39,14 @@
       grid-template-areas: "params stage" "time time" "code code";
     }
     .instrument > .i-code { border-left: 0; border-top: 1px solid var(--rule); }
+  }
+  @media (max-width: 900px) {
+    .instrument.code-first {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: auto;
+      grid-template-areas: "stage" "time" "params" "code";
+    }
+    .instrument.code-first > .i-code { border-right: 0; border-top: 1px solid var(--rule); min-height: 360px; }
   }
   @media (max-width: 720px) {
     .instrument, .instrument.no-code {
