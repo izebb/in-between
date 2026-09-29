@@ -4,6 +4,7 @@ import { getCollection } from "astro:content";
 import { chapters, parts, pad2, instruments } from "~/lib/curriculum";
 import TitleScrub from "~/components/ui/TitleScrub.svelte";
 import OutlineNumber from "~/components/ui/OutlineNumber.astro";
+import BenchItem from "~/components/ui/BenchItem.astro";
 
 const written = new Set((await getCollection("chapters")).map((c) => c.id));
 const byPart = parts.map((p) => ({ part: p, items: chapters.filter((c) => c.part === p.numeral) }));
@@ -11,7 +12,6 @@ const byPart = parts.map((p) => ({ part: p, items: chapters.filter((c) => c.part
 <Base title="Inbetween">
   <div class="page index">
     <section class="hero" data-reveal-section>
-      <p class="smallcaps kicker">A field manual and laboratory for motion on the web</p>
       <TitleScrub client:load />
       <div class="hero-grid">
         <!-- The word the site is named for, defined as a dictionary defines it. Each part rises out of its
@@ -81,15 +81,7 @@ const byPart = parts.map((p) => ({ part: p, items: chapters.filter((c) => c.part
         <div class="tick-rule" aria-hidden="true" data-reveal-block="rule"></div>
       </div>
       <div class="bench-list" data-persp>
-        {instruments.map((i, ii) => (
-          <a class="bench-item pencil-hover" href={`/lab/${i.id}`} data-reveal-block data-reveal-i={ii % 3}>
-            <svg class="ph-outline" aria-hidden="true"><rect x="0.5" y="0.5" width="100%" height="100%" pathLength="1" /></svg>
-            <span class="smallcaps ph-n">{i.code}</span>
-            <span class="serif ph-title">{i.name}</span>
-            <p data-reveal-lines data-lines>{i.does}</p>
-            <span class="smallcaps trains">Trains · {i.trains}</span>
-          </a>
-        ))}
+        {instruments.map((i, ii) => <BenchItem i={i} revealI={ii % 5} />)}
       </div>
     </section>
   </div>
@@ -152,7 +144,6 @@ const byPart = parts.map((p) => ({ part: p, items: chapters.filter((c) => c.part
 <style>
   .index { padding-bottom: 2rem; }
   .hero { padding-block: clamp(2.5rem, 8vw, 6rem) clamp(2rem, 5vw, 3.5rem); }
-  .kicker { color: var(--graphite-strong); }
   .hero-grid { display: grid; grid-template-columns: minmax(0, 36rem) minmax(0, 20rem); justify-content: space-between; gap: 2rem 4rem; margin-top: 2rem; align-items: end; }
   /* The intro, as a dictionary entry: a label, numbered senses in the reading mono hanging from their
      numbers, and a see-also line aligned with the senses. */

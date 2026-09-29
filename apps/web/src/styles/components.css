@@ -135,8 +135,12 @@
   .inspect-outline { outline: 1px dashed var(--blue-pencil) !important; outline-offset: 2px; }
 
   /* ---------- Cards for lab bench / drills ---------- */
-  .bench-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); border-top: 1px solid var(--rule); border-left: 1px solid var(--rule); }
-  .bench-item { background: var(--paper); border-right: 1px solid var(--rule); border-bottom: 1px solid var(--rule); padding: 1.1rem 1.1rem 1.25rem; text-decoration: none; display: flex; flex-direction: column; gap: 0.35rem; min-height: 9.5rem; }
+  /* Ten boxes, always a full grid: five across, two across, or one. Each draws its own right and bottom
+     rule; they are see-through, so a neighbour on its own layer can't paint over a shared edge. */
+  .bench-list { display: grid; grid-template-columns: minmax(0, 1fr); border-top: 1px solid var(--rule); border-left: 1px solid var(--rule); }
+  @media (min-width: 560px) { .bench-list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (min-width: 1180px) { .bench-list { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+  .bench-item { border-right: 1px solid var(--rule); border-bottom: 1px solid var(--rule); padding: 1rem 1rem 1.1rem; text-decoration: none; display: flex; flex-direction: column; gap: 0.4rem; min-height: 12rem; }
 
   /* Hover: a blue-pencil outline is drawn as one line, from the top-left, all the way round until it
      meets itself (an SVG rect, dashed to its own perimeter); leaving, it's taken back the way it came.
@@ -220,7 +224,39 @@
   :root[data-motion="reduce"] :is(.o-ink, .pencil-hover:is(:hover, :focus-visible) .o-ink) { stroke-dashoffset: 0; fill-opacity: 1; opacity: 0; transition: opacity var(--dur-quick) var(--ease-out); }
   :root[data-motion="reduce"] .pencil-hover:is(:hover, :focus-visible) .o-ink { opacity: 1; }
 
-  .bench-item .serif { font-size: 1.5rem; line-height: 1.1; }
+  .bench-item .serif { font-size: 1.3rem; line-height: 1.1; }
   .bench-item p { font-size: var(--text-sm); color: var(--graphite-strong); line-height: 1.45; }
-  .bench-item .trains { margin-top: auto; }
+  /* Along the top: the code in outline figures, and the tool drawn in pencil */
+  .bi-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.45rem; }
+  .bench-item .bi-code { font-size: 1.5rem; color: var(--ph-n, var(--graphite)); --o-hair: 42; }
+  .bi-icon { width: 24px; height: 24px; overflow: visible; flex: none; margin-top: 0.2rem; }
+  .bi-icon path { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  .bi-icon-base { stroke: var(--graphite-strong); stroke-width: 1.5; }
+  /* Traced over in blue pencil on hover, as the outline is; taken back quicker. */
+  .bi-icon-ink {
+    stroke: var(--blue-pencil);
+    stroke-width: 1.5;
+    stroke-dasharray: 1 2;
+    stroke-dashoffset: 1;
+    transition: stroke-dashoffset calc(var(--dur-base) * 1.2) var(--ease-in);
+  }
+  /* The foot: what it trains, which gives way to "Open" on hover. One line, never wrapped. */
+  .bi-foot { margin-top: auto; padding-top: 0.5rem; display: grid; }
+  .bi-foot > * { grid-area: 1 / 1; white-space: nowrap; font-size: 0.6875rem; transition: opacity var(--dur-quick) var(--ease-out), translate var(--dur-quick) var(--ease-out); }
+  .bi-tag { color: var(--graphite); overflow: hidden; text-overflow: ellipsis; }
+  .bi-open { color: var(--blue-pencil); opacity: 0; translate: calc(-1 * var(--dist-nudge)) 0; }
+  .bench-item:focus-visible .bi-icon-ink { stroke-dashoffset: 0; transition: stroke-dashoffset calc(var(--dur-scene) * 1.2) var(--ease-inout); }
+  .bench-item:focus-visible .bi-tag { opacity: 0; translate: var(--dist-nudge) 0; }
+  .bench-item:focus-visible .bi-open { opacity: 1; translate: 0 0; }
+  @media (hover: hover) {
+    .bench-item:hover .bi-icon-ink { stroke-dashoffset: 0; transition: stroke-dashoffset calc(var(--dur-scene) * 1.2) var(--ease-inout); }
+    .bench-item:hover .bi-tag { opacity: 0; translate: var(--dist-nudge) 0; }
+    .bench-item:hover .bi-open { opacity: 1; translate: 0 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .bi-icon-ink { stroke-dashoffset: 0; opacity: 0; transition: opacity var(--dur-quick) var(--ease-out); }
+    .bench-item:is(:hover, :focus-visible) .bi-icon-ink { opacity: 1; }
+  }
+  :root[data-motion="reduce"] .bi-icon-ink { stroke-dashoffset: 0; opacity: 0; transition: opacity var(--dur-quick) var(--ease-out); }
+  :root[data-motion="reduce"] .bench-item:is(:hover, :focus-visible) .bi-icon-ink { opacity: 1; }
 }

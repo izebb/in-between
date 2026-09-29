@@ -195,18 +195,16 @@
   /* ---------- Footer ---------- */
   .site-footer {
     margin-top: 6rem;
-    border-top: 1px solid var(--rule);
     /* At least the unroll band tall, so at the end of the page it has scrolled flat, and the
        dial (its last child) sits flush on the page's bottom edge. */
     min-height: var(--band, 0px);
     display: flex;
     flex-direction: column;
-    gap: 2.5rem;
     font-size: var(--text-sm);
     color: var(--graphite-strong);
   }
   .foot-line {
-    padding-top: 1.5rem;
+    padding-block: 1.5rem 2.5rem;
     display: flex;
     flex-wrap: wrap;
     justify-content: space-between;

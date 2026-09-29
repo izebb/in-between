@@ -102,7 +102,7 @@ export interface InstrumentMeta {
 }
 
 export const instruments: InstrumentMeta[] = [
-  { id: "spacing-chart", code: "L1", name: "Spacing chart", does: "An object's positions per frame as onion-skin ghosts, plus an animator's tick chart.", trains: "Seeing spacing = seeing easing" },
+  { id: "spacing-chart", code: "L1", name: "Spacing chart", does: "An object's positions per frame as onion-skin ghosts, plus an animator's tick chart.", trains: "Spacing = easing" },
   { id: "curve-bench", code: "L2", name: "Curve bench", does: "Cubic-bezier editor with position and velocity graphs side by side, plus A/B compare.", trains: "Reading a curve as speed" },
   { id: "spring-bench", code: "L3", name: "Spring bench", does: "Stiffness, damping, mass, or response and bounce. Live graph, settle time, CSS linear() export.", trains: "Physics as feel" },
   { id: "exposure-sheet", code: "L4", name: "Exposure sheet", does: "Multi-track timeline for keyframes, offsets, and staggers across several elements.", trains: "Choreography, overlap" },

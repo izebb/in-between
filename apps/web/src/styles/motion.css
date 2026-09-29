@@ -3,6 +3,13 @@
  * Tokens → primitives → patterns → policy (chapter 24).
  * No raw durations or curves may appear in this file. scripts/check-motion-tokens.mjs enforces it.
  */
+/* The footer playhead's place along its ruler, 0 → 1: registered so it can be animated. */
+@property --ph {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
+
 @layer motion {
   /* ---------- Primitives (declarative): data-motion="…" ---------- */
   [data-motion="fade"] {
@@ -115,6 +122,52 @@
       }
     }
   }
+
+  /* ---------- Pattern: the footer's ruler keeps playing ----------
+     The red playhead from the title's scrubber glides along the ruler at a steady pace, and loops.
+     The ticks lift as it reaches them and settle behind it: a taller copy of the ruler shows through
+     a window that travels with the head (clear just ahead of it, fading out behind). One registered
+     property, --ph, moves both, so they never drift apart. The head fades out at the end of its run
+     and in at the start, so the loop has no jump. */
+  .foot-rule { position: relative; container-type: inline-size; }
+  .foot-rule::before,
+  .foot-rule::after { content: ""; position: absolute; bottom: 0; pointer-events: none; }
+  .foot-rule::before {
+    left: 0;
+    right: 0;
+    height: 14px;
+    background:
+      linear-gradient(to right, color-mix(in srgb, var(--ink) 50%, transparent) 1px, transparent 1px) 0 100% / 40px 14px repeat-x,
+      linear-gradient(to right, color-mix(in srgb, var(--ink) 34%, transparent) 1px, transparent 1px) 0 100% / 8px 9px repeat-x;
+    -webkit-mask: linear-gradient(to right, transparent 0, #000 110px, #000 128px, transparent 140px) no-repeat;
+    mask: linear-gradient(to right, transparent 0, #000 110px, #000 128px, transparent 140px) no-repeat;
+    -webkit-mask-size: 140px 100%;
+    mask-size: 140px 100%;
+    -webkit-mask-position: calc(var(--ph) * 100cqw - 128px) 0;
+    mask-position: calc(var(--ph) * 100cqw - 128px) 0;
+  }
+  .foot-rule::after {
+    left: -4px;
+    width: 8px;
+    height: 16px;
+    background:
+      radial-gradient(circle at 50% 4px, var(--red-pencil) 3.5px, transparent 4px),
+      linear-gradient(var(--red-pencil), var(--red-pencil)) 50% 100% / 2px 12px no-repeat;
+    translate: calc(var(--ph) * 100cqw) 0;
+    animation: ib-playhead-fade calc(var(--dur-scene) * 25) linear infinite;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    :root:not([data-motion="reduce"]) .foot-rule { animation: ib-playhead calc(var(--dur-scene) * 25) linear infinite; }
+  }
+  /* Reduced motion: a still ruler, no head. */
+  :root[data-motion="reduce"] .foot-rule::before,
+  :root[data-motion="reduce"] .foot-rule::after { display: none; }
+  @media (prefers-reduced-motion: reduce) {
+    :root:not([data-motion="full"]) .foot-rule::before,
+    :root:not([data-motion="full"]) .foot-rule::after { display: none; }
+  }
+  @keyframes ib-playhead { from { --ph: 0; } to { --ph: 1; } }
+  @keyframes ib-playhead-fade { 0% { opacity: 0; } 4% { opacity: 1; } 94% { opacity: 1; } 100% { opacity: 0; } }
 
   /* ---------- Pattern: the nav indicator slides along the bar's border to the new page ---------- */
   ::view-transition-group(nav-ink) { animation-duration: var(--dur-base); animation-timing-function: var(--ease-inout); }
