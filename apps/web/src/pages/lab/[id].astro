@@ -1,0 +1,47 @@
+---
+import Base from "~/layouts/Base.astro";
+import { instruments, instrumentById, chapters, pad2, type InstrumentId } from "~/lib/curriculum";
+import SpacingChart from "~/components/lab/SpacingChart.svelte";
+import CurveBench from "~/components/lab/CurveBench.svelte";
+import FrameStepper from "~/components/lab/FrameStepper.svelte";
+
+export function getStaticPaths() {
+  return instruments.filter((i) => i.id !== "eye-trainer").map((i) => ({ params: { id: i.id } }));
+}
+
+const id = Astro.params.id as InstrumentId;
+const meta = instrumentById(id);
+const usedIn = chapters.filter((c) => c.instruments.includes(id));
+const built: InstrumentId[] = ["spacing-chart", "curve-bench", "frame-stepper"];
+---
+<Base title={`${meta.code} ${meta.name}`} description={meta.does} posture="lab">
+  <div class="lab-page">
+    <header class="lab-head">
+      <nav class="crumbs smallcaps" aria-label="Breadcrumb"><a href="/lab">Lab</a> / {meta.code}</nav>
+      <p class="does">{meta.does} <span class="trains">Trains: {meta.trains.toLowerCase()}.</span></p>
+      {usedIn.length > 0 && (
+        <p class="used smallcaps">
+          Used in {usedIn.map((c, i) => (<>{i > 0 && " · "}<a href={`/chapters/${c.slug}`}>{pad2(c.number)} {c.title}</a></>))}
+        </p>
+      )}
+    </header>
+    {id === "spacing-chart" && <SpacingChart client:only="svelte" />}
+    {id === "curve-bench" && <CurveBench client:only="svelte" />}
+    {id === "frame-stepper" && <FrameStepper client:only="svelte" />}
+    {!built.includes(id) && <p class="soon">This instrument is still on the bench.</p>}
+  </div>
+</Base>
+
+<style>
+  .lab-page { padding-bottom: 2rem; }
+  .lab-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.35rem 1.5rem; padding-block: 0.5rem 1rem; }
+  .crumbs { color: var(--graphite-strong); }
+  .crumbs a { text-decoration: none; }
+  .does { font-size: var(--text-sm); color: var(--graphite-strong); max-width: 70ch; }
+  .trains { color: var(--graphite); }
+  .used { color: var(--graphite); margin-left: auto; }
+  .used a { color: var(--graphite-strong); }
+  .soon { padding: 4rem 0; font-family: var(--font-display); font-size: var(--text-xl); color: var(--graphite-strong); }
+  :global(.posture-lab .instrument) { min-height: calc(100dvh - 190px); }
+  :global(.posture-lab .site-footer) { margin-top: 2rem; }
+</style>

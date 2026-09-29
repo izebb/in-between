@@ -8,8 +8,8 @@ Source of truth: `CURRICULUM.md`. Task brief: `PROMPT.md`. This file is enough t
 |---|---|---|
 | M0 | Design system | ✅ done |
 | M1 | Motion core | ✅ done |
-| M2 | First instruments (L1, L2, L5, Code Panel) | ⏳ next |
-| M3 | Part I live (ch 01–03 + 2 drills) | — |
+| M2 | First instruments (L1, L2, L5, Code Panel) | ✅ done |
+| M3 | Part I live (ch 01–03 + 2 drills) | ⏳ next |
 | M4 | Physics (L3, L7, ch 04–06) | — |
 | M5 | Choreography (L4, ch 07–11) | — |
 | M6 | Interaction + Canvas (ch 12–19) | — |
@@ -36,8 +36,13 @@ node scripts/shoot.mjs --pages /,/system --out ./screenshots --themes light,dark
   decay (λ and iOS rate, `project`, rubberband), loop (rAF + dt + manual clock), playhead (shared scrub/step clock),
   motion (`Move`/`EasingSpec`, `resolveMove`), sample (frames, spacing), keyframes, interpolate (`damp`), integrators
   (Euler / semi-implicit / Verlet / RK4), noise (Perlin, simplex, seeded random), velocity tracker.
-- `packages/codegen` — (M2) lab state → CSS / WAAPI / Motion / GSAP / Canvas token streams with bound params.
-- `packages/editor` — (M2) CodeMirror 6 extensions.
+- `packages/codegen` — `Scene = { title?, moves: Move[] }` → `generate(dialect, scene)` for css / waapi / motion / gsap /
+  canvas. Output `Code { text, bindings[{path, from, to, value, scale, decimals}], lines[{targets}] }`. `Writer` records
+  where each bound number was printed. `setPath/getPath/paramSpec` (limits + drag steps), `encodeState/decodeState`
+  (URL `?s=`), `diffCode` (token LCS → minimal edits + changed ranges for the flash).
+- `packages/editor` — CodeMirror 6 extensions: `pencilTheme/pencilHighlight`, `boundParams` (ranges mapped through
+  edits, `fromKnob` annotation, `setHotGroup`), `dragNumbers` (scrub any number; double-press selects it),
+  `tokenFlash`, `linkHover` (line ↔ stage). Re-exports the CodeMirror bits the app needs (`cm.ts`).
 - `apps/web`
   - `src/motion/tokens.json` — **single source of truth** for colour + motion tokens. `scripts/build-tokens.mjs`
     compiles it to `src/styles/tokens.css`, `src/motion/tokens.ts`, `public/tokens.figma.json` (springs → CSS `linear()` via core).
@@ -52,6 +57,20 @@ node scripts/shoot.mjs --pages /,/system --out ./screenshots --themes light,dark
   - `src/components/mdx/` — `Figure` (plate + caption + Still toggle), `Margin`, `Beat`; exported map in `index.ts`
     (passed to `<Content components>` so MDX needs no imports). Svelte islands get thin `.astro` wrappers that apply `client:*`.
   - `src/pages/system.astro` — specimen sheet (living catalog of tokens/primitives).
+  - `src/lib/sandbox/` — `clock.ts` (**virtual clock**: patches rAF, performance.now, Date.now and drives every
+    CSS/WAAPI animation via getAnimations(); serialised with toString() into iframes), `harness.ts` (builds the
+    `<iframe srcdoc sandbox="allow-scripts">` doc: stage, UMD libs from /vendor, import rewriting, sampler posting
+    `{t, s:{target:[x,y,scale,opacity,rot]}}` per frame, canvas `update/draw` or `setup/update(state)/draw` contract with
+    hot reload), `transport.svelte.ts` (sandbox transport: forward = step/fast-forward, backward = reload + ff),
+    `page.svelte.ts` (clock injected into same-origin pages for L5).
+  - `src/lib/transport.svelte.ts` — `Transport` interface (+ `PlayheadTransport`); `TimeBar` drives any transport.
+  - `src/lib/prefs.svelte.ts` (reactive reduced-motion + pencil colours; `watchPlateStill`), `link.svelte.ts`
+    (hot path shared by code lines, knobs, stage marks), `labstate.ts` (`?s=`), `presets.ts`, `sound.ts` (frame tick).
+  - `src/components/lab/` — `Instrument` (shell: params | stage | time | code; Save to Journal; Share / Open in Lab),
+    `CodePanel` (two-way), `CodeEditor` (free code), `SandboxStage`, `TimeBar` (spring scrub), controls
+    (`Slider`, `NumberScrub`, `Seg`, `Field`), instruments `SpacingChart` (L1), `CurveBench` (L2), `FrameStepper` (L5).
+  - `src/components/figures/` — `SpacingTrack`, `CurveGraph` (draggable handles), `VelocityGraph`.
+  - `/lab/[id].astro` mounts instruments with `client:only` (URL state would mismatch SSR).
 
 ## Decisions
 
@@ -71,15 +90,32 @@ node scripts/shoot.mjs --pages /,/system --out ./screenshots --themes light,dark
 - Colours in code: numbers are blue pencil (the knobs, "what could be"); a changed token flashes red. Shiki uses the
   `css-variables` theme mapped to the pencil palette, so both themes work at zero JS.
 - Dev toolbar disabled (it overlapped content).
+- Svelte gotcha: never name a variable/prop `state` in a component that uses runes (`$state` becomes a store read).
+  Instruments call their state `lab`; the shell prop is `snapshot`.
+- `structuredClone` fails on `$state` proxies → codegen uses JSON clones.
+- Sandbox iframe must be created with its srcdoc (keyed `{#key srcdoc}`); changing srcdoc during the initial
+  about:blank load is dropped by Chromium. Harness starts its clock paused, waits two real frames, samples t=0,
+  triggers `.is-on`, then plays.
+- Code panel states: `synced` (doc == generated; knob changes diff+flash), `edited` (structure changed; knobs patch
+  only bound tokens), `detached` (a binding was destroyed; code runs as written). Non-synced auto-switches the stage
+  to the browser sandbox. Typing resyncs derived text after 900ms idle; dragging resyncs live.
+- The Frame Stepper steps same-origin pages only (browsers forbid touching another origin's clock); cross-origin URLs
+  load view-only with a notice.
 
 ## Known issues / todo
 
-- Spacing-chart tick labels collide where frames bunch up → the real SpacingChart must thin labels.
 - Chapters show "in preparation" on the index until their MDX exists.
 
-## Next (M2)
+## Verification helpers (not committed tests)
 
-1. `packages/codegen`: `Scene = Move[]` → dialects {css, waapi, motion, gsap, canvas}; output `{ text, bindings[{path, from, to, format, parse}], lines[{targets}] }`.
-2. `packages/editor`: bound-params field (ranges mapped through changes), drag-number, token flash, link-hover, pencil theme.
-3. Sandbox runtime (`<iframe srcdoc sandbox="allow-scripts">`) with virtual clock + sampler posting frames back.
-4. Svelte: controls (Slider, Seg, NumberScrub), `CodePanel`, `InstrumentShell`, `SpacingChart` (L1), `CurveBench` (L2), `FrameStepper` (L5); lab routes `/lab/<id>` reading `?s=` state.
+`scripts/dev/` is git-ignored scratch: `cp.mjs` drives the code panel (knob→code flash, type→knob, drag→knob,
+tab switch, stage hover→lines). Last run: all pass.
+
+## Next (M3)
+
+1. MDX figure kit: Astro wrappers for Svelte islands (`client:visible`), `SpacingChart` figure (wraps SpacingTrack +
+   playhead + onion on hover + still), `FeelAB` (judge before numbers), `Snippet` (Shiki + Copy + Open in Lab),
+   `Drill` (embedded Eye Trainer round), embedded instruments (`showCode={false}` option exists).
+2. Eye Trainer core: drill engine (60–90s rounds, score, streak), IndexedDB sessions, drills Guess the Duration and
+   Match the Curve; `/lab/eye-trainer` page.
+3. Chapters 01–03 MDX meeting §5.3 DoD.

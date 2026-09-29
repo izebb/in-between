@@ -52,7 +52,7 @@
     transition: background-color var(--dur-quick) var(--ease-out), color var(--dur-quick) var(--ease-out);
   }
   .seg > button:hover { color: var(--ink); }
-  .seg > button[aria-pressed="true"] { color: var(--ink); background: color-mix(in srgb, var(--ink) 9%, transparent); }
+  .seg > button[aria-pressed="true"], .seg > button[aria-selected="true"] { color: var(--ink); background: color-mix(in srgb, var(--ink) 9%, transparent); }
 
   /* ---------- Small-caps labels and chips ---------- */
   .label { font-family: var(--font-mono); font-size: var(--text-xs); letter-spacing: 0.08em; text-transform: uppercase; color: var(--graphite-strong); }
