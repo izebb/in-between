@@ -1,0 +1,23 @@
+---
+/**
+ * A page title written on like the index title: a blue-pencil line draws each letter's outline, then
+ * ink fills it and the pencil lifts (InkWords, motion.css). It starts when the title is in view
+ * (patterns.ts). Reduced motion: it is simply there.
+ */
+import InkWords from "./InkWords.astro";
+
+interface Props {
+  text: string;
+  as?: "h1" | "h2";
+  id?: string;
+  /** Shown before the title in graphite, e.g. a chapter number. */
+  number?: string;
+  /** Letter-spacing in em, matching the heading's type style. */
+  tracking?: number;
+}
+const { text, as: Tag = "h1", id, number, tracking = Tag === "h1" ? -0.025 : -0.015 } = Astro.props;
+---
+<Tag class="ink-h" id={id}>
+  {number && <span class="ch-n">{number}</span>}
+  <InkWords text={text} tracking={tracking} />
+</Tag>

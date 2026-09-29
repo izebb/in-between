@@ -2,36 +2,34 @@
   :root {
     --text-xs: 0.6875rem;   /* 11: captions, labels */
     --text-sm: 0.8125rem;   /* 13: UI, marginalia */
-    --text-md: 1.0625rem;   /* 17: body */
-    --text-lg: 1.375rem;    /* 22: lede */
-    --text-xl: 2rem;        /* 32: section titles */
-    --text-2xl: clamp(2.5rem, 1.6rem + 3.6vw, 4.5rem); /* chapter titles */
-    --text-3xl: clamp(3.25rem, 2rem + 6vw, 6.5rem);    /* the wordmark on the index */
-    --measure: 64ch;
+    --text-md: 1rem;        /* 16: body (mono) */
+    --text-lg: 1.3125rem;   /* 21: lede */
+    --text-xl: 1.625rem;    /* 26: section titles */
+    --text-2xl: clamp(2.25rem, 1.5rem + 3vw, 3.75rem); /* chapter titles */
+    --text-3xl: clamp(3rem, 1.75rem + 5.5vw, 6rem);    /* the wordmark on the index */
+    --measure: 68ch;
   }
 
-  h1, h2, h3, h4 { font-weight: 400; line-height: 1.1; text-wrap: balance; }
+  /* Headings: a grotesk at medium weight, tracked tight. Reading text: a mono, tracked a touch open. */
+  h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 500; line-height: 1.2; text-wrap: balance; }
 
   .display, h1 {
-    font-family: var(--font-display);
     font-size: var(--text-2xl);
-    letter-spacing: -0.01em;
-    line-height: 1;
+    letter-spacing: -0.025em;
+    line-height: 1.05;
   }
   h2 {
-    font-family: var(--font-display);
     font-size: var(--text-xl);
-    letter-spacing: -0.005em;
+    letter-spacing: -0.015em;
   }
   h3 {
-    font-family: var(--font-body);
-    font-size: var(--text-md);
-    font-weight: 600;
-    line-height: 1.35;
+    font-size: 1.125rem;
+    letter-spacing: -0.01em;
+    line-height: 1.3;
   }
   em, i { font-style: italic; }
-  .serif { font-family: var(--font-display); }
-  .serif-italic { font-family: var(--font-display); font-style: italic; }
+  /* "serif" is the historical name for the display face in the markup; it is the grotesk now. */
+  .serif, .serif-italic { font-family: var(--font-display); font-weight: 500; letter-spacing: -0.01em; font-style: normal; }
   strong, b { font-weight: 600; }
   p { text-wrap: pretty; }
 
@@ -54,9 +52,10 @@
   .lede {
     font-family: var(--font-display);
     font-size: var(--text-lg);
+    font-weight: 400;
+    letter-spacing: -0.01em;
     line-height: 1.35;
     color: var(--graphite-strong);
-    font-style: italic;
   }
 
   :not(pre) > code {

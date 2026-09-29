@@ -1,5 +1,5 @@
 /**
- * Data Stage: a small dataset, the states a chart moves between, and the geometry of every
+ * Data stage: a small dataset, the states a chart moves between, and the geometry of every
  * mark at any moment of a transition. Used by L10, the chapter 23 figures, and the
  * "Which transition lies?" drill.
  *

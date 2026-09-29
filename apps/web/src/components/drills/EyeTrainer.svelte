@@ -1,5 +1,5 @@
 <script lang="ts">
-  /** L6 · Eye Trainer: ear training for the eyes. Short scored rounds and a calibration graph. */
+  /** L6 · Eye trainer: ear training for the eyes. Short scored rounds and a calibration graph. */
   import { onMount } from "svelte";
   import { drills, drillOrder, drillNames } from "~/lib/drills";
   import { chapterByNumber, pad2, type DrillId } from "~/lib/curriculum";
@@ -81,7 +81,7 @@
       <p>Your estimates against the truth. As your eye trains, the points close in on the diagonal and the error line falls.</p>
     </div>
     {#if loaded && withData.length === 0}
-      <p class="empty">Nothing yet. Play a round of <em>Guess the Duration</em> and your first points will land here.</p>
+      <p class="empty">Nothing yet. Play a round of <em>Guess the duration</em> and your first points will land here.</p>
     {/if}
     {#each withData as id (id)}
       <div class="calib-item">

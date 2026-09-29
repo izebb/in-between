@@ -1,19 +1,21 @@
 ---
 import Base from "~/layouts/Base.astro";
 import { instruments } from "~/lib/curriculum";
+import InkTitle from "~/components/ui/InkTitle.astro";
 ---
 <Base title="The Lab" posture="lab">
   <div class="page">
-    <header class="chapter-head">
+    <header class="chapter-head" data-reveal-section>
       <span class="smallcaps part">The Lab</span>
-      <h1><span>A bench of instruments</span></h1>
-      <p class="lede">Every lesson opens one of these, pre-configured. Parameters on the left, stage in the centre, time underneath, code on the right.</p>
+      <InkTitle as="h1" text="A bench of instruments" />
+      <p class="lede" data-reveal-lines data-lines>Every lesson opens one of these, pre-configured. Parameters on the left, stage in the centre, time underneath, code on the right.</p>
     </header>
-    <div class="bench-list">
+    <div class="bench-list" data-reveal-block data-persp>
       {instruments.map((i) => (
-        <a class="bench-item" href={`/lab/${i.id}`}>
-          <span class="smallcaps">{i.code}</span>
-          <span class="serif">{i.name}</span>
+        <a class="bench-item pencil-hover" href={`/lab/${i.id}`}>
+          <svg class="ph-outline" aria-hidden="true"><rect x="0.5" y="0.5" width="100%" height="100%" pathLength="1" /></svg>
+          <span class="smallcaps ph-n">{i.code}</span>
+          <span class="serif ph-title">{i.name}</span>
           <p>{i.does}</p>
           <span class="smallcaps trains">Trains · {i.trains}</span>
         </a>

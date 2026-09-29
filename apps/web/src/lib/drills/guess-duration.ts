@@ -11,7 +11,7 @@ export interface GuessDurationSpec {
 /** Watch a move. Estimate its milliseconds. Score = error. */
 export const guessDuration: DrillDef<GuessDurationSpec, number> = {
   id: "guess-duration",
-  name: "Guess the Duration",
+  name: "Guess the duration",
   prompt: "Watch the move. How long did it take?",
   trains: "Timing: hearing 200ms as 200ms",
   unlocksAfter: 2,

@@ -1,6 +1,6 @@
 /**
  * The virtual clock. Installed into a window (a sandboxed iframe, or a same-origin page
- * in the Frame Stepper), it takes over time itself:
+ * in the Frame stepper), it takes over time itself:
  *   - requestAnimationFrame / performance.now / Date.now follow virtual time
  *   - every CSS transition, CSS animation and WAAPI animation is paused and driven by it
  * so anything on that page can be slowed, paused, stepped frame by frame, and sampled.

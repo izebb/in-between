@@ -1,8 +1,16 @@
 ---
+import RotaryDial from "./RotaryDial.svelte";
+
+// The dial stands only at the foot of the home page.
+const home = Astro.url.pathname.replace(/\/$/, "") === "";
 ---
-<footer class="site-footer page">
-  <span><span class="serif-italic">Inbetween</span> · a field manual and laboratory for motion on the web.</span>
-  <span>
-    <a href="/">Contents</a> · <a href="/lab">Lab</a> · <a href="/lab/eye-trainer">Eye Trainer</a> · <a href="/tokens.figma.json">Tokens</a>
-  </span>
+<footer class="site-footer page" data-persp-self>
+  <div class="foot-line">
+    <span><span class="serif-italic">Inbetween</span> · a field manual and laboratory for motion on the web.</span>
+    <span>
+      <a href="/">Contents</a> · <a href="/lab">Lab</a> · <a href="/lab/eye-trainer">Eye trainer</a> · <a href="/tokens.figma.json">Tokens</a>
+    </span>
+  </div>
+  <!-- A rotary dial standing on the bottom edge of the page: only its upper half is in view. -->
+  {home && <RotaryDial client:visible />}
 </footer>

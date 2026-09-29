@@ -1,6 +1,6 @@
 <script lang="ts">
   /**
-   * L5 · Frame Stepper: play anything at 1×, 0.25×, 0.1×, or step it frame by frame.
+   * L5 · Frame stepper: play anything at 1×, 0.25×, 0.1×, or step it frame by frame.
    * Page mode injects a virtual clock into a same-origin page; Code mode runs your code in the sandbox.
    */
   import { onDestroy } from "svelte";
@@ -174,7 +174,7 @@ box.animate(
   </div>
 {/snippet}
 
-<Instrument id="frame-stepper" code="L5" name="Frame Stepper" {embedded} snapshot={snapshot} codePanel={lab.mode === "code" ? codeSnip : undefined}>
+<Instrument id="frame-stepper" code="L5" name="Frame stepper" {embedded} snapshot={snapshot} codePanel={lab.mode === "code" ? codeSnip : undefined}>
   {#snippet params()}
     <div class="param-group">
       <Field label="Source">
@@ -207,7 +207,7 @@ box.animate(
       <SandboxStage dialect={lab.dialect === "css" ? "css" : "js"} code={runCode} targets={["box"]} duration={lab.pass} bind:transport={sandboxTransport} ghostEvery={2} />
     {:else}
       <div class="page-stage" use:resize={(w, h) => (stageSize = { w, h })}>
-        <iframe bind:this={iframe} {src} title="Page under the Frame Stepper" onload={onLoad}></iframe>
+        <iframe bind:this={iframe} {src} title="Page under the Frame stepper" onload={onLoad}></iframe>
         {#if trail.length > 1}
           <svg class="trail" width={stageSize.w} height={stageSize.h} aria-hidden="true">
             <path class="path" d={trailPath} />

@@ -137,7 +137,7 @@ A scroll-driven animation is an ordinary CSS animation with a different timeline
 Scroll-driven animations shipped first in Chromium and aren't in every browser yet. So build the page to work without them, and add them inside `@supports`. Where they're missing, the cards are simply there and the bar isn't drawn. In JavaScript the same timelines exist as objects, `ScrollTimeline` and `ViewTimeline`, which you pass to `element.animate()` as its `timeline`.
 
 <div class="snippets">
-<Snippet title="13 · Scroll as Time: a reading progress bar" lab="curve-bench" easing="linear" compare="--ease-out">
+<Snippet title="13 · Scroll as time: a reading progress bar" lab="curve-bench" easing="linear" compare="--ease-out">
 
 ```css
 /* As full as you are far down the page. */
@@ -167,7 +167,7 @@ Scroll-driven animations shipped first in Chromium and aren't in every browser y
 
 </Snippet>
 
-<Snippet title="13 · Scroll as Time: a reveal scrubbed by view()" lab="exposure-sheet" source="list">
+<Snippet title="13 · Scroll as time: a reveal scrubbed by view()" lab="exposure-sheet" source="list">
 
 ```css
 @keyframes reveal {
@@ -190,7 +190,7 @@ Scroll-driven animations shipped first in Chromium and aren't in every browser y
 
 </Snippet>
 
-<Snippet title="13 · Scroll as Time: a triggered reveal, the CSS" lab="exposure-sheet" source="list">
+<Snippet title="13 · Scroll as time: a triggered reveal, the CSS" lab="exposure-sheet" source="list">
 
 ```css
 /* Hidden only once the script has run (it adds .will-reveal),
@@ -209,7 +209,7 @@ Scroll-driven animations shipped first in Chromium and aren't in every browser y
 
 </Snippet>
 
-<Snippet title="13 · Scroll as Time: a triggered reveal, the observer" lab="exposure-sheet" source="list">
+<Snippet title="13 · Scroll as time: a triggered reveal, the observer" lab="exposure-sheet" source="list">
 
 ```js
 // Reveal each .reveal once, the first time it scrolls into view.

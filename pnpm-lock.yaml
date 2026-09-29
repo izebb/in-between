@@ -16,17 +16,14 @@ importers:
     dependencies:
       '@astrojs/mdx':
         specifier: 4.3.14
-        version: 4.3.14(astro@5.18.2(idb-keyval@6.3.0)(rollup@4.63.5)(typescript@5.9.3)(yaml@2.9.1))
+        version: 4.3.14(astro@5.18.2(@types/node@26.6.3)(idb-keyval@6.3.0)(rollup@4.63.5)(typescript@5.9.3)(yaml@2.9.1))
       '@astrojs/svelte':
         specifier: 7.2.5
-        version: 7.2.5(astro@5.18.2(idb-keyval@6.3.0)(rollup@4.63.5)(typescript@5.9.3)(yaml@2.9.1))(svelte@5.57.1)(typescript@5.9.3)(yaml@2.9.1)
-      '@fontsource-variable/inter':
+        version: 7.2.5(@types/node@26.6.3)(astro@5.18.2(@types/node@26.6.3)(idb-keyval@6.3.0)(rollup@4.63.5)(typescript@5.9.3)(yaml@2.9.1))(svelte@5.57.1)(typescript@5.9.3)(yaml@2.9.1)
+      '@fontsource-variable/geist':
         specifier: ^5.3.0
         version: 5.3.0
-      '@fontsource-variable/jetbrains-mono':
-        specifier: ^5.3.0
-        version: 5.3.0
-      '@fontsource/instrument-serif':
+      '@fontsource-variable/geist-mono':
         specifier: ^5.3.0
         version: 5.3.0
       '@inbetween/codegen':
@@ -40,7 +37,7 @@ importers:
         version: link:../../packages/editor
       astro:
         specifier: 5.18.2
-        version: 5.18.2(idb-keyval@6.3.0)(rollup@4.63.5)(typescript@5.9.3)(yaml@2.9.1)
+        version: 5.18.2(@types/node@26.6.3)(idb-keyval@6.3.0)(rollup@4.63.5)(typescript@5.9.3)(yaml@2.9.1)
       d3-interpolate:
         specifier: ^3.0.1
         version: 3.0.1
@@ -66,6 +63,12 @@ importers:
       '@astrojs/check':
         specifier: 0.9.10
         version: 0.9.10(@emnapi/runtime@1.11.3)(prettier@3.9.9)(typescript@5.9.3)
+      '@fontsource/geist':
+        specifier: ^5.3.0
+        version: 5.3.0
+      '@fontsource/geist-mono':
+        specifier: ^5.3.0
+        version: 5.3.0
       '@types/d3-interpolate':
         specifier: ^3.0.4
         version: 3.0.4
@@ -75,6 +78,12 @@ importers:
       '@types/d3-shape':
         specifier: ^3.1.7
         version: 3.2.0
+      '@types/node':
+        specifier: ^26.6.3
+        version: 26.6.3
+      opentype.js:
+        specifier: ^2.0.0
+        version: 2.0.0
       typescript:
         specifier: 5.9.3
         version: 5.9.3
@@ -568,14 +577,17 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@fontsource-variable/inter@5.3.0':
-    resolution: {integrity: sha512-OupL48va4JNofb97w6NYeF9S7W/kHNKM0Er8Dem5nqi4jeOLrVJDoE8tZEpnMJmtkvNbB1EIPPwHcdkF6b1oUA==}
+  '@fontsource-variable/geist-mono@5.3.0':
+    resolution: {integrity: sha512-vBbuwDEo9AkrqADMXOrlAR3DFcJi4/JxeuU43FoiQERnNwsfXNnvxvReZG02cQKmyk4DZkZdBZX3oTDvy2zBAw==}
 
-  '@fontsource-variable/jetbrains-mono@5.3.0':
-    resolution: {integrity: sha512-F32xpS2NsGYoQi2ADSkKTgpJj7ozajsGgDJ8woTnqjmIB+dxDIqImjl4pXZVEExu8UFZ2ndhmX18EBS/hdz3Lw==}
+  '@fontsource-variable/geist@5.3.0':
+    resolution: {integrity: sha512-j0m+vLQuG5XAYoHtGCVu0spvlGreR3EzpECUVzkFmI1mTVnAO38l/NEPDCFgZ177JxzYJCLSmTQibIiYPilGrA==}
 
-  '@fontsource/instrument-serif@5.3.0':
-    resolution: {integrity: sha512-mDiaIg0u67sYV59fie92Wz4sM8UiVlbL7fLxnFPCKkX15DMASEnQTREbaP5S5/3DCcsoAOcQ0sV9E4AeY4QqYQ==}
+  '@fontsource/geist-mono@5.3.0':
+    resolution: {integrity: sha512-UtJ1BBBCVpMYdIcW7nEB45UAoAw5M53ZXs2t0ciPW+IokuAAIc56M8+kW5tXbRJCTpDw4XTtU7proT6NdQAHTg==}
+
+  '@fontsource/geist@5.3.0':
+    resolution: {integrity: sha512-u03ftlfVwb05uijq2jGDJ03/HKGqMKaNFk7KOhkpBUex8+BhrAOfMs/XciJ2UUNUX9fEsZbZQld/RWMA2oFU7g==}
 
   '@img/colour@1.1.0':
     resolution: {integrity: sha512-Td76q7j57o/tLVdgS746cYARfSyxk8iEfRxewL9h4OMzYhbW4TAcppl0mT4eyqXddh6L/jwoM75mo7ixa/pCeQ==}
@@ -1016,6 +1028,9 @@ packages:
 
   '@types/nlcst@2.0.3':
     resolution: {integrity: sha512-vSYNSDe6Ix3q+6Z7ri9lyWqgGhJTmzRjZRqyq15N0Z/1/UnVsno9G/N40NBijoYx2seFDIl0+B2mgAb9mezUCA==}
+
+  '@types/node@26.6.3':
+    resolution: {integrity: sha512-dsqMQQoeTLqu9wynDD00q573mNzso3IdQOAfHRJqLCcmCFPoGo9A1bDpUcv/9tnKpErQWv9uKeGfl37EIS02Yg==}
 
   '@types/unist@2.0.11':
     resolution: {integrity: sha512-CmBKiL6NNo/OqgmMn95Fk9Whlp2mtvIv+KNpQKN2F4SjvrEesubTRWGYSg+BnWZOnlCaSTU1sMpsBOzgbYhnsA==}
@@ -1852,6 +1867,10 @@ packages:
   oniguruma-to-es@4.3.6:
     resolution: {integrity: sha512-csuQ9x3Yr0cEIs/Zgx/OEt9iBw9vqIunAPQkx19R/fiMq2oGVTgcMqO/V3Ybqefr1TBvosI6jU539ksaBULJyA==}
 
+  opentype.js@2.0.0:
+    resolution: {integrity: sha512-kCyjv6xdDY1W/jLWZ/L3QhhTlKUqDZMQ5+Jdlw12b3dXkKNpYBqqlMMj0YDQPShWFTMwgZI1hG14kN3XUDSg/A==}
+    hasBin: true
+
   p-limit@6.2.0:
     resolution: {integrity: sha512-kuUqqHNUqoIWp/c467RI4X6mmyuojY5jGutNU0wVTmEOOfcuwLqyMVoAi9MKi2Ak+5i9+nhmrK4ufZE8069kHA==}
     engines: {node: '>=18'}
@@ -2151,6 +2170,9 @@ packages:
 
   uncrypto@0.1.3:
     resolution: {integrity: sha512-Ql87qFHB3s/De2ClA9e0gsnS6zXG27SkTiSJwjCc9MebbfapQfuPzumMIUMi38ezPZVNFcHI9sUIepeQfw8J8Q==}
+
+  undici-types@8.9.0:
+    resolution: {integrity: sha512-KTDyRTYX8sWmKXAikPHHSyc63CRPETMctyjKFupcC6OBLXT3xsN0e9aF7m+mIXutFWpUXuedtowG7iLOzp0kQg==}
 
   undici@8.11.2:
     resolution: {integrity: sha512-u4UB2/IrKdU6lFxumHmmo1a3fCQO5tzQllRorfoRS63txhrB7xTpSn1PftwC4qEHkOaqP95fCWW4lJzwErwzhQ==}
@@ -2572,12 +2594,12 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@astrojs/mdx@4.3.14(astro@5.18.2(idb-keyval@6.3.0)(rollup@4.63.5)(typescript@5.9.3)(yaml@2.9.1))':
+  '@astrojs/mdx@4.3.14(astro@5.18.2(@types/node@26.6.3)(idb-keyval@6.3.0)(rollup@4.63.5)(typescript@5.9.3)(yaml@2.9.1))':
     dependencies:
       '@astrojs/markdown-remark': 6.3.11
       '@mdx-js/mdx': 3.1.1
       acorn: 8.18.0
-      astro: 5.18.2(idb-keyval@6.3.0)(rollup@4.63.5)(typescript@5.9.3)(yaml@2.9.1)
+      astro: 5.18.2(@types/node@26.6.3)(idb-keyval@6.3.0)(rollup@4.63.5)(typescript@5.9.3)(yaml@2.9.1)
       es-module-lexer: 1.7.0
       estree-util-visit: 2.0.0
       hast-util-to-html: 9.0.5
@@ -2595,14 +2617,14 @@ snapshots:
     dependencies:
       prismjs: 1.30.0
 
-  '@astrojs/svelte@7.2.5(astro@5.18.2(idb-keyval@6.3.0)(rollup@4.63.5)(typescript@5.9.3)(yaml@2.9.1))(svelte@5.57.1)(typescript@5.9.3)(yaml@2.9.1)':
+  '@astrojs/svelte@7.2.5(@types/node@26.6.3)(astro@5.18.2(@types/node@26.6.3)(idb-keyval@6.3.0)(rollup@4.63.5)(typescript@5.9.3)(yaml@2.9.1))(svelte@5.57.1)(typescript@5.9.3)(yaml@2.9.1)':
     dependencies:
-      '@sveltejs/vite-plugin-svelte': 5.1.1(svelte@5.57.1)(vite@6.4.3(yaml@2.9.1))
-      astro: 5.18.2(idb-keyval@6.3.0)(rollup@4.63.5)(typescript@5.9.3)(yaml@2.9.1)
+      '@sveltejs/vite-plugin-svelte': 5.1.1(svelte@5.57.1)(vite@6.4.3(@types/node@26.6.3)(yaml@2.9.1))
+      astro: 5.18.2(@types/node@26.6.3)(idb-keyval@6.3.0)(rollup@4.63.5)(typescript@5.9.3)(yaml@2.9.1)
       svelte: 5.57.1
       svelte2tsx: 0.7.61(svelte@5.57.1)(typescript@5.9.3)
       typescript: 5.9.3
-      vite: 6.4.3(yaml@2.9.1)
+      vite: 6.4.3(@types/node@26.6.3)(yaml@2.9.1)
     transitivePeerDependencies:
       - '@types/node'
       - jiti
@@ -2900,11 +2922,13 @@ snapshots:
   '@esbuild/win32-x64@0.27.7':
     optional: true
 
-  '@fontsource-variable/inter@5.3.0': {}
+  '@fontsource-variable/geist-mono@5.3.0': {}
 
-  '@fontsource-variable/jetbrains-mono@5.3.0': {}
+  '@fontsource-variable/geist@5.3.0': {}
 
-  '@fontsource/instrument-serif@5.3.0': {}
+  '@fontsource/geist-mono@5.3.0': {}
+
+  '@fontsource/geist@5.3.0': {}
 
   '@img/colour@1.1.0':
     optional: true
@@ -3207,25 +3231,25 @@ snapshots:
     dependencies:
       acorn: 8.18.0
 
-  '@sveltejs/vite-plugin-svelte-inspector@4.0.1(@sveltejs/vite-plugin-svelte@5.1.1(svelte@5.57.1)(vite@6.4.3(yaml@2.9.1)))(svelte@5.57.1)(vite@6.4.3(yaml@2.9.1))':
+  '@sveltejs/vite-plugin-svelte-inspector@4.0.1(@sveltejs/vite-plugin-svelte@5.1.1(svelte@5.57.1)(vite@6.4.3(@types/node@26.6.3)(yaml@2.9.1)))(svelte@5.57.1)(vite@6.4.3(@types/node@26.6.3)(yaml@2.9.1))':
     dependencies:
-      '@sveltejs/vite-plugin-svelte': 5.1.1(svelte@5.57.1)(vite@6.4.3(yaml@2.9.1))
+      '@sveltejs/vite-plugin-svelte': 5.1.1(svelte@5.57.1)(vite@6.4.3(@types/node@26.6.3)(yaml@2.9.1))
       debug: 4.4.3
       svelte: 5.57.1
-      vite: 6.4.3(yaml@2.9.1)
+      vite: 6.4.3(@types/node@26.6.3)(yaml@2.9.1)
     transitivePeerDependencies:
       - supports-color
 
-  '@sveltejs/vite-plugin-svelte@5.1.1(svelte@5.57.1)(vite@6.4.3(yaml@2.9.1))':
+  '@sveltejs/vite-plugin-svelte@5.1.1(svelte@5.57.1)(vite@6.4.3(@types/node@26.6.3)(yaml@2.9.1))':
     dependencies:
-      '@sveltejs/vite-plugin-svelte-inspector': 4.0.1(@sveltejs/vite-plugin-svelte@5.1.1(svelte@5.57.1)(vite@6.4.3(yaml@2.9.1)))(svelte@5.57.1)(vite@6.4.3(yaml@2.9.1))
+      '@sveltejs/vite-plugin-svelte-inspector': 4.0.1(@sveltejs/vite-plugin-svelte@5.1.1(svelte@5.57.1)(vite@6.4.3(@types/node@26.6.3)(yaml@2.9.1)))(svelte@5.57.1)(vite@6.4.3(@types/node@26.6.3)(yaml@2.9.1))
       debug: 4.4.3
       deepmerge: 4.3.1
       kleur: 4.1.5
       magic-string: 0.30.21
       svelte: 5.57.1
-      vite: 6.4.3(yaml@2.9.1)
-      vitefu: 1.1.3(vite@6.4.3(yaml@2.9.1))
+      vite: 6.4.3(@types/node@26.6.3)(yaml@2.9.1)
+      vitefu: 1.1.3(vite@6.4.3(@types/node@26.6.3)(yaml@2.9.1))
     transitivePeerDependencies:
       - supports-color
 
@@ -3276,6 +3300,10 @@ snapshots:
   '@types/nlcst@2.0.3':
     dependencies:
       '@types/unist': 3.0.3
+
+  '@types/node@26.6.3':
+    dependencies:
+      undici-types: 8.9.0
 
   '@types/unist@2.0.11': {}
 
@@ -3379,7 +3407,7 @@ snapshots:
 
   astring@1.9.0: {}
 
-  astro@5.18.2(idb-keyval@6.3.0)(rollup@4.63.5)(typescript@5.9.3)(yaml@2.9.1):
+  astro@5.18.2(@types/node@26.6.3)(idb-keyval@6.3.0)(rollup@4.63.5)(typescript@5.9.3)(yaml@2.9.1):
     dependencies:
       '@astrojs/compiler': 2.13.1
       '@astrojs/internal-helpers': 0.7.6
@@ -3436,8 +3464,8 @@ snapshots:
       unist-util-visit: 5.1.0
       unstorage: 1.17.5(idb-keyval@6.3.0)
       vfile: 6.0.3
-      vite: 6.4.3(yaml@2.9.1)
-      vitefu: 1.1.3(vite@6.4.3(yaml@2.9.1))
+      vite: 6.4.3(@types/node@26.6.3)(yaml@2.9.1)
+      vitefu: 1.1.3(vite@6.4.3(@types/node@26.6.3)(yaml@2.9.1))
       xxhash-wasm: 1.1.0
       yargs-parser: 21.1.1
       yocto-spinner: 0.2.3
@@ -4553,6 +4581,8 @@ snapshots:
       regex: 6.1.0
       regex-recursion: 6.0.2
 
+  opentype.js@2.0.0: {}
+
   p-limit@6.2.0:
     dependencies:
       yocto-queue: 1.2.2
@@ -4978,6 +5008,8 @@ snapshots:
 
   uncrypto@0.1.3: {}
 
+  undici-types@8.9.0: {}
+
   undici@8.11.2: {}
 
   unified@11.0.5:
@@ -5070,7 +5102,7 @@ snapshots:
       '@types/unist': 3.0.3
       vfile-message: 4.0.3
 
-  vite@6.4.3(yaml@2.9.1):
+  vite@6.4.3(@types/node@26.6.3)(yaml@2.9.1):
     dependencies:
       esbuild: 0.25.12
       fdir: 6.5.0(picomatch@4.0.7)
@@ -5079,12 +5111,13 @@ snapshots:
       rollup: 4.63.5
       tinyglobby: 0.2.17
     optionalDependencies:
+      '@types/node': 26.6.3
       fsevents: 2.3.3
       yaml: 2.9.1
 
-  vitefu@1.1.3(vite@6.4.3(yaml@2.9.1)):
+  vitefu@1.1.3(vite@6.4.3(@types/node@26.6.3)(yaml@2.9.1)):
     optionalDependencies:
-      vite: 6.4.3(yaml@2.9.1)
+      vite: 6.4.3(@types/node@26.6.3)(yaml@2.9.1)
 
   volar-service-css@0.0.71(@volar/language-service@2.4.28):
     dependencies:

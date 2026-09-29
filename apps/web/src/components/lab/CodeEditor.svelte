@@ -1,5 +1,5 @@
 <script lang="ts">
-  /** A plain editor for free code (Frame Stepper, Canvas Sandbox): pencil theme, draggable numbers. */
+  /** A plain editor for free code (Frame stepper, Canvas sandbox): pencil theme, draggable numbers. */
   import { onMount, onDestroy } from "svelte";
   import {
     EditorView,

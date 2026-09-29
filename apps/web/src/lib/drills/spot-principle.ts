@@ -10,7 +10,7 @@ export interface SpotSpec {
 /** A clip from a UI. Name the principle. */
 export const spotPrinciple: DrillDef<SpotSpec, number> = {
   id: "spot-principle",
-  name: "Spot the Principle",
+  name: "Spot the principle",
   prompt: "Which principle is this clip showing?",
   trains: "The twelve principles, recognised in UI",
   unlocksAfter: 7,

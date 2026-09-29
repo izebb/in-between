@@ -1,5 +1,5 @@
 /**
- * The Eye Trainer's drill contract. A drill makes trials, and scores answers.
+ * The Eye trainer's drill contract. A drill makes trials, and scores answers.
  * The runner handles time, streaks, storage and the calibration graph.
  */
 import type { DrillId } from "~/lib/curriculum";

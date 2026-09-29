@@ -1,6 +1,6 @@
 <script lang="ts">
   import { clone } from "~/lib/clone";
-  /** L1 · Spacing Chart: an object's positions per frame, as ghosts and as an animator's tick chart. */
+  /** L1 · Spacing chart: an object's positions per frame, as ghosts and as an animator's tick chart. */
   import { onDestroy } from "svelte";
   import { resolveMove, frameCount, fromResponse, type EasingSpec } from "@inbetween/core";
   import { move as makeMove, type Scene, type Dialect } from "@inbetween/codegen";
@@ -96,7 +96,7 @@
   <CodePanel bind:scene={lab.scene} bind:dialect={lab.dialect} {link} bind:status bind:text {running} onrun={() => (running = !running)} />
 {/snippet}
 
-<Instrument id="spacing-chart" code="L1" name="Spacing Chart" {embedded} snapshot={snapshot} {link} codePanel={showCode ? codeSnip : undefined}>
+<Instrument id="spacing-chart" code="L1" name="Spacing chart" {embedded} snapshot={snapshot} {link} codePanel={showCode ? codeSnip : undefined}>
   {#snippet params()}
     <div class="param-group">
       <Field label="Curve" link="0.easing">

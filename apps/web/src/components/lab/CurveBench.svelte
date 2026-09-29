@@ -1,6 +1,6 @@
 <script lang="ts">
   import { clone } from "~/lib/clone";
-  /** L2 · Curve Bench: a cubic-bézier editor with position and velocity side by side, plus A/B. */
+  /** L2 · Curve bench: a cubic-bézier editor with position and velocity side by side, plus A/B. */
   import { onDestroy } from "svelte";
   import { resolveMove, type EasingSpec } from "@inbetween/core";
   import { move as makeMove, type Scene, type Dialect } from "@inbetween/codegen";
@@ -87,7 +87,7 @@
   <CodePanel bind:scene={lab.scene} bind:dialect={lab.dialect} {link} bind:status bind:text {running} onrun={() => (running = !running)} />
 {/snippet}
 
-<Instrument id="curve-bench" code="L2" name="Curve Bench" {embedded} snapshot={snapshot} {link} codePanel={showCode ? codeSnip : undefined}>
+<Instrument id="curve-bench" code="L2" name="Curve bench" {embedded} snapshot={snapshot} {link} codePanel={showCode ? codeSnip : undefined}>
   {#snippet params()}
     <div class="param-group">
       <span class="label">Presets</span>

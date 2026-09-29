@@ -4,15 +4,15 @@
     color: var(--ink);
     font-family: var(--font-body);
     font-size: 100%;
-    font-feature-settings: "cv11", "ss01";
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     scrollbar-color: var(--rule) transparent;
   }
   body {
     background: var(--paper);
-    font-size: 1.0625rem; /* 17px */
+    font-size: 1rem; /* 16px, mono */
     line-height: 1.6;
+    letter-spacing: 0.01em;
     overflow-x: clip;
   }
   ::selection { background: color-mix(in srgb, var(--blue-pencil) 22%, transparent); }

@@ -28,7 +28,7 @@ const PAIRS: [StateId, StateId][] = [
 /** Two chart transitions of the same data. Pick the one that distorts. */
 export const transitionLies: DrillDef<LiesSpec, number> = {
   id: "transition-lies",
-  name: "Which Transition Lies?",
+  name: "Which transition lies?",
   prompt: "Same data, same change. Which transition distorts it?",
   trains: "Honesty: motion must not distort magnitude or identity",
   unlocksAfter: 23,

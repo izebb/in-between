@@ -81,8 +81,8 @@
   @media (max-width: 560px) { .cols { grid-template-columns: 1fr; } }
   .col { display: flex; flex-direction: column; gap: 0.4rem; border-top: 1px solid var(--rule); padding-top: 0.6rem; }
   .col .smallcaps { color: var(--graphite-strong); }
-  /* Inter has true tabular figures (the display serif doesn't). */
-  .num { font-family: var(--font-body); font-weight: 300; font-size: 2.6rem; line-height: 1; letter-spacing: -0.01em; font-variant-numeric: tabular-nums lining-nums; }
+  /* A proportional face with a tabular-figures feature: in the mono every digit is equal width anyway. */
+  .num { font-family: var(--font-display); font-weight: 300; font-size: 2.6rem; line-height: 1; letter-spacing: -0.01em; font-variant-numeric: tabular-nums lining-nums; }
   .proportional .num { font-variant-numeric: proportional-nums lining-nums; }
   .roll { display: inline-flex; }
   .digit { display: inline-block; height: 1em; overflow: hidden; line-height: 1; }

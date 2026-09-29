@@ -9,7 +9,7 @@ You will design a motion system for a product you choose, in the layers of a mot
 
 <Beat kind="see">One system, playing</Beat>
 
-These are four moments from a finished system, made for an imaginary notes app. Hover one to play it again.
+These are four moments from a finished system, made for an imaginary notes app. Hover or click one to play it again.
 
 <Figure n="25.1" caption="A notes app's moments, from one system">
   <Specimens items={[
@@ -51,7 +51,7 @@ Eight steps. Each one links back to the chapter that teaches it.
 5. **Set the policy:** reduced motion, a frequency budget, and what may run at once ([21](/chapters/21-care), [22](/chapters/22-taste)).
 6. **Build the screen's six moments:** an enter, an exit, a shared element, a gesture, a canvas moment, an animated infographic.
 7. **Document it:** a spacing chart for every primitive, captioned like a figure, and a specimen sheet.
-8. **Critique it** with the protocol from chapter 22 and the Eye Trainer. Save specimens in the Journal. Export with the Export Desk.
+8. **Critique it** with the protocol from chapter 22 and the Eye trainer. Save specimens in the Journal. Export with the Export desk.
 
 <Beat kind="more">1 · A voice</Beat>
 
@@ -153,7 +153,7 @@ The chart is information first. Each bar is keyed to its weekday, so Tuesday sta
 
 <Beat kind="more">7 · Publish it</Beat>
 
-Publish the system the way this course publishes every idea: as figures with captions. Make one spacing chart per primitive in the [Spacing Chart](/lab/spacing-chart), number your figures, and caption them in small caps, like *Fig. 1.2 — Appear, enter, 14 fr*. This is the notes app's.
+Publish the system the way this course publishes every idea: as figures with captions. Make one spacing chart per primitive in the [Spacing chart](/lab/spacing-chart), number your figures, and caption them in small caps, like *Fig. 1.2 — Appear, enter, 14 fr*. This is the notes app's.
 
 <Figure n="25.2" caption="The notes app's primitives, published">
   <SpacingChart rows={[
@@ -174,7 +174,7 @@ A finished document has five parts:
 
 1. **The voice.** Three words, and the feeling to avoid.
 2. **The token table**, with what each token is for.
-3. **A spacing chart for every primitive**, with its spec sentence from the Export Desk underneath.
+3. **A spacing chart for every primitive**, with its spec sentence from the Export desk underneath.
 4. **A specimen sheet.** Every moment of the screen, playable, with a one-line note, like Figure 25.1.
 5. **The policy**, in sentences.
 
@@ -190,13 +190,13 @@ In the example, launch felt *slow*. The cause: with twelve notes, the last row s
   <p>Two books on motion in interfaces: Val Head's <i>Designing Interface Animation</i> and Rachel Nabors' <i>Animation at Work</i>.</p>
 </Margin>
 
-Sharpen your eye before each critique with a few rounds of Blind A/B in the [Eye Trainer](/lab/eye-trainer). And keep a record. Every instrument has *Save to Journal*: save each token as you settle it, and name it with the words it earned. Over time the Journal shows what you mean by *calm*, in milliseconds.
+Sharpen your eye before each critique with a few rounds of Blind A/B in the [Eye trainer](/lab/eye-trainer). And keep a record. Every instrument has *Save to Journal*: save each token as you settle it, and name it with the words it earned. Over time the Journal shows what you mean by *calm*, in milliseconds.
 
 <Lab id="specimen-journal" />
 
 <Beat kind="tune">Export the system</Beat>
 
-The Export Desk writes one motion in every notation: CSS, Web Animations, Motion, GSAP and Canvas, plus design-token JSON and a sentence a designer can read. It opens on the notes app's `appear`: a rise of `6px` over `240ms` on `easing.out`.
+The Export desk writes one motion in every notation: CSS, Web Animations, Motion, GSAP and Canvas, plus design-token JSON and a sentence a designer can read. It opens on the notes app's `appear`: a rise of `6px` over `240ms` on `easing.out`.
 
 - Read the sentence in the handoff card. That line goes under the spacing chart of `appear` in your document.
 - Type the exit into *Any easing*, `cubic-bezier(.4, 0, 1, 1)` with `168` beside it, and press Convert. Every dialect rewrites itself. They are the same numbers in different notation.
@@ -210,7 +210,7 @@ The Export Desk writes one motion in every notation: CSS, Web Animations, Motion
 The whole example, written down: the token file, what it compiles to, one primitive, and one pattern in its CSS and JavaScript halves. The shape is this site's own. One JSON file is the single source of truth; a short build script compiles it to CSS variables and a JavaScript module, and springs become `linear()` on the way. Nothing else in the code holds a number.
 
 <div class="snippets">
-<Snippet title="25 · Your Motion System: one source of truth" lab="export-desk" easing="cubic-bezier(.3, .6, .2, 1)" duration={240} from={6} to={0} property="y">
+<Snippet title="25 · Your motion system: one source of truth" lab="export-desk" easing="cubic-bezier(.3, .6, .2, 1)" duration={240} from={6} to={0} property="y">
 
 ```json
 {
@@ -241,7 +241,7 @@ The whole example, written down: the token file, what it compiles to, one primit
 
 </Snippet>
 
-<Snippet title="25 · Your Motion System: the tokens as CSS, with the policy" lab="curve-bench" easing="cubic-bezier(.3, .6, .2, 1)" duration={240} compare="token-out">
+<Snippet title="25 · Your motion system: the tokens as CSS, with the policy" lab="curve-bench" easing="cubic-bezier(.3, .6, .2, 1)" duration={240} compare="token-out">
 
 ```css
 /* tokens.css. Compiled from tokens.json: don't edit by hand. */
@@ -287,7 +287,7 @@ The whole example, written down: the token file, what it compiles to, one primit
 
 </Snippet>
 
-<Snippet title="25 · Your Motion System: a primitive with its interruption rule" lab="curve-bench" easing="cubic-bezier(.3, .6, .2, 1)" duration={240} compare="token-in">
+<Snippet title="25 · Your motion system: a primitive with its interruption rule" lab="curve-bench" easing="cubic-bezier(.3, .6, .2, 1)" duration={240} compare="token-in">
 
 ```js
 // appear.js. One motion, written only in tokens.
@@ -332,7 +332,7 @@ export function appear(el, dir = 'in', { dist = 'nudge', delay = 0 } = {}) {
 
 </Snippet>
 
-<Snippet title="25 · Your Motion System: a pattern's timing" lab="curve-bench" easing="cubic-bezier(.65, 0, .35, 1)" duration={360}>
+<Snippet title="25 · Your motion system: a pattern's timing" lab="curve-bench" easing="cubic-bezier(.65, 0, .35, 1)" duration={360}>
 
 ```css
 /* noteOpen. The card's trip is an on-screen move: the in-out
@@ -350,7 +350,7 @@ export function appear(el, dir = 'in', { dist = 'nudge', delay = 0 } = {}) {
 
 </Snippet>
 
-<Snippet title="25 · Your Motion System: a pattern, noteOpen" lab="curve-bench" easing="cubic-bezier(.65, 0, .35, 1)" duration={360}>
+<Snippet title="25 · Your motion system: a pattern, noteOpen" lab="curve-bench" easing="cubic-bezier(.65, 0, .35, 1)" duration={360}>
 
 ```js
 // noteOpen.js. A moment of the product, built on the system.

@@ -79,7 +79,7 @@ In a chart of years, the rule reads: the bar for 2024 is the bar for 2024, in ev
 
 When two states don't hold the same data, each datum is in one of three cases, and each case needs its own motion:
 
-| The datum is… | Called | Its mark | In the Data Stage |
+| The datum is… | Called | Its mark | In the Data stage |
 |---|---|---|---|
 | in both states | update | moves and reshapes, old geometry to new | slides, grows or shrinks |
 | only in the new state | enter | a new mark, from a place that means *new* | rises from the baseline, fading in |
@@ -98,7 +98,7 @@ For a bar on an axis that starts at zero, it makes no difference. With a shared 
 - **Colour.** If a colour encodes a value, mix the value and look its colour up in the scale. Mixing the two colours directly can pass through colours that aren't in the scale at all.
 
 <Margin kind="note">
-  <p>d3-scale, d3-shape and d3-interpolate are plain functions: numbers in, numbers or path strings out. None of them touches the page. The Data Stage in this chapter uses d3-scale and d3-interpolate for its maths and Svelte for its elements.</p>
+  <p>d3-scale, d3-shape and d3-interpolate are plain functions: numbers in, numbers or path strings out. None of them touches the page. The Data stage in this chapter uses d3-scale and d3-interpolate for its maths and Svelte for its elements.</p>
 </Margin>
 
 So a transition is three small pieces of maths. Scales turn values into geometry (`scaleLinear`, `scaleBand`). Interpolators mix two values (`interpolateNumber`). Shape generators turn a list of points into a path (`line`, `area`). D3 also has a DOM layer, selections and transitions, and you don't need it: whatever already owns your elements can own them here, and D3 does the arithmetic.
@@ -124,7 +124,7 @@ This site stages its own plots the same way. As a curve plot scrolls into view (
   <p>Jeffrey Heer and George Robertson's paper <i>Animated Transitions in Statistical Data Graphics</i> (2007) sets out design guidelines for chart transitions. Two of them: stage complex transitions, and make transitions as long as needed, but no longer.</p>
 </Margin>
 
-The same order works for a change. Figure 23.1 moved everything at once, which is fine while every bar stays. When bars leave and arrive as well, stage it like a scene change: clear what's leaving, then move what stays, then bring on what's new. Each step then has one kind of motion, and the eye can follow each in turn. The Data Stage calls this *Exit · move · enter*, and you'll try it in the Tune beat below.
+The same order works for a change. Figure 23.1 moved everything at once, which is fine while every bar stays. When bars leave and arrive as well, stage it like a scene change: clear what's leaving, then move what stays, then bring on what's new. Each step then has one kind of motion, and the eye can follow each in turn. The Data stage calls this *Exit · move · enter*, and you'll try it in the Tune beat below.
 
 <Beat kind="more">Labels land on the settle</Beat>
 
@@ -161,7 +161,7 @@ In a chart, motion is read as data. A bar's length is its value, so every frame'
 
 - **Overshoot.** Put a bouncy spring or a "back" curve on a bar and it grows past its value, then comes back. For a moment the chart shows a number that isn't in the data: Hazel's bar passes 88, then settles back. In [chapter 05](/chapters/05-springs) a bounce said a thing had momentum. Data has no momentum. Use curves that stay between the start and the end, like ease-in-out, or a spring with no bounce.
 - **Out of step.** If every bar shares one clock and one curve, every frame is the true chart, scaled, and the ratios between bars never change. Give each bar its own delay or its own duration and the frames in between rank them wrong: a short bar that started early stands taller than a long one that hasn't started yet. Worst is growing every bar at the same *speed*, so that bigger values take longer: until the shortest bar stops, every bar is the same height. Keep a stagger between bars to a frame or two ([chapter 08](/chapters/08-stagger-and-hierarchy)), or leave it out.
-- **A moving ruler.** A bar's length is its value only if the axis starts at zero and stays put. Truncate the axis and small differences look huge. Change it during a move and every bar grows or shrinks, though no value did. The Data Stage fixes its axis at the largest value in either year, so a bar changes length only when its value does. If the axis has to change, move its ticks on the same clock as the bars, so the reader sees the ruler change, not the data.
+- **A moving ruler.** A bar's length is its value only if the axis starts at zero and stays put. Truncate the axis and small differences look huge. Change it during a move and every bar grows or shrinks, though no value did. The Data stage fixes its axis at the largest value in either year, so a bar changes length only when its value does. If the axis has to change, move its ticks on the same clock as the bars, so the reader sees the ruler change, not the data.
 - **Depth.** Perspective makes near things look bigger. Tilt a pie chart into 3D and the slices at the front look larger than their share. Spin it and every slice grows and shrinks as it comes round. Keep data flat and face-on.
 
 <Beat kind="more">Chapters of a chart</Beat>
@@ -193,13 +193,13 @@ An SVG chart is made of elements: each bar is a `<rect>` in the page. A canvas c
 | Crispness | vector, sharp at any zoom | a bitmap: scale it by `devicePixelRatio` or it blurs on sharp screens |
 | Text and access | real text; each mark can carry a label for screen readers | pixels only: add a table or a description |
 
-Try it in the Data Stage below: set **Draw with** to *Canvas*. The chart looks the same. Now click a bar: nothing happens. The canvas doesn't know it has bars. In SVG the browser works out which bar you clicked; on a canvas, you do. For bars, invert the band scale and ask which band the pointer is in. For scattered points, keep them in a quadtree: `find()` in d3-quadtree returns the point nearest to a position.
+Try it in the Data stage below: set **Draw with** to *Canvas*. The chart looks the same. Now click a bar: nothing happens. The canvas doesn't know it has bars. In SVG the browser works out which bar you clicked; on a canvas, you do. For bars, invert the band scale and ask which band the pointer is in. For scattered points, keep them in a quadtree: `find()` in d3-quadtree returns the point nearest to a position.
 
 A rough rule: SVG for hundreds of marks, Canvas for thousands that move. Many charts use both, with the marks on a canvas for speed and the axes and labels in SVG or HTML on top, where text stays crisp and readable. The maths doesn't change. The generators in d3-shape even draw straight onto a canvas: give one `.context(ctx)` and it calls the canvas's path methods, `moveTo`, `lineTo` and the rest, instead of returning a string.
 
 <Beat kind="tune">Stage a filter</Beat>
 
-This Data Stage stages its changes: exits first, then moves, then enters. It starts on the 2024 scores and filters them down to one group.
+This Data stage stages its changes: exits first, then moves, then enters. It starts on the 2024 scores and filters them down to one group.
 
 - Press **By group**, then **North only**, then **2024**. Watch each change happen in three parts: leaving, moving, arriving.
 - Switch **Staging** to *Together* and do it again. The leaving bars now cross the moving ones, and the eye has to sort out which is which.
@@ -215,7 +215,7 @@ This Data Stage stages its changes: exits first, then moves, then enters. It sta
 A chart transition is three pieces of maths (scales, interpolators, shape generators) and one rule: find each mark by its datum. First the reveal and the changing numbers in CSS. Then three JavaScript forms: bars keyed by id and moved with the Web Animations API, a line whose values are interpolated frame by frame, and the step that drives a scrollytelling chart.
 
 <div class="snippets">
-<Snippet title="23 · Animated Infographics: a staged reveal" lab="exposure-sheet" extra={revealLab}>
+<Snippet title="23 · Animated infographics: a staged reveal" lab="exposure-sheet" extra={revealLab}>
 
 ```css
 /* In reading order: the ruler, the data, the numbers, the point. */
@@ -266,7 +266,7 @@ A chart transition is three pieces of maths (scales, interpolators, shape genera
 
 </Snippet>
 
-<Snippet title="23 · Animated Infographics: numbers that change in place" lab="curve-bench" easing="cubic-bezier(.2,.8,.2,1)" duration={480} distance={40} property="y">
+<Snippet title="23 · Animated infographics: numbers that change in place" lab="curve-bench" easing="cubic-bezier(.2,.8,.2,1)" duration={480} distance={40} property="y">
 
 ```css
 /* Every digit the same width, so a changing number doesn't shuffle. */
@@ -306,7 +306,7 @@ A chart transition is three pieces of maths (scales, interpolators, shape genera
 
 </Snippet>
 
-<Snippet title="23 · Animated Infographics: bars keyed by datum" lab="data-stage" duration={600} easing="--ease-inout" extra={{ from: "2024", to: "north", keying: "data", staging: "staged", stagger: 0 }}>
+<Snippet title="23 · Animated infographics: bars keyed by datum" lab="data-stage" duration={600} easing="--ease-inout" extra={{ from: "2024", to: "north", keying: "data", staging: "staged", stagger: 0 }}>
 
 ```js
 import { scaleBand, scaleLinear } from 'd3-scale';
@@ -407,7 +407,7 @@ async function update(rows, max) {
 
 </Snippet>
 
-<Snippet title="23 · Animated Infographics: interpolate the data" lab="data-stage" duration={600} easing="--ease-inout" extra={{ from: "by-value", to: "2024", keying: "data", staging: "together", stagger: 0 }}>
+<Snippet title="23 · Animated infographics: interpolate the data" lab="data-stage" duration={600} easing="--ease-inout" extra={{ from: "by-value", to: "2024", keying: "data", staging: "together", stagger: 0 }}>
 
 ```js
 import { scaleLinear, scalePoint } from 'd3-scale';
@@ -453,7 +453,7 @@ morph([38, 45, 58, 66, 74, 79, 81, 77, 69, 60, 50, 41]);
 
 </Snippet>
 
-<Snippet title="23 · Animated Infographics: a scrollytelling step" lab="data-stage" duration={600} easing="--ease-inout" extra={{ from: "by-value", to: "2024", keying: "data", staging: "staged", stagger: 30 }}>
+<Snippet title="23 · Animated infographics: a scrollytelling step" lab="data-stage" duration={600} easing="--ease-inout" extra={{ from: "by-value", to: "2024", keying: "data", staging: "staged", stagger: 30 }}>
 
 ```js
 // A sticky chart beside a column of steps. Each step names a state:

@@ -223,7 +223,7 @@ CSS has no noise. It has something nearly as good for idling: several loops at o
 In JavaScript you can have real noise. The second snippet carries its own, the gradient noise described above, and drives a small wobble from a `requestAnimationFrame` loop with `dt`, so it moves at the same speed at any refresh rate. It pauses whenever the element is out of view or the tab is hidden, and it never runs under reduced motion.
 
 <div class="snippets">
-<Snippet title="18 · Organic Motion: breathing in two loops" lab="frame-stepper" dialect="css" source={breatheCss} extra={{ pass: 4000 }}>
+<Snippet title="18 · Organic motion: breathing in two loops" lab="frame-stepper" dialect="css" source={breatheCss} extra={{ pass: 4000 }}>
 
 ```css
 /* A breath and a sway whose lengths don't line up.
@@ -255,7 +255,7 @@ In JavaScript you can have real noise. The second snippet carries its own, the g
 
 </Snippet>
 
-<Snippet title="18 · Organic Motion: a noise wobble that pauses" lab="frame-stepper" dialect="js" source={wobbleJs} extra={{ pass: 4000 }}>
+<Snippet title="18 · Organic motion: a noise wobble that pauses" lab="frame-stepper" dialect="js" source={wobbleJs} extra={{ pass: 4000 }}>
 
 ```js
 // A slow, uneven wobble driven by noise. It pauses when no one

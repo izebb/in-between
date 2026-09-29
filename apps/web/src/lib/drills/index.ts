@@ -36,13 +36,13 @@ export const drillOrder: DrillId[] = [
 
 /** Display names, including drills whose trials are still being built. */
 export const drillNames: Record<DrillId, string> = {
-  "what-it-says": "What Does It Say?",
-  "guess-duration": "Guess the Duration",
-  "match-curve": "Match the Curve",
-  "which-heavier": "Which Is Heavier?",
-  "tune-to-match": "Tune to Match",
-  "spot-principle": "Spot the Principle",
-  "fix-feeling": "Fix the Feeling",
-  "transition-lies": "Which Transition Lies?",
+  "what-it-says": "What does it say?",
+  "guess-duration": "Guess the duration",
+  "match-curve": "Match the curve",
+  "which-heavier": "Which is heavier?",
+  "tune-to-match": "Tune to match",
+  "spot-principle": "Spot the principle",
+  "fix-feeling": "Fix the feeling",
+  "transition-lies": "Which transition lies?",
   "blind-ab": "Blind A/B",
 };

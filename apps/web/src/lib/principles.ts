@@ -1,7 +1,7 @@
 /**
  * The twelve principles of The Illusion of Life, each as a tiny UI clip.
  * draw(ctx, t, w, h, c): t runs 0 → 1 over one loop. Used by the ch. 07 figure and the
- * "Spot the Principle" drill.
+ * "Spot the principle" drill.
  */
 
 import { cubicBezier, easeIn, easeOut, easeInOut, spring, fromResponse, perlin1D } from "@inbetween/core";

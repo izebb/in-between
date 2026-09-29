@@ -240,14 +240,14 @@
     <div class="graphs" aria-label="Measured position and velocity">
       <div class="g">
         <span class="smallcaps">position · measured</span>
-        <svg width={GW} height={GH} aria-hidden="true">
+        <svg viewBox={`0 0 ${GW} ${GH}`} preserveAspectRatio="none" height={GH} aria-hidden="true">
           <line class="grid" x1="0" x2={GW} y1={GH} y2={GH} />
           <path class="ink" d={path(measured.pos.map((p) => ({ t: p.t, y: p.d })), measured.T, measured.dMin, measured.dMax)} />
         </svg>
       </div>
       <div class="g">
-        <span class="smallcaps">velocity · px/s, peak {Math.round(measured.vMax)}</span>
-        <svg width={GW} height={GH} aria-hidden="true">
+        <span class="smallcaps">velocity · peak {Math.round(measured.vMax)} px/s</span>
+        <svg viewBox={`0 0 ${GW} ${GH}`} preserveAspectRatio="none" height={GH} aria-hidden="true">
           <line class="grid" x1="0" x2={GW} y1={GH / 2} y2={GH / 2} />
           <path class="path" d={path(measured.vel.map((p) => ({ t: p.t, y: p.v })), measured.T, -measured.vMax, measured.vMax)} />
         </svg>
@@ -271,9 +271,12 @@
   .logs { color: var(--graphite-strong); }
   /* With the graphs in the bottom corner, the log sits under the badge instead. */
   .logs.top { top: 2rem; bottom: auto; }
-  .graphs { position: absolute; right: 0.75rem; bottom: 0.6rem; display: flex; gap: 1rem; padding: 0.5rem 0.6rem; background: color-mix(in srgb, var(--paper) 88%, transparent); border: 1px solid var(--rule); border-radius: 6px; }
-  .g { display: flex; flex-direction: column; gap: 0.2rem; }
-  .g .smallcaps { color: var(--graphite-strong); font-size: 10px; }
-  .graphs svg { display: block; overflow: visible; }
+  /* The graphs take the width they're given: in a narrow stage they shrink rather than spill out. */
+  .graphs { position: absolute; right: 0.75rem; bottom: 0.6rem; width: min(470px, calc(100% - 1.5rem)); display: flex; gap: 1rem; padding: 0.5rem 0.6rem; background: color-mix(in srgb, var(--paper) 88%, transparent); border: 1px solid var(--rule); border-radius: 6px; }
+  /* A label may wrap in a narrow stage; the graphs stay bottom-aligned under it. */
+  .g { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; justify-content: flex-end; gap: 0.2rem; }
+  .g .smallcaps { color: var(--graphite-strong); font-size: 10px; line-height: 1.3; }
+  .graphs svg { display: block; width: 100%; overflow: hidden; }
+  .graphs svg :is(path, line) { vector-effect: non-scaling-stroke; }
   @media (max-width: 640px) { .graphs { display: none; } }
 </style>

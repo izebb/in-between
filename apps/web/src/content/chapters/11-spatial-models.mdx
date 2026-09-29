@@ -125,7 +125,7 @@ A same-document view transition can run figure 11.1's push and pop. Decide the d
 Newer browsers can also hand the direction to the transition itself: pass `types: ['back']` along with the `update` callback to `startViewTransition()`, and match it in CSS with `:active-view-transition-type(back)` on the root. The attribute works wherever view transitions do.
 
 <div class="snippets">
-<Snippet title="11 · Spatial Models: push and pop as a view transition" lab="exposure-sheet" extra={push}>
+<Snippet title="11 · Spatial models: push and pop as a view transition" lab="exposure-sheet" extra={push}>
 
 ```css
 /* Which way is forward? 1: from the right. -1: from the left. */
@@ -157,7 +157,7 @@ html[dir="rtl"][data-direction="back"] { --dir: 1; }
 
 </Snippet>
 
-<Snippet title="11 · Spatial Models: pick the direction, then transition" lab="exposure-sheet" extra={push}>
+<Snippet title="11 · Spatial models: pick the direction, then transition" lab="exposure-sheet" extra={push}>
 
 ```js
 // Set the direction first, so the CSS knows which way to slide.
@@ -176,7 +176,7 @@ navigate(() => showPage('home'), 'back');  // back: from the left
 
 </Snippet>
 
-<Snippet title="11 · Spatial Models: a navigation stack in WAAPI" lab="exposure-sheet" extra={push}>
+<Snippet title="11 · Spatial models: a navigation stack in WAAPI" lab="exposure-sheet" extra={push}>
 
 ```js
 // Pages sit on top of each other (position: absolute; inset: 0)
@@ -219,7 +219,7 @@ function back() {
 
 </Snippet>
 
-<Snippet title="11 · Spatial Models: a card flip in 3D" lab="curve-bench" easing="--ease-inout" duration={480} property="rotate" to={180}>
+<Snippet title="11 · Spatial models: a card flip in 3D" lab="curve-bench" easing="--ease-inout" duration={480} property="rotate" to={180}>
 
 ```css
 .card {

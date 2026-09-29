@@ -1,6 +1,6 @@
 <script lang="ts">
   /**
-   * Draws the marks of a Data Stage transition at one moment, in SVG or on a Canvas.
+   * Draws the marks of a Data stage transition at one moment, in SVG or on a Canvas.
    * The tracked datum is drawn in red pencil so you can follow one identity through the move.
    * Value labels appear only once everything has settled: the eye arrives after the motion stops.
    */
@@ -37,7 +37,7 @@
     const p = prefs.pencils;
     c.strokeStyle = p.rule;
     c.fillStyle = p.graphite;
-    c.font = "10px ui-monospace, monospace";
+    c.font = "10px 'Geist Mono Variable', ui-monospace, monospace";
     for (const t of ticks) {
       c.beginPath();
       c.moveTo(frame.padL, y(t));

@@ -1,6 +1,6 @@
 /**
  * A Transport is anything with time you can play, pause, slow down, step and scrub.
- * The time bar (the Frame Stepper under every stage) drives a Transport and doesn't
+ * The time bar (the Frame stepper under every stage) drives a Transport and doesn't
  * care whether it's the model playhead or a sandboxed browser page.
  */
 

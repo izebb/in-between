@@ -190,7 +190,7 @@
   {/if}
   <div class="foot">
     {#if stepper}<div class="tb"><TimeBar {transport} showMs={readout} /></div>{/if}
-    <a class="btn ghost small open" href={sandboxHref}>Open in Canvas Sandbox</a>
+    <a class="btn ghost small open" href={sandboxHref}>Open in Canvas sandbox</a>
   </div>
 </div>
 

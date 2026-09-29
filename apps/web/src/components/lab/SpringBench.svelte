@@ -1,6 +1,6 @@
 <script lang="ts">
   /**
-   * L3 · Spring Bench: stiffness, damping, mass — or response and bounce, the designer's pair.
+   * L3 · Spring bench: stiffness, damping, mass — or response and bounce, the designer's pair.
    * Live graph, settle time, and the spring compiled to CSS linear().
    */
   import { onDestroy } from "svelte";
@@ -125,7 +125,7 @@
   <CodePanel bind:scene={lab.scene} bind:dialect={lab.dialect} {link} bind:status bind:text {running} onrun={() => (running = !running)} />
 {/snippet}
 
-<Instrument id="spring-bench" code="L3" name="Spring Bench" {embedded} {snapshot} {link} codePanel={showCode ? codeSnip : undefined}>
+<Instrument id="spring-bench" code="L3" name="Spring bench" {embedded} {snapshot} {link} codePanel={showCode ? codeSnip : undefined}>
   {#snippet params()}
     <div class="param-group">
       <span class="label">Presets</span>

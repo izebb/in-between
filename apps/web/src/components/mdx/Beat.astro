@@ -1,20 +1,9 @@
 ---
-/** A section heading tagged with its beat: SEE · FEEL · TUNE · WRITE · DRILL. */
+/** A section heading for one beat of a chapter (see, feel, tune, write, drill), anchored by its beat name. */
 interface Props {
   kind: "see" | "feel" | "tune" | "write" | "drill" | "more";
   id?: string;
 }
-const order = ["see", "feel", "tune", "write", "drill"] as const;
 const { kind, id } = Astro.props;
-const idx = order.indexOf(kind as (typeof order)[number]);
 ---
-{idx === -1 ? (
-  <h2 id={id}><slot /></h2>
-) : (
-  <h2 class="beat" id={id ?? kind}>
-    <span class="smallcaps" aria-hidden="true">
-      {order.map((b, i) => <>{i > 0 && " · "}{i === idx ? <b>{b}</b> : <span>{b}</span>}</>)}
-    </span>
-    <span><slot /></span>
-  </h2>
-)}
+<h2 id={id ?? (kind === "more" ? undefined : kind)}><slot /></h2>

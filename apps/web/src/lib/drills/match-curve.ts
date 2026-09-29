@@ -25,7 +25,7 @@ const HARD = [
 /** Watch a motion, pick its curve from four. */
 export const matchCurve: DrillDef<MatchCurveSpec, number> = {
   id: "match-curve",
-  name: "Match the Curve",
+  name: "Match the curve",
   prompt: "Which curve made that motion?",
   trains: "Spacing: reading a curve as speed",
   unlocksAfter: 3,

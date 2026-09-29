@@ -1,0 +1,39 @@
+---
+/**
+ * Words as Geist Medium outlines (lib/outline.ts), one SVG per word so the line still wraps, one path
+ * per letter carrying --k, its place in the stagger (0 → 1). Inside an .ink-h element they are
+ * written on in pencil and inked when it comes into view (motion.css).
+ */
+import { outline } from "~/lib/outline";
+
+interface Props {
+  text: string;
+  /** Letter-spacing in em, matching the surrounding type. */
+  tracking?: number;
+}
+const { text, tracking = -0.025 } = Astro.props;
+const o = outline(text, tracking);
+const PAD = 40;
+const n = o.words.reduce((sum, w) => sum + w.letters.length, 0);
+// Each letter starts a fraction of the way through the stagger: evenly spread, but never slower than 8% apart.
+const step = n > 1 ? Math.min(1 / (n - 1), 0.08) : 0;
+let k = 0;
+const words = o.words.map((w) => ({ ...w, ks: w.letters.map(() => (k++ * step).toFixed(3)) }));
+const h = o.bottom - o.top + 2 * PAD;
+---
+<span class="ink-words">
+  <span class="visually-hidden">{text}</span>
+  {words.map((w, wi) => (
+    <>
+      <svg
+        class="ink-w"
+        viewBox={`${-PAD} ${o.top - PAD} ${w.width + 2 * PAD} ${h}`}
+        style={`width:${(w.width + 2 * PAD) / o.em}em;height:${h / o.em}em;margin:0 ${-PAD / o.em}em;vertical-align:${(o.bottom + PAD) / -o.em}em`}
+        aria-hidden="true"
+      >
+        {w.letters.map((d, li) => <path class="ink-g" d={d} pathLength="1" style={`--k:${w.ks[li]}`} />)}
+      </svg>
+      {wi < words.length - 1 ? " " : ""}
+    </>
+  ))}
+</span>

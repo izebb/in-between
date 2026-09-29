@@ -1,0 +1,35 @@
+---
+/**
+ * A number as Geist Bold outlines (lib/outline.ts): a hairline at rest. Inside a .pencil-hover it
+ * is written over in blue pencil, one figure after the other, then inked: the page titles' write-on,
+ * played on hover (components.css). Each figure is two paths: the hairline, and the pencil and ink.
+ */
+import { outline } from "~/lib/outline";
+
+interface Props {
+  text: string;
+  class?: string;
+}
+const { text, class: cls } = Astro.props;
+// Bold, tabular figures: an outline needs body between its two edges, or the straight figures (1, 4)
+// read as wireframes; and the tabular 1 has its foot.
+const o = outline(text, 0, { weight: 700, tabular: true });
+const PAD = 40;
+const w = o.words[0];
+const h = o.bottom - o.top + 2 * PAD;
+---
+<span class:list={["o-num", cls]}>
+  <span class="visually-hidden">{text}</span>
+  <svg
+    viewBox={`${-PAD} ${o.top - PAD} ${w.width + 2 * PAD} ${h}`}
+    style={`width:${(w.width + 2 * PAD) / o.em}em;height:${h / o.em}em;margin:${-PAD / o.em}em`}
+    aria-hidden="true"
+  >
+    {w.letters.map((d, i) => (
+      <g style={`--k:${i}`}>
+        <path class="o-hair" d={d} />
+        <path class="o-ink" d={d} pathLength="1" />
+      </g>
+    ))}
+  </svg>
+</span>

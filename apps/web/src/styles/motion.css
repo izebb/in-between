@@ -46,6 +46,81 @@
     ::view-transition-new(page) { animation: ib-cut-in var(--dur-base) var(--ease-out) calc(var(--dur-base-exit) * 0.5) both !important; }
   }
 
+  /* ---------- Pattern: page titles (and the epigraph's last line) are written on, then inked ---------- */
+  .ink-words { display: inline; }
+  .ink-w { display: inline-block; overflow: visible; }
+  .ink-g {
+    fill: currentColor;
+    stroke: var(--blue-pencil);
+    stroke-width: var(--pen, 24); /* font units: about 1.1px at a page title's size */
+    stroke-linejoin: round;
+    stroke-linecap: round;
+    stroke-dasharray: 1 1;
+    stroke-opacity: 0;
+    paint-order: stroke;
+  }
+  @keyframes ib-pen { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+  @keyframes ib-ink { from { fill-opacity: 0; stroke-opacity: 1; } to { fill-opacity: 1; stroke-opacity: 0; } }
+  @media (prefers-reduced-motion: no-preference) {
+    /* Until it is in view, only the paper shows; then the pencil draws, and the ink follows it. */
+    :root.js:not([data-motion="reduce"]) .ink-h:not(.is-in) .ink-g { stroke-dashoffset: 1; fill-opacity: 0; stroke-opacity: 1; }
+    :root.js:not([data-motion="reduce"]) .ink-h.is-in .ink-g {
+      animation:
+        ib-pen calc(var(--dur-scene) * 1.2) var(--ease-inout) calc(var(--ink-start, 0s) + var(--k) * var(--dur-scene) * 1.4) both,
+        ib-ink calc(var(--dur-base) * 1.6) var(--ease-out) calc(var(--ink-start, 0s) + var(--dur-scene) + var(--k) * var(--dur-scene) * 1.4) both;
+    }
+  }
+
+  /* ---------- Pattern: masked line reveal (patterns.ts revealLines) ---------- */
+  /* Each wrapped line in its own mask: it reaches past the top and sides (hanging punctuation,
+     ascenders), so only the bottom edge clips the rising line. */
+  .rl-mask { display: block; clip-path: inset(-0.5em -1em 0 -1em); }
+  .rl-line { display: block; }
+  @media (prefers-reduced-motion: no-preference) {
+    :root.js:not([data-motion="reduce"]) [data-reveal-lines]:not(.is-in) :is([data-lines], figcaption),
+    :root.js:not([data-motion="reduce"]) [data-reveal-lines][data-lines]:not(.is-in),
+    :root.js:not([data-motion="reduce"]) [data-reveal-block]:not(.is-in) { opacity: 0; }
+  }
+
+  /* ---------- Pattern: the page unrolls as you scroll (data-persp) ---------- */
+  /* The content is one sheet: flat where you read, and curving back into the distance through the
+     bottom band of the frame, as if coming off a roll. Each child of a [data-persp] container (or a
+     [data-persp-self] element) is
+     placed on that roll by where its top edge is (a view() timeline on the page scroller, over the
+     band's height), angled to match, and seen from one camera at the middle of the sheet
+     (--persp-dx moves the camera from the block's centre to the sheet's), so the blocks read as a
+     single curved surface. Scrolling up rolls it back. Generated: radius 1.6 of the band, a gentle lean
+     (the far edge turns about 36°), fading only lightly. */
+  :root { --band: 30vh; --persp-dx: 0px; }
+  @keyframes ib-unroll {
+    0% { transform: translate(var(--persp-dx), calc(var(--band) * -1.000)) perspective(900px) translate(calc(-1 * var(--persp-dx)), calc(var(--band) * 1.000)) translateY(calc(var(--band) * -0.0638)) translateZ(calc(var(--band) * -0.3025)) rotateX(-0.6250rad); opacity: 0.200; }
+    10% { transform: translate(var(--persp-dx), calc(var(--band) * -0.900)) perspective(900px) translate(calc(-1 * var(--persp-dx)), calc(var(--band) * 0.900)) translateY(calc(var(--band) * -0.0467)) translateZ(calc(var(--band) * -0.2465)) rotateX(-0.5625rad); opacity: 0.360; }
+    20% { transform: translate(var(--persp-dx), calc(var(--band) * -0.800)) perspective(900px) translate(calc(-1 * var(--persp-dx)), calc(var(--band) * 0.800)) translateY(calc(var(--band) * -0.0329)) translateZ(calc(var(--band) * -0.1959)) rotateX(-0.5000rad); opacity: 0.520; }
+    30% { transform: translate(var(--persp-dx), calc(var(--band) * -0.700)) perspective(900px) translate(calc(-1 * var(--persp-dx)), calc(var(--band) * 0.700)) translateY(calc(var(--band) * -0.0221)) translateZ(calc(var(--band) * -0.1507)) rotateX(-0.4375rad); opacity: 0.680; }
+    40% { transform: translate(var(--persp-dx), calc(var(--band) * -0.600)) perspective(900px) translate(calc(-1 * var(--persp-dx)), calc(var(--band) * 0.600)) translateY(calc(var(--band) * -0.0140)) translateZ(calc(var(--band) * -0.1112)) rotateX(-0.3750rad); opacity: 0.840; }
+    50% { transform: translate(var(--persp-dx), calc(var(--band) * -0.500)) perspective(900px) translate(calc(-1 * var(--persp-dx)), calc(var(--band) * 0.500)) translateY(calc(var(--band) * -0.0081)) translateZ(calc(var(--band) * -0.0775)) rotateX(-0.3125rad); opacity: 1.000; }
+    60% { transform: translate(var(--persp-dx), calc(var(--band) * -0.400)) perspective(900px) translate(calc(-1 * var(--persp-dx)), calc(var(--band) * 0.400)) translateY(calc(var(--band) * -0.0042)) translateZ(calc(var(--band) * -0.0497)) rotateX(-0.2500rad); opacity: 1.000; }
+    70% { transform: translate(var(--persp-dx), calc(var(--band) * -0.300)) perspective(900px) translate(calc(-1 * var(--persp-dx)), calc(var(--band) * 0.300)) translateY(calc(var(--band) * -0.0018)) translateZ(calc(var(--band) * -0.0280)) rotateX(-0.1875rad); opacity: 1.000; }
+    80% { transform: translate(var(--persp-dx), calc(var(--band) * -0.200)) perspective(900px) translate(calc(-1 * var(--persp-dx)), calc(var(--band) * 0.200)) translateY(calc(var(--band) * -0.0005)) translateZ(calc(var(--band) * -0.0125)) rotateX(-0.1250rad); opacity: 1.000; }
+    90% { transform: translate(var(--persp-dx), calc(var(--band) * -0.100)) perspective(900px) translate(calc(-1 * var(--persp-dx)), calc(var(--band) * 0.100)) translateY(calc(var(--band) * -0.0001)) translateZ(calc(var(--band) * -0.0031)) rotateX(-0.0625rad); opacity: 1.000; }
+    100% { transform: none; opacity: 1.000; }
+  }
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      :root:not([data-motion="reduce"]) :is([data-persp] > *, [data-persp-self]) {
+        transform-origin: 50% 0;
+        animation: ib-unroll linear both;
+        animation-timeline: view();
+        animation-range: cover 0px cover var(--band);
+      }
+    }
+  }
+
+  /* ---------- Pattern: the nav indicator slides along the bar's border to the new page ---------- */
+  ::view-transition-group(nav-ink) { animation-duration: var(--dur-base); animation-timing-function: var(--ease-inout); }
+  ::view-transition-old(nav-ink) { display: none; }
+  ::view-transition-new(nav-ink) { animation: none; }
+
   /* ---------- Pattern: changed-token flash (code panel) ---------- */
   @keyframes ib-flash {
     from { background-color: color-mix(in srgb, var(--red-pencil) 28%, transparent); color: var(--red-pencil); }

@@ -1,6 +1,6 @@
 <script lang="ts">
   /**
-   * L9 · Export Desk: one motion, every notation. CSS, Web Animations, Motion, GSAP, Canvas,
+   * L9 · Export desk: one motion, every notation. CSS, Web Animations, Motion, GSAP, Canvas,
    * plus a design handoff: tokens (W3C design-token JSON) and a spec sentence a designer can read.
    */
   import { onMount, onDestroy } from "svelte";

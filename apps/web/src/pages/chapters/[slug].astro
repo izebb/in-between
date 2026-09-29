@@ -3,6 +3,7 @@ import Base from "~/layouts/Base.astro";
 import { getCollection, render } from "astro:content";
 import { chapterBySlug, chapters, pad2, partOf, instrumentById } from "~/lib/curriculum";
 import { mdxComponents } from "~/components/mdx";
+import InkTitle from "~/components/ui/InkTitle.astro";
 
 export async function getStaticPaths() {
   const entries = await getCollection("chapters");
@@ -20,10 +21,10 @@ const next = chapters.slice(idx + 1).find((c) => written.has(c.slug));
 ---
 <Base title={`${pad2(meta.number)} ${meta.title}`} description={meta.summary}>
   <article class="page chapter" data-chapter={meta.number}>
-    <header class="chapter-head prose">
+    <header class="chapter-head prose" data-reveal-section>
       <span class="smallcaps part">{part.numeral === "—" ? "Capstone" : `Part ${part.numeral} · ${part.title}`}</span>
-      <h1><span class="ch-n">{pad2(meta.number)}</span> <span>{meta.title}</span></h1>
-      <p class="lede">{entry.data.lede}</p>
+      <InkTitle as="h1" text={meta.title} number={pad2(meta.number)} />
+      <p class="lede" data-reveal-lines data-lines data-reveal-delay="base">{entry.data.lede}</p>
       <div class="meta">
         {meta.instruments.map((id) => {
           const i = instrumentById(id);
@@ -31,7 +32,7 @@ const next = chapters.slice(idx + 1).find((c) => written.has(c.slug));
         })}
       </div>
     </header>
-    <div class="prose chapter-body">
+    <div class="prose chapter-body" data-reveal-block data-persp>
       <Content components={mdxComponents} />
     </div>
     <nav class="pager prose" aria-label="Chapters">

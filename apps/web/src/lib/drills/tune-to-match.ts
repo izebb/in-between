@@ -27,7 +27,7 @@ export function springGap(a: TuneSpec, b: TuneSpec): number {
 /** A target spring plays. Match it with two knobs. */
 export const tuneToMatch: DrillDef<TuneSpec, TuneAnswer> = {
   id: "tune-to-match",
-  name: "Tune to Match",
+  name: "Tune to match",
   prompt: "Match the blue spring with your red one. Use your eyes, then submit.",
   trains: "Springs: response and bounce as feel",
   unlocksAfter: 5,

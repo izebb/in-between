@@ -1,7 +1,8 @@
 <script lang="ts">
   /**
-   * A row of UI specimens, each a small labelled motion. Hover or focus one to play it;
-   * all play once when the figure first comes into view. Still: they rest in their end state.
+   * A row of UI specimens, each a small labelled motion. Hover to preview, click or tap to play;
+   * all play once when the figure first comes into view. Still or reduced motion: they rest in their
+   * end state and play only when clicked.
    */
   import { onMount } from "svelte";
   import Mock, { type MockKind, type MockMotion } from "./Mock.svelte";
@@ -36,14 +37,24 @@
     return () => io.disconnect();
   });
 
-  const play = (i: number) => {
+  /** Hover previews only when motion is welcome; a click or tap is a request, so it always plays. */
+  const preview = (i: number) => {
     if (!prefs.reduced && !still) mocks[i]?.play();
   };
+  const request = (i: number) => mocks[i]?.play();
 </script>
 
 <div class="specimens" bind:this={root} style={columns ? `--cols:${columns}` : undefined}>
   {#each items as it, i (i)}
-    <div class="sp" role="group" aria-label={it.label} tabindex="0" onpointerenter={() => play(i)} onfocus={() => play(i)}>
+    <div
+      class="sp"
+      role="button"
+      aria-label={`${it.label}: play`}
+      tabindex="0"
+      onpointerenter={(e) => e.pointerType === "mouse" && preview(i)}
+      onclick={() => request(i)}
+      onkeydown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), request(i))}
+    >
       <Mock bind:this={mocks[i]} kind={it.kind} motion={it.motion} direction={it.direction} {height} label={it.label} />
       <span class="smallcaps lbl">{it.label}</span>
       {#if it.note}<span class="note">{it.note}</span>{/if}
@@ -53,7 +64,7 @@
 
 <style>
   .specimens { display: grid; grid-template-columns: repeat(var(--cols, auto-fit), minmax(min(100%, 170px), 1fr)); gap: 1rem; }
-  .sp { display: flex; flex-direction: column; gap: 0.35rem; border-radius: 8px; outline-offset: 4px; }
+  .sp { display: flex; flex-direction: column; gap: 0.35rem; border-radius: 8px; outline-offset: 4px; cursor: pointer; }
   .lbl { color: var(--ink); }
   .note { font-size: var(--text-sm); color: var(--graphite-strong); line-height: 1.4; }
   @media (max-width: 640px) { .specimens { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

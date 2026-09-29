@@ -2,54 +2,67 @@
 import Base from "~/layouts/Base.astro";
 import { getCollection } from "astro:content";
 import { chapters, parts, pad2, instruments } from "~/lib/curriculum";
+import TitleScrub from "~/components/ui/TitleScrub.svelte";
+import OutlineNumber from "~/components/ui/OutlineNumber.astro";
 
 const written = new Set((await getCollection("chapters")).map((c) => c.id));
 const byPart = parts.map((p) => ({ part: p, items: chapters.filter((c) => c.part === p.numeral) }));
 ---
 <Base title="Inbetween">
   <div class="page index">
-    <section class="hero">
+    <section class="hero" data-reveal-section>
       <p class="smallcaps kicker">A field manual and laboratory for motion on the web</p>
-      <h1 class="wordmark-xl">Inbetween</h1>
+      <TitleScrub client:load />
       <div class="hero-grid">
-        <p class="intro">
-          In animation, an <em class="serif-italic">inbetween</em> is a frame drawn between two keys. This course lives in
-          that gap: between design and code, between the start state and the end state, between copying a value and
-          knowing why it’s right.
-        </p>
-        <blockquote class="epigraph">
-          <p>“Animation is not the art of drawings that move, but the art of movements that are drawn.”</p>
-          <cite class="smallcaps">Norman McLaren</cite>
-        </blockquote>
+        <!-- The word the site is named for, defined as a dictionary defines it. Each part rises out of its
+             mask after the last. -->
+        <div class="dict" id="intro">
+          <p class="dict-head smallcaps" id="dict-head" data-reveal-lines data-lines data-reveal-delay="quick">Definition</p>
+          <ol class="dict-senses" role="list">
+            <li id="sense-1" data-reveal-lines data-lines data-reveal-after="#dict-head"><span class="dict-n">1</span> A frame drawn between two keys.</li>
+            <li id="sense-2" data-reveal-lines data-lines data-reveal-after="#sense-1"><span class="dict-n">2</span> The part of a motion that decides how it feels.</li>
+          </ol>
+          <p class="dict-see" id="dict-see" data-reveal-lines data-lines data-reveal-after="#sense-2">
+            <span class="smallcaps dict-see-label">See also</span>
+            <span><a href="/chapters/02-timing">timing</a>,</span> <span><a href="/chapters/03-spacing">spacing</a>,</span>
+            <a href="/chapters/15-easing-by-hand">easing</a>
+          </p>
+        </div>
+        <!-- An epigraph, set as a book sets one: small, in the reading face, ranged right, attributed.
+             Its lines rise out of their masks once it comes into view (patterns.ts revealLines). -->
+        <figure class="epigraph" data-reveal-lines data-reveal-after="#dict-see">
+          <blockquote>
+            <p data-lines>“Animation is not the art of drawings that move, but the art of movements that are drawn.”</p>
+          </blockquote>
+          <figcaption><span class="dash">—</span> <span class="smallcaps">Norman McLaren</span></figcaption>
+        </figure>
       </div>
-      <ol class="beats" role="list" aria-label="The four beats of every lesson">
-        <li><span class="smallcaps">See</span><span>a live figure shows the idea</span></li>
-        <li><span class="smallcaps">Feel</span><span>you judge it with your eyes, not numbers</span></li>
-        <li><span class="smallcaps">Tune</span><span>an instrument, one variable at a time</span></li>
-        <li><span class="smallcaps">Write</span><span>the code, last, as notation</span></li>
-      </ol>
     </section>
-
     <section class="toc" aria-labelledby="contents-h">
-      <h2 id="contents-h" class="smallcaps toc-title">Contents</h2>
+      <!-- The divider carries its label: "Contents" at its left, the tick ruler running on from it. -->
+      <div class="toc-head" data-persp-self>
+        <h2 id="contents-h" class="smallcaps toc-title" data-reveal-block>Contents</h2>
+        <div class="tick-rule" aria-hidden="true" data-reveal-block="rule"></div>
+      </div>
       {byPart.map(({ part, items }) => (
         <div class="toc-part">
-          <div class="part-head">
+          <div class="part-head" data-reveal-block data-persp-self>
             <span class="smallcaps part-n">{part.numeral === "—" ? "Capstone" : `Part ${part.numeral}`}</span>
             <h3 class="part-title serif">{part.title}</h3>
-            <p class="part-blurb">{part.blurb}</p>
+            <p class="part-blurb" data-reveal-lines data-lines>{part.blurb}</p>
           </div>
-          <ol class="rows" role="list">
-            {items.map((c) => {
+          <ol class="rows" role="list" data-persp>
+            {items.map((c, ci) => {
               const live = written.has(c.slug);
               const Tag = live ? "a" : "div";
               return (
                 <li>
-                  <Tag class:list={["row", { soon: !live }]} href={live ? `/chapters/${c.slug}` : undefined} data-specimen-row>
-                    <span class="row-n serif">{pad2(c.number)}</span>
+                  <Tag class:list={["row", { soon: !live, "pencil-hover": live }]} href={live ? `/chapters/${c.slug}` : undefined} data-specimen-row data-reveal-block data-reveal-i={ci + 1}>
+                    {live && <svg class="ph-outline" aria-hidden="true"><rect x="0.5" y="0.5" width="100%" height="100%" pathLength="1" /></svg>}
+                    <OutlineNumber class="row-n ph-n" text={pad2(c.number)} />
                     <span class="row-text">
-                      <span class="row-title serif">{c.title}</span>
-                      <span class="row-sum">{c.summary}</span>
+                      <span class="row-title serif ph-title">{c.title}</span>
+                      <span class="row-sum" data-reveal-lines data-lines>{c.summary}</span>
                     </span>
                     <canvas class="specimen" data-specimen={c.specimen} width="128" height="36" aria-hidden="true" />
                   </Tag>
@@ -62,16 +75,18 @@ const byPart = parts.map((p) => ({ part: p, items: chapters.filter((c) => c.part
     </section>
 
     <section class="bench" aria-labelledby="lab-h">
-      <div class="bench-head">
-        <h2 id="lab-h" class="smallcaps toc-title">The Lab</h2>
-        <p class="part-blurb">A bench of instruments. Parameters on the left, stage in the centre, time underneath, code on the right.</p>
+      <!-- The same divider as the contents: its label at the left, the tick ruler running on from it. -->
+      <div class="toc-head bench-head" data-persp-self>
+        <h2 id="lab-h" class="smallcaps toc-title" data-reveal-block>Lab</h2>
+        <div class="tick-rule" aria-hidden="true" data-reveal-block="rule"></div>
       </div>
-      <div class="bench-list">
-        {instruments.map((i) => (
-          <a class="bench-item" href={`/lab/${i.id}`}>
-            <span class="smallcaps">{i.code}</span>
-            <span class="serif">{i.name}</span>
-            <p>{i.does}</p>
+      <div class="bench-list" data-persp>
+        {instruments.map((i, ii) => (
+          <a class="bench-item pencil-hover" href={`/lab/${i.id}`} data-reveal-block data-reveal-i={ii % 3}>
+            <svg class="ph-outline" aria-hidden="true"><rect x="0.5" y="0.5" width="100%" height="100%" pathLength="1" /></svg>
+            <span class="smallcaps ph-n">{i.code}</span>
+            <span class="serif ph-title">{i.name}</span>
+            <p data-reveal-lines data-lines>{i.does}</p>
             <span class="smallcaps trains">Trains · {i.trains}</span>
           </a>
         ))}
@@ -83,35 +98,45 @@ const byPart = parts.map((p) => ({ part: p, items: chapters.filter((c) => c.part
 <script>
   import { createLoop, type Loop } from "@inbetween/core";
   import { specimens, readPencils } from "~/lib/specimens";
+  import { vignettes, readPalette, VW, VH } from "~/lib/vignettes";
   import { prefersReducedMotion } from "~/motion/policy";
 
+  /**
+   * Each chapter row's picture: an illustrated vignette (lib/vignettes.ts) where one exists, else the
+   * older spacing-chart specimen. At rest it shows its designed pose; on hover it plays its loop.
+   */
   function setup() {
     const canvases = [...document.querySelectorAll<HTMLCanvasElement>("canvas[data-specimen]")];
     if (!canvases.length) return;
     const dpr = Math.min(2, devicePixelRatio || 1);
     let pencils = readPencils();
+    let palette = readPalette();
 
     const draw = (cv: HTMLCanvasElement, t: number | null) => {
-      const fn = specimens[cv.dataset.specimen!];
+      const key = cv.dataset.specimen!;
       const ctx = cv.getContext("2d");
-      if (!fn || !ctx) return;
-      const w = 128, h = 36;
-      if (cv.width !== w * dpr) { cv.width = w * dpr; cv.height = h * dpr; }
+      if (!ctx) return;
+      const vig = vignettes[key];
+      const w = vig ? VW : 128, h = vig ? VH : 36;
+      if (cv.width !== w * dpr) { cv.width = w * dpr; cv.height = h * dpr; cv.style.width = `${w}px`; cv.style.height = `${h}px`; }
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, w, h);
-      fn({ ctx, w, h, c: pencils }, t);
+      if (vig) vig.draw({ ctx, w, h, c: palette }, t);
+      else specimens[key]?.({ ctx, w, h, c: pencils }, t === null ? null : t);
     };
-    const drawAllStill = () => { pencils = readPencils(); canvases.forEach((c) => draw(c, null)); };
+    const drawAllStill = () => { pencils = readPencils(); palette = readPalette(); canvases.forEach((c) => draw(c, null)); };
     drawAllStill();
+    if (import.meta.env.DEV) (window as unknown as { __ibDraw: typeof draw }).__ibDraw = draw; // for frame-by-frame checks
 
     let loop: Loop | null = null;
     const stop = (cv: HTMLCanvasElement) => { loop?.stop(); loop = null; draw(cv, null); };
     document.querySelectorAll<HTMLElement>("[data-specimen-row]").forEach((row) => {
       const cv = row.querySelector<HTMLCanvasElement>("canvas")!;
+      const period = vignettes[cv.dataset.specimen!]?.period ?? 1.2;
       const start = () => {
         if (prefersReducedMotion()) return;
         loop?.stop();
-        loop = createLoop(({ time }) => draw(cv, (time % 1.2) / 1.2));
+        loop = createLoop(({ time }) => draw(cv, (time % period) / period));
       };
       row.addEventListener("pointerenter", start);
       row.addEventListener("focus", start);
@@ -126,59 +151,82 @@ const byPart = parts.map((p) => ({ part: p, items: chapters.filter((c) => c.part
 
 <style>
   .index { padding-bottom: 2rem; }
-  .hero { padding-block: clamp(2.5rem, 8vw, 6rem) clamp(2rem, 5vw, 3.5rem); border-bottom: 1px solid var(--rule); }
+  .hero { padding-block: clamp(2.5rem, 8vw, 6rem) clamp(2rem, 5vw, 3.5rem); }
   .kicker { color: var(--graphite-strong); }
-  .wordmark-xl { font-family: var(--font-display); font-size: var(--text-3xl); line-height: 0.95; letter-spacing: -0.02em; margin-top: 0.75rem; }
-  .hero-grid { display: grid; grid-template-columns: minmax(0, 38rem) minmax(0, 18rem); justify-content: space-between; gap: 2rem 4rem; margin-top: 2rem; align-items: end; }
-  .intro { font-size: 1.1875rem; line-height: 1.55; }
-  .intro em { font-size: 1.12em; }
-  .epigraph p { font-family: var(--font-display); font-style: italic; font-size: 1.25rem; line-height: 1.3; color: var(--graphite-strong); }
-  .epigraph cite { display: block; margin-top: 0.6rem; font-style: normal; color: var(--graphite); }
-  .beats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; margin-top: 2.75rem; background: var(--rule); border: 1px solid var(--rule); }
-  .beats li { background: var(--paper); padding: 0.8rem 0.9rem; display: flex; flex-direction: column; gap: 0.2rem; font-size: var(--text-sm); color: var(--graphite-strong); }
-  .beats .smallcaps { color: var(--ink); }
+  .hero-grid { display: grid; grid-template-columns: minmax(0, 36rem) minmax(0, 20rem); justify-content: space-between; gap: 2rem 4rem; margin-top: 2rem; align-items: end; }
+  /* The intro, as a dictionary entry: a label, numbered senses in the reading mono hanging from their
+     numbers, and a see-also line aligned with the senses. */
+  .dict { --hang: 1.75rem; color: var(--ink); }
+  .dict-head { color: var(--graphite); }
+  .dict-senses { list-style: none; margin: 0.75rem 0 0; padding: 0; display: grid; gap: 0.35rem; }
+  .dict-senses li { font-size: 1.125rem; line-height: 1.55; padding-left: var(--hang); text-indent: calc(-1 * var(--hang)); }
+  /* Less the word space after it (1ch in the mono), so the text starts at the hang, where wrapped
+     lines and the see-also line start too. */
+  .dict-n { display: inline-block; width: calc(var(--hang) - 1ch); text-indent: 0; color: var(--graphite); font-variant-numeric: tabular-nums; }
+  /* While a sense is split into masked lines, only its first line hangs from the number. */
+  .dict-senses :global(.rl-mask) { text-indent: 0; }
+  .dict-senses :global(.rl-mask:first-child) { text-indent: calc(-1 * var(--hang)); clip-path: inset(-0.5em -1em 0 calc(-1 * var(--hang) - 1em)); }
+  .dict-see { margin-top: 1.1rem; padding-left: var(--hang); font-size: var(--text-sm); color: var(--graphite-strong); }
+  .dict-see-label { color: var(--graphite); margin-right: 0.5rem; }
+  .dict-see a { color: inherit; }
+  /* The epigraph, as a book sets one: a short block in the reading face, a size down, hanging quote,
+     attribution ranged right beneath it. */
+  .epigraph { margin: 0; justify-self: end; max-width: 25ch; }
+  .epigraph blockquote { margin: 0; }
+  .epigraph p { font-size: 0.875rem; line-height: 1.6; color: var(--graphite-strong); text-indent: -1ch; }
+  .epigraph figcaption { margin-top: 0.6rem; text-align: right; color: var(--graphite); font-size: 0.875rem; }
+  .epigraph .dash { margin-right: 0.15em; }
+  /* While its lines are masked for the reveal, only the first keeps the hanging quote. */
+  .epigraph :global(.rl-mask) { text-indent: 0; }
+  .epigraph :global(.rl-mask:first-child) { text-indent: -1ch; }
 
-  .toc { padding-top: 3rem; }
-  .toc-title { color: var(--graphite-strong); }
-  .toc-part { display: grid; grid-template-columns: minmax(0, 15rem) minmax(0, 1fr); gap: 1rem 3rem; padding-block: 2rem; border-bottom: 1px solid var(--rule); }
-  .part-head { position: sticky; top: 1rem; align-self: start; }
+
+  .toc-head { display: flex; align-items: baseline; gap: 1rem; }
+  /* The ruler has no text, so its baseline is its bottom edge: the label sits on the ruler's line. */
+  .toc-head .tick-rule { flex: 1; min-width: 0; }
+  .toc-title { color: var(--graphite-strong); line-height: 1; }
+  .toc-part { display: grid; grid-template-columns: minmax(0, 15rem) minmax(0, 1fr); gap: 1rem 3rem; padding-block: 2rem; }
+  /* The camera sits at the page's middle: rows are right of it (past the 15rem part column), the part
+     heads left of it (the middle of the 15rem column, from half the content width). */
+  .toc-part .rows { --persp-dx: -9rem; }
+  .part-head { --persp-dx: calc(min(50vw - var(--frame-inset) - var(--gutter), 620px - var(--gutter)) - 7.5rem); }
+  .part-head { position: sticky; top: calc(var(--header-h) + 1rem); align-self: start; }
   .part-n { color: var(--graphite); }
   .part-title { font-size: 1.75rem; line-height: 1.1; margin-top: 0.3rem; }
   .part-blurb { font-size: var(--text-sm); color: var(--graphite-strong); margin-top: 0.4rem; line-height: 1.45; }
 
   .rows { margin: 0; padding: 0; }
-  .rows li + li .row { border-top: 1px solid var(--rule); }
   .row {
     display: grid;
-    grid-template-columns: 3rem minmax(0, 1fr) 128px;
+    grid-template-columns: 3.5rem minmax(0, 1fr) 176px;
     align-items: center;
     gap: 1rem;
     padding: 0.85rem 0.5rem;
     margin-inline: -0.5rem;
     text-decoration: none;
     border-radius: 4px;
-    transition: background-color var(--dur-quick) var(--ease-out);
   }
-  a.row:hover, a.row:focus-visible { background: color-mix(in srgb, var(--ink) 3.5%, transparent); }
-  .row-n { font-size: 1.625rem; color: var(--graphite); font-variant-numeric: tabular-nums lining-nums; line-height: 1; }
+  /* The number: outline figures (OutlineNumber), a hairline at rest, inked in blue pencil on hover. */
+  .row :global(.row-n) { font-size: 2.25rem; color: var(--ph-n, var(--graphite)); --o-hair: 28; }
   .row-text { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
   .row-title { font-size: 1.4rem; line-height: 1.15; }
   .row-sum { font-size: var(--text-sm); color: var(--graphite-strong); line-height: 1.4; }
-  .specimen { width: 128px; height: 36px; opacity: 0.9; }
+  .specimen { width: 128px; height: 36px; }
   .row.soon { opacity: 0.45; }
   .row.soon .row-title::after { content: " · in preparation"; font-family: var(--font-mono); font-size: var(--text-xs); letter-spacing: 0.06em; text-transform: uppercase; color: var(--graphite); }
 
   .bench { padding-top: 4rem; }
-  .bench-head { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem 2rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
+  .bench-head { margin-bottom: 2rem; }
 
   @media (max-width: 860px) {
     .hero-grid { grid-template-columns: minmax(0, 1fr); }
-    .beats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .toc-part { grid-template-columns: minmax(0, 1fr); gap: 0.75rem; }
+    .toc-part .rows, .part-head { --persp-dx: 0px; }
     .part-head { position: static; }
   }
   @media (max-width: 560px) {
-    .row { grid-template-columns: 2.25rem minmax(0, 1fr); }
+    .row { grid-template-columns: 2.75rem minmax(0, 1fr); }
+    .row :global(.row-n) { font-size: 1.75rem; --o-hair: 36; }
     .specimen { grid-column: 2; width: 128px; }
     .row-title { font-size: 1.25rem; }
   }

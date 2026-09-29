@@ -1,6 +1,6 @@
 <script lang="ts">
   /**
-   * L8 · Specimen Journal: every lab state you saved, with the words you used for it.
+   * L8 · Specimen journal: every lab state you saved, with the words you used for it.
    * Over time the words gather numbers: what *you* mean by "snappy" or "heavy".
    */
   import { onMount } from "svelte";

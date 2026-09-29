@@ -135,7 +135,7 @@ function draw(ctx, s, width, height) {
 }
 `;
 
-[Chapter 05](/chapters/05-springs) drew springs from a formula. Give it a time and it tells you where the spring is. That works because a spring on its own is simple enough to solve once, on paper, and the Spring Bench uses that answer. Put a floor under it, a wall beside it or a finger on it, and there is usually no formula to find. What's left is the rule: how hard is everything being pushed, right now?
+[Chapter 05](/chapters/05-springs) drew springs from a formula. Give it a time and it tells you where the spring is. That works because a spring on its own is simple enough to solve once, on paper, and the Spring bench uses that answer. Put a floor under it, a wall beside it or a finger on it, and there is usually no formula to find. What's left is the rule: how hard is everything being pushed, right now?
 
 So you step. Work out the push, change the speed a little, change the position a little, move the clock on by a sliver of a second, and ask again. Every physics engine is that loop. What matters is how you take each step.
 
@@ -247,17 +247,17 @@ The remainder means the drawing can lag the simulation by up to one step. At 1/1
 
 A spring is now a handful of lines. Work out the force, `−k · (x − target) − c · v`. Divide it by the mass for the acceleration. Add that to the velocity, then add the velocity to the position. That's semi-implicit Euler, and the whole spring fits in six lines of code. They're in the notation below.
 
-How close does it get? The Spring Bench (L3) doesn't step. It uses the exact solution from chapter 05, a formula for the position at any moment. Here are both, with the spring from chapter 05's CSS: response 0.4, bounce 0.3, which is `k = 246.7`, `c = 21.99`, `m = 1`.
+How close does it get? The Spring bench (L3) doesn't step. It uses the exact solution from chapter 05, a formula for the position at any moment. Here are both, with the spring from chapter 05's CSS: response 0.4, bounce 0.3, which is `k = 246.7`, `c = 21.99`, `m = 1`.
 
-<Figure n="16.3" caption="A spring stepped by hand at 1/120 s, against the Spring Bench">
-  <CurvePlot easing={byHand.easing} duration={byHand.duration} compare="spring(response .4 bounce .3)" label="by hand · 1/120 s" compareLabel="Spring Bench · exact" />
+<Figure n="16.3" caption="A spring stepped by hand at 1/120 s, against the Spring bench">
+  <CurvePlot easing={byHand.easing} duration={byHand.duration} compare="spring(response .4 bounce .3)" label="by hand · 1/120 s" compareLabel="Spring bench · exact" />
 </Figure>
 
 The solid curve is the six lines, stepped 120 times a second. The dashed one is the bench. They nearly coincide. The stepped spring overshoots a little less, 3.3% past its target where the bench's goes 4.6%, and while it moves fastest it runs slightly ahead, by up to 4.9% of the distance. On the velocity graph the stepped spring's speed is a staircase, because it changes only once per step. Both gaps belong to the step, and both halve when the step does:
 
 | Step | Overshoot | Largest gap from the bench |
 |---|---|---|
-| Spring Bench, exact | 4.6% | none |
+| Spring bench, exact | 4.6% | none |
 | 1/60 s | 2.0% | 10% |
 | 1/120 s | 3.3% | 4.9% |
 | 1/240 s | 4.0% | 2.4% |
@@ -296,17 +296,17 @@ This is the weight on a spring from chapter 05, with its code. It takes one step
 
 CSS can't step anything. A transition knows a start, an end and a duration, and nothing about forces, so it can't feel a floor or a push halfway through. There are two ways to hand physics to it:
 
-- **Bake it.** Work the motion out ahead of time and play it back as `linear()`. The Spring Bench does this with the exact formula; for anything without one, step it. The browser can often run the result off the main thread, but it's a recording: it can't be pushed or interrupted.
+- **Bake it.** Work the motion out ahead of time and play it back as `linear()`. The Spring bench does this with the exact formula; for anything without one, step it. The browser can often run the result off the main thread, but it's a recording: it can't be pushed or interrupted.
 - **Drive it.** Step in JavaScript every frame and write the result to a `transform`, with no transition at all. CSS only draws. This is the real thing, and the only way when the motion has to react.
 
 <div class="snippets">
-<Snippet title="16 · Physics by Hand: a stepped spring, baked into linear()" lab="spring-bench" response={0.4} bounce={0.3} property="scale" to={1}>
+<Snippet title="16 · Physics by hand: a stepped spring, baked into linear()" lab="spring-bench" response={0.4} bounce={0.3} property="scale" to={1}>
 
 ```css
 /* A spring stepped by hand, ahead of time: bake(246.7, 21.99)
    from the cards below (response 0.4, bounce 0.3). One stop per
    frame at 60Hz, so the stops need no percentages. Within 1% of
-   the Spring Bench's exact curve. */
+   the Spring bench's exact curve. */
 :root {
   --spring-pop: linear(0, 0.0324, 0.1104, 0.2155, 0.3333, 0.4529, 0.567,
     0.6707, 0.7612, 0.8375, 0.8994, 0.948, 0.9845, 1.0106, 1.028, 1.0384,
@@ -328,7 +328,7 @@ CSS can't step anything. A transition knows a start, an end and a duration, and 
 
 </Snippet>
 
-<Snippet title="16 · Physics by Hand: a spring in 6 lines, on a fixed step" lab="canvas-sandbox" source={fixedSpring}>
+<Snippet title="16 · Physics by hand: a spring in 6 lines, on a fixed step" lab="canvas-sandbox" source={fixedSpring}>
 
 ```js
 function step(s, target, dt, k = 170, c = 26, m = 1) {
@@ -364,7 +364,7 @@ requestAnimationFrame(frame);
 
 </Snippet>
 
-<Snippet title="16 · Physics by Hand: bake a spring for CSS" lab="spring-bench" response={0.4} bounce={0.3} property="scale" to={1}>
+<Snippet title="16 · Physics by hand: bake a spring for CSS" lab="spring-bench" response={0.4} bounce={0.3} property="scale" to={1}>
 
 ```js
 // Step the spring ahead of time and keep one x per frame.
@@ -393,7 +393,7 @@ root.setProperty('--spring-pop-dur', `${pop.duration}ms`);
 
 </Snippet>
 
-<Snippet title="16 · Physics by Hand: gravity, a floor, a bounce, friction" lab="canvas-sandbox" source={floorBalls}>
+<Snippet title="16 · Physics by hand: gravity, a floor, a bounce, friction" lab="canvas-sandbox" source={floorBalls}>
 
 ```js
 const GRAVITY = 1200;     // px/s², downwards

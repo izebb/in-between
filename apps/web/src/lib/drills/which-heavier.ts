@@ -15,7 +15,7 @@ export interface WhichHeavierSpec {
 /** Two objects, same path. Which is heavier? */
 export const whichHeavier: DrillDef<WhichHeavierSpec, number> = {
   id: "which-heavier",
-  name: "Which Is Heavier?",
+  name: "Which is heavier?",
   prompt: "Two balls drop and bounce. Which one is heavier?",
   trains: "Weight: reading mass from timing and spacing",
   unlocksAfter: 4,

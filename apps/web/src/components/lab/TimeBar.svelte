@@ -1,6 +1,6 @@
 <script lang="ts">
   /**
-   * TIME: scrubber · frame counter · rate · step. The Frame Stepper (L5) lives under every stage.
+   * TIME: scrubber · frame counter · rate · step. The Frame stepper (L5) lives under every stage.
    * Scrubbing drives the playhead through a real spring (spring.snappy) with velocity carry-over,
    * so it feels like a physical dial. Under reduced motion it tracks the pointer directly.
    */
@@ -144,7 +144,7 @@
 
   <div class="counter mono" aria-live="off">
     <span><b>{String(frame).padStart(String(totalFrames).length, "0")}</b>/{totalFrames} fr</span>
-    {#if showMs}<span class="ms">{Math.round(transport.time)}ms</span>{/if}
+    {#if showMs}<span class="ms">{Math.round(Math.min(transport.time, transport.duration))}ms</span>{/if}
   </div>
 </div>
 </div>

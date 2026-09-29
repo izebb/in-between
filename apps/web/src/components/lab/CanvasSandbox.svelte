@@ -1,6 +1,6 @@
 <script lang="ts">
   /**
-   * L7 · Canvas Sandbox: motion from scratch. setup(), update(state, dt), draw(ctx, state, w, h)
+   * L7 · Canvas sandbox: motion from scratch. setup(), update(state, dt), draw(ctx, state, w, h)
    * are scaffolded; edits hot-reload and keep state. dt and fps are read out; the refresh rate
    * can be simulated (30 / 60 / 120Hz) to see which code survives.
    */
@@ -109,7 +109,7 @@ function draw(ctx, s, width, height) {
   </div>
 {/snippet}
 
-<Instrument id="canvas-sandbox" code="L7" name="Canvas Sandbox" {embedded} {snapshot} codePanel={codeSnip} layout="code-first">
+<Instrument id="canvas-sandbox" code="L7" name="Canvas sandbox" {embedded} {snapshot} codePanel={codeSnip} layout="code-first">
   {#snippet params()}
     <div class="param-group">
       <Field label="Start from">

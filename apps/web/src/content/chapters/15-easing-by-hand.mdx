@@ -198,7 +198,7 @@ Two dots follow the ring: blue with `K` per frame, red with `HALF_LIFE` in secon
 Easing by hand is three small functions and a loop. CSS can run the curves themselves: `cubic-bezier()` for anything up to a cubic, `linear()` samples for the rest. A chase stays in JavaScript. It has no duration, and CSS transitions are built around one.
 
 <div class="snippets">
-<Snippet title="15 · Easing by Hand: hand-written curves as cubic-bezier" lab="curve-bench" easing="cubic-bezier(.333,0,.667,1)" duration={600} compare="linear">
+<Snippet title="15 · Easing by hand: hand-written curves as cubic-bezier" lab="curve-bench" easing="cubic-bezier(.333,0,.667,1)" duration={600} compare="linear">
 
 ```css
 /* Easings written by hand, as CSS. With its x values at a third
@@ -219,7 +219,7 @@ Easing by hand is three small functions and a loop. CSS can run the curves thems
 
 </Snippet>
 
-<Snippet title="15 · Easing by Hand: any curve as linear() stops" lab="spacing-chart" easing="linear(0, 0.0005, 0.004, 0.0135, 0.032, 0.0625, 0.108, 0.1715, 0.256, 0.3645, 0.5, 0.6355, 0.744, 0.8285, 0.892, 0.9375, 0.968, 0.9865, 0.996, 0.9995, 1)" duration={600}>
+<Snippet title="15 · Easing by hand: any curve as linear() stops" lab="spacing-chart" easing="linear(0, 0.0005, 0.004, 0.0135, 0.032, 0.0625, 0.108, 0.1715, 0.256, 0.3645, 0.5, 0.6355, 0.744, 0.8285, 0.892, 0.9375, 0.968, 0.9865, 0.996, 0.9995, 1)" duration={600}>
 
 ```css
 /* mirror(t => t * t * t), the in-out cubic, which no single
@@ -235,7 +235,7 @@ Easing by hand is three small functions and a loop. CSS can run the curves thems
 
 </Snippet>
 
-<Snippet title="15 · Easing by Hand: lerp, easings and a tween" lab="curve-bench" easing="cubic-bezier(.333,0,.667,1)" duration={600} distance={240}>
+<Snippet title="15 · Easing by hand: lerp, easings and a tween" lab="curve-bench" easing="cubic-bezier(.333,0,.667,1)" duration={600} distance={240}>
 
 ```js
 const lerp = (a, b, t) => a + (b - a) * t;
@@ -278,7 +278,7 @@ toLinear(easeInOutCubic); // the stops in the card above
 
 </Snippet>
 
-<Snippet title="15 · Easing by Hand: a chase that counts seconds" lab="canvas-sandbox" source={follow}>
+<Snippet title="15 · Easing by hand: a chase that counts seconds" lab="canvas-sandbox" source={follow}>
 
 ```js
 // Close a share of the gap per second, not per frame.

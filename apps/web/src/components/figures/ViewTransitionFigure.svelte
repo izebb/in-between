@@ -45,8 +45,8 @@
     const tag = document.createElement("style");
     tag.textContent = styleFor();
     document.head.appendChild(tag);
-    // The page's own chapter cut is a view transition on <main>: keep it out of this one.
-    const main = document.querySelector<HTMLElement>("main");
+    // The page's own chapter cut is a view transition on the page scroller: keep it out of this one.
+    const main = document.querySelector<HTMLElement>("[data-scroller]");
     const prevName = main?.style.viewTransitionName ?? "";
     if (main) main.style.viewTransitionName = "none";
     const vt = doc.startViewTransition(async () => {

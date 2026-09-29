@@ -1,6 +1,6 @@
 <script lang="ts">
   /**
-   * L10 · Data Stage: a chart that moves between states — sort, filter, regroup, update.
+   * L10 · Data stage: a chart that moves between states — sort, filter, regroup, update.
    * Swap the interpolation (keep identity or not), the stagger, the staging; draw it in SVG or on a Canvas.
    * Scrub the transition on the time bar. Click a bar to follow one datum through the move.
    */
@@ -121,7 +121,7 @@ rows.forEach((d, i) => {
   </div>
 {/snippet}
 
-<Instrument id="data-stage" code="L10" name="Data Stage" {embedded} {snapshot} codePanel={embedded ? undefined : codeSnip}>
+<Instrument id="data-stage" code="L10" name="Data stage" {embedded} {snapshot} codePanel={embedded ? undefined : codeSnip}>
   {#snippet params()}
     <div class="param-group">
       <span class="label">Go to</span>

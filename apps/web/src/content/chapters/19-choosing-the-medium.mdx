@@ -86,7 +86,7 @@ Two questions decide which one to use: what is moving, and how many of it.
 
 <Beat kind="see">A change, and a process</Beat>
 
-Four small pieces of interface. Hover one to play it again.
+Four small pieces of interface. Hover or click one to play it again.
 
 <Figure n="19.1" caption="Four state changes: a start, an end, the frames between">
   <Specimens items={[
@@ -213,7 +213,7 @@ Then change one thing. Type `spring.snappy` into *Any easing* and convert. CSS a
 The same small move twice: first as a state change in CSS, then as an animation your code holds. Then the canvas habits from above, in code.
 
 <div class="snippets">
-<Snippet title="19 · Choosing the Medium: a state change in CSS" lab="export-desk" easing="--ease-out" duration={280} distance={240}>
+<Snippet title="19 · Choosing the medium: a state change in CSS" lab="export-desk" easing="--ease-out" duration={280} distance={240}>
 
 ```css
 /* Name both ends; the browser draws the frames between. */
@@ -229,7 +229,7 @@ The same small move twice: first as a state change in CSS, then as an animation 
 
 </Snippet>
 
-<Snippet title="19 · Choosing the Medium: the same move, held by code" lab="export-desk" easing="--ease-out" duration={280} distance={240}>
+<Snippet title="19 · Choosing the medium: the same move, held by code" lab="export-desk" easing="--ease-out" duration={280} distance={240}>
 
 ```js
 // The same move, but now it's an object your code holds.
@@ -254,7 +254,7 @@ button.addEventListener('click', () => move.reverse());
 
 </Snippet>
 
-<Snippet title="19 · Choosing the Medium: many dots, one path, no garbage" lab="canvas-sandbox" source={manyDots}>
+<Snippet title="19 · Choosing the medium: many dots, one path, no garbage" lab="canvas-sandbox" source={manyDots}>
 
 ```js
 // Many dots, one canvas. Everything is allocated once, in setup().
@@ -303,7 +303,7 @@ function draw(ctx, s, w, h) {
 
 </Snippet>
 
-<Snippet title="19 · Choosing the Medium: hand the canvas to a worker">
+<Snippet title="19 · Choosing the medium: hand the canvas to a worker">
 
 ```js
 // main.js: size the canvas, then give it away.
@@ -326,7 +326,7 @@ canvas.addEventListener('pointermove', (e) => {
 
 </Snippet>
 
-<Snippet title="19 · Choosing the Medium: the worker draws">
+<Snippet title="19 · Choosing the medium: the worker draws">
 
 ```js
 // worker.js: draws on its own thread, with its own animation frames.

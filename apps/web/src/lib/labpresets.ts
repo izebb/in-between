@@ -19,7 +19,7 @@ export interface LabShorthand {
   property?: Property;
   fps?: number;
   dialect?: string;
-  /** Free code (Frame Stepper, Canvas Sandbox). */
+  /** Free code (Frame stepper, Canvas sandbox). */
   source?: string;
   /** Spring bench. */
   response?: number;

@@ -4,7 +4,7 @@
     --page-max: 1240px;
     --rail: 15rem;
     --rail-gap: 3.5rem;
-    --header-h: 76px;
+    --header-h: 58px;
   }
 
   .page {
@@ -14,22 +14,70 @@
     padding-inline: var(--gutter);
   }
 
-  /* ---------- Header: the peg bar is the one ornament we allow ---------- */
+  /* ---------- The frame: the site is one sheet on a hatched ground. Only the sheet scrolls. ---------- */
+  :root {
+    --frame-inset: clamp(8px, 1.8vw, 24px);
+    --frame-radius: 0;
+    /* The ground the sheet sits on, and its hatching: one 8px tile, so every stroke is the same weight. */
+    --ground: color-mix(in srgb, var(--paper) 92%, var(--ink));
+    --hatch-ink: color-mix(in srgb, var(--ink) 18%, transparent);
+    --hatch-tile: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8'%3E%3Cpath d='M-1 1l2-2M0 8l8-8M7 9l2-2' stroke='black' stroke-width='1'/%3E%3C/svg%3E");
+  }
+  @media (max-width: 640px) { :root { --frame-inset: 8px; } }
+  html, body { height: 100%; overflow: hidden; }
+  body { background-color: var(--ground); }
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: var(--hatch-ink);
+    -webkit-mask: var(--hatch-tile) 0 0 / 8px 8px repeat;
+    mask: var(--hatch-tile) 0 0 / 8px 8px repeat;
+    pointer-events: none;
+  }
+  .frame {
+    position: fixed;
+    inset: var(--frame-inset);
+    display: flex;
+    flex-direction: column;
+    background: var(--paper);
+    border: 1px solid color-mix(in srgb, var(--ink) 16%, transparent);
+    border-radius: var(--frame-radius);
+    overflow: hidden;
+    box-shadow: 0 18px 50px -32px rgb(0 0 0 / 0.35);
+  }
+  .scroller {
+    flex: 1;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    /* The content starts below the header and scrolls up under it. */
+    padding-top: var(--header-h);
+    scroll-padding-top: calc(var(--header-h) + 1.25rem);
+  }
+  .scroller:focus { outline: none; }
+
+  /* ---------- Header: frosted glass pinned over the top of the frame ---------- */
   .site-header {
-    position: relative;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: var(--scrollbar-w, 0px); /* leave a classic scrollbar uncovered */
     z-index: 20;
+    height: var(--header-h);
+    background: color-mix(in srgb, var(--paper) 94%, transparent);
+    border-bottom: 1px solid var(--rule);
   }
-  .pegbar {
-    display: block;
-    width: 100%;
-    height: 22px;
-    color: var(--graphite);
+  @supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+    .site-header {
+      background: color-mix(in srgb, var(--paper) 62%, transparent);
+      -webkit-backdrop-filter: saturate(170%) blur(16px);
+      backdrop-filter: saturate(170%) blur(16px);
+    }
   }
-  .pegbar .rule { stroke: var(--rule); }
-  .pegbar .hole { fill: var(--paper); stroke: var(--graphite); }
-  :root[data-theme="dark"] .pegbar .hole { fill: rgba(255, 248, 230, 0.10); }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) .pegbar .hole { fill: rgba(255, 248, 230, 0.10); }
+  @media (prefers-reduced-transparency: reduce) {
+    .site-header { background: var(--paper); -webkit-backdrop-filter: none; backdrop-filter: none; }
   }
 
   .masthead {
@@ -37,31 +85,48 @@
     align-items: baseline;
     justify-content: space-between;
     gap: 1rem;
-    padding-block: 0.5rem 1rem;
+    height: 100%;
+    align-items: stretch;
   }
+  .wordmark { align-self: center; }
   .wordmark {
     font-family: var(--font-display);
-    font-size: 1.625rem;
+    font-weight: 500;
+    font-size: 1.375rem;
     line-height: 1;
     text-decoration: none;
-    letter-spacing: -0.01em;
+    letter-spacing: -0.03em;
   }
   .wordmark em { color: var(--graphite-strong); }
+  /* Navigation reads like a label: small mono capitals, tracked open. */
   .site-nav {
     display: flex;
-    align-items: center;
-    gap: clamp(0.75rem, 2.4vw, 1.75rem);
-    font-size: var(--text-sm);
+    align-items: stretch;
+    gap: clamp(0.7rem, 2.4vw, 1.75rem);
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
   }
-  .site-nav a { text-decoration: none; color: var(--graphite-strong); }
+  .site-nav a { position: relative; display: flex; align-items: center; text-decoration: none; color: var(--graphite-strong); white-space: nowrap; }
+  .site-nav button { font: inherit; letter-spacing: inherit; text-transform: inherit; }
+  /* Inside the frame a phone has a little less width: tighten the bar so it stays on one line. */
+  @media (max-width: 480px) {
+    :root { --header-h: 52px; }
+    .masthead { gap: 0.75rem; }
+    .wordmark { font-size: 1.125rem; }
+    .site-nav { gap: 0.6rem; font-size: 0.6875rem; }
+  }
   .site-nav a:hover, .site-nav a[aria-current="page"] { color: var(--ink); }
-  .site-nav a[aria-current="page"] { text-decoration: underline; text-decoration-color: var(--ink); text-underline-offset: 0.35em; }
+  /* The indicator lives on the bar's bottom border. It is one named element, so a page change
+     slides it from the old item to the new one (the pattern is in motion.css). */
+  .nav-ink { position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; background: var(--ink); view-transition-name: nav-ink; pointer-events: none; }
 
   /* ---------- Reading posture: a 64ch column and a right rail ---------- */
   .prose {
     font-size: var(--text-md);
     max-width: calc(var(--measure) + var(--rail) + var(--rail-gap));
     padding-right: calc(var(--rail) + var(--rail-gap));
+    --persp-dx: calc((var(--rail) + var(--rail-gap)) / 2); /* the text column sits left of the sheet's middle */
     margin-inline: auto;
   }
   .prose > * + * { margin-top: 1.1em; }
@@ -73,7 +138,7 @@
   .prose > ul > li::marker, .prose > ol > li::marker { color: var(--graphite); }
   .prose blockquote {
     font-family: var(--font-display);
-    font-style: italic;
+    letter-spacing: -0.01em;
     font-size: var(--text-lg);
     line-height: 1.35;
     color: var(--graphite-strong);
@@ -116,7 +181,7 @@
   .margin-note a { color: var(--ink); }
 
   @media (max-width: 1080px) {
-    .prose { max-width: var(--measure); padding-right: 0; }
+    .prose { max-width: var(--measure); padding-right: 0; --persp-dx: 0px; }
     .prose > .plate, .prose > .wide { width: 100%; }
     .margin-note {
       float: none;
@@ -131,9 +196,17 @@
   .site-footer {
     margin-top: 6rem;
     border-top: 1px solid var(--rule);
-    padding-block: 1.5rem 3rem;
+    /* At least the unroll band tall, so at the end of the page it has scrolled flat, and the
+       dial (its last child) sits flush on the page's bottom edge. */
+    min-height: var(--band, 0px);
+    display: flex;
+    flex-direction: column;
+    gap: 2.5rem;
     font-size: var(--text-sm);
     color: var(--graphite-strong);
+  }
+  .foot-line {
+    padding-top: 1.5rem;
     display: flex;
     flex-wrap: wrap;
     justify-content: space-between;

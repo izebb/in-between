@@ -1,14 +1,15 @@
 ---
 import Base from "~/layouts/Base.astro";
 import EyeTrainer from "~/components/drills/EyeTrainer.svelte";
+import InkTitle from "~/components/ui/InkTitle.astro";
 ---
-<Base title="L6 Eye Trainer" description="Perception drills for motion: guess the duration, match the curve, and more. Scored, with a calibration graph." posture="lab">
+<Base title="L6 Eye trainer" description="Perception drills for motion: guess the duration, match the curve, and more. Scored, with a calibration graph." posture="lab">
   <div class="page">
-    <header class="chapter-head">
+    <header class="chapter-head" data-reveal-section>
       <span class="smallcaps part">Lab · L6</span>
-      <h1><span>Eye Trainer</span></h1>
-      <p class="lede">Ear training for the eyes. Short rounds, scored, with streaks. These drills turn knowledge into instinct.</p>
+      <InkTitle as="h1" text="Eye trainer" />
+      <p class="lede" data-reveal-lines data-lines>Ear training for the eyes. Short rounds, scored, with streaks. These drills turn knowledge into instinct.</p>
     </header>
-    <EyeTrainer client:only="svelte" />
+    <div data-reveal-block><EyeTrainer client:only="svelte" /></div>
   </div>
 </Base>

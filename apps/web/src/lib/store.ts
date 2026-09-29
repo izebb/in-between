@@ -40,7 +40,7 @@ export interface DrillSession {
   score: number;
   streak: number;
   trials: Trial[];
-  /** Where it was played: the Eye Trainer or a chapter. */
+  /** Where it was played: the Eye trainer or a chapter. */
   source: string;
 }
 

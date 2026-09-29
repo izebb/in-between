@@ -1,5 +1,5 @@
 ---
-/** A short Eye Trainer round inside a chapter. <Drill kind="guess-duration" trials={5} /> */
+/** A short Eye trainer round inside a chapter. <Drill kind="guess-duration" trials={5} /> */
 import DrillRunner from "../drills/DrillRunner.svelte";
 import type { DrillId } from "~/lib/curriculum";
 interface Props {
@@ -13,7 +13,7 @@ const { kind, trials = 5, chapter, topic } = Astro.props;
 ---
 <section class="drill-plate wide" aria-label="Drill">
   <DrillRunner client:visible drill={kind} mode="short" {trials} {topic} source={chapter ? `chapter-${chapter}` : "chapter"} />
-  <a class="more smallcaps" href={`/lab/eye-trainer?drill=${kind}`}>Full rounds and your calibration in the Eye Trainer →</a>
+  <a class="more smallcaps" href={`/lab/eye-trainer?drill=${kind}`}>Full rounds and your calibration in the Eye trainer →</a>
 </section>
 <style>
   .drill-plate { border: 1px solid var(--rule); border-radius: 8px; padding: clamp(1rem, 3vw, 1.5rem); background: var(--plate-bg); margin-block: 2.5rem !important; display: flex; flex-direction: column; gap: 1rem; }

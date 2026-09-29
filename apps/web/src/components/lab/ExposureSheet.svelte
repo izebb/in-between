@@ -1,6 +1,6 @@
 <script lang="ts">
   /**
-   * L4 · Exposure Sheet: keyframes, offsets and staggers across several elements.
+   * L4 · Exposure sheet: keyframes, offsets and staggers across several elements.
    * Who leads, who follows, and how much they overlap.
    */
   import { onDestroy } from "svelte";
@@ -164,7 +164,7 @@
   <CodePanel bind:scene={lab.scene} bind:dialect={lab.dialect} {link} bind:status bind:text {running} onrun={() => (running = !running)} />
 {/snippet}
 
-<Instrument id="exposure-sheet" code="L4" name="Exposure Sheet" {embedded} {snapshot} {link} codePanel={showCode ? codeSnip : undefined}>
+<Instrument id="exposure-sheet" code="L4" name="Exposure sheet" {embedded} {snapshot} {link} codePanel={showCode ? codeSnip : undefined}>
   {#snippet params()}
     <div class="param-group">
       <span class="label">Start from</span>

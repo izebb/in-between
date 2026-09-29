@@ -6,6 +6,7 @@
 import Base from "~/layouts/Base.astro";
 import Figure from "~/components/mdx/Figure.astro";
 import Margin from "~/components/mdx/Margin.astro";
+import InkTitle from "~/components/ui/InkTitle.astro";
 import tokens from "~/motion/tokens.json";
 import { spring as springTokens, exitDuration } from "~/motion/tokens";
 import { cubicBezier } from "@inbetween/core";
@@ -30,8 +31,8 @@ const curvePath = Array.from({ length: 61 }, (_, i) => {
   <div class="page sheet">
     <header class="chapter-head prose">
       <span class="smallcaps part">System · specimen sheet</span>
-      <h1><span class="ch-n">§</span> <span>The Animator’s Desk</span></h1>
-      <p class="lede">Paper, graphite, and two pencils. Everything on this page is a token; nothing is ad hoc.</p>
+      <InkTitle as="h1" text="The animator’s desk" number="§" />
+      <p class="lede" data-reveal-lines data-lines>Paper, graphite, and two pencils. Everything on this page is a token; nothing is ad hoc.</p>
     </header>
 
     <div class="prose">
@@ -53,9 +54,9 @@ const curvePath = Array.from({ length: 61 }, (_, i) => {
 
       <h2>Type</h2>
       <div class="wide type-specimens">
-        <div><span class="smallcaps">Display · Instrument Serif</span><p class="t-display"><span class="ch-n">02</span> Timing</p></div>
-        <div><span class="smallcaps">Body · Inter</span><p>Duration is weight, mood, and importance. A heavy thing takes longer to start and longer to stop.</p></div>
-        <div><span class="smallcaps">Numbers · JetBrains Mono</span><p class="mono t-mono">280ms · cubic-bezier(.2, .8, .2, 1) · 17 fr</p></div>
+        <div><span class="smallcaps">Display · Geist</span><p class="t-display"><span class="ch-n">02</span> Timing</p></div>
+        <div><span class="smallcaps">Body · Geist Mono</span><p>Duration is weight, mood, and importance. A heavy thing takes longer to start and longer to stop.</p></div>
+        <div><span class="smallcaps">Numbers · Geist Mono</span><p class="mono t-mono">280ms · cubic-bezier(.2, .8, .2, 1) · 17 fr</p></div>
         <div><span class="smallcaps">Caption</span><p class="smallcaps">Fig. 2.3 — Ease-out, 12 fr, spacing chart</p></div>
       </div>
 
@@ -123,7 +124,7 @@ const curvePath = Array.from({ length: 61 }, (_, i) => {
         <button class="btn ghost">Ghost</button>
         <button class="btn solid">Open in Lab</button>
         <div class="seg"><button aria-pressed="true">CSS</button><button>WAAPI</button><button>Motion</button><button>GSAP</button><button>Canvas</button></div>
-        <span class="chip">L2 · Curve Bench</span>
+        <span class="chip">L2 · Curve bench</span>
       </div>
       <p class="fig-note">Curve for --ease-out:</p>
       <svg width="200" height="140" viewBox="-10 -10 200 140" class="fig" aria-hidden="true">

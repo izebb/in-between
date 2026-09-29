@@ -1,7 +1,7 @@
 /**
  * Canvas programs used by chapter figures. Each is plain JS source with
  * setup(w, h) → state, update(state, dt), draw(ctx, state, w, h), optional onPointer.
- * The same source opens in the Canvas Sandbox (L7), so readers can edit what they just watched.
+ * The same source opens in the Canvas sandbox (L7), so readers can edit what they just watched.
  * Globals: params, pointer, pencils, and the helpers in prelude.ts.
  */
 

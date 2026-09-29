@@ -59,6 +59,13 @@
     /** Delay multiplier for staggered parts. */
     order?: number;
     origin?: string;
+    /** The frames were measured against this origin, so a motion's `origin` must not replace it. */
+    lockOrigin?: boolean;
+    /**
+     * A gesture made of several beats (press, then pop) carries its easing on each keyframe and runs
+     * linear overall: one curve across all the beats would squeeze the first beat into a few ms.
+     */
+    beats?: boolean;
   }
 
   function partsFor(k: MockKind, d: number, w: number, h: number): Part[] {
@@ -93,13 +100,57 @@
           { sel: ".m-switch", frames: [{ backgroundColor: "var(--rule)" }, { backgroundColor: "var(--ink)" }] },
         ];
       case "like":
-        return [{ sel: ".m-heart", frames: [{ transform: "scale(1)" }, { transform: "scale(0.82)", offset: 0.25 }, { transform: "scale(1.18)", offset: 0.6 }, { transform: "scale(1)" }] }];
+        // Unliked (outline) → the press squashes it flat → it fills and stretches up → settles, liked.
+        return [{
+          sel: ".m-heart",
+          origin: "50% 85%",
+          beats: true,
+          frames: [
+            { transform: "none", fill: "transparent", offset: 0, easing: "ease-in" },
+            { transform: "scale(1.18, 0.78)", fill: "transparent", offset: 0.28, easing: "ease-out" },
+            { transform: "scale(0.9, 1.16)", fill: "var(--red-pencil)", offset: 0.56, easing: "ease-in-out" },
+            { transform: "scale(1.04, 0.97)", offset: 0.8, easing: "ease-out" },
+            { transform: "none", fill: "var(--red-pencil)" },
+          ],
+        }];
       case "drop":
         return [{ sel: ".m-ball", frames: [{ transform: `translateY(-${h - 70}px)` }, { transform: "none" }] }];
-      case "expand":
-        return [{ sel: ".m-panel", frames: [{ transform: "translate(-38%, 22%) scale(0.22, 0.3)", borderRadius: "14px" }, { transform: "none", borderRadius: "8px" }], origin: "center" }];
-      case "swap":
-        return [{ sel: ".m-mover", frames: [{ transform: "translate(0, 0)" }, { transform: "translate(150px, 46px)" }] }];
+      case "expand": {
+        // FLIP: start the panel exactly on the tile it opens from, so it reads as that tile growing.
+        const panel = root.querySelector<HTMLElement>(".m-panel")!;
+        const tile = root.querySelector<HTMLElement>(".m-grid .m-open")!;
+        const sx = tile.offsetWidth / panel.offsetWidth;
+        const sy = tile.offsetHeight / panel.offsetHeight;
+        const dx = tile.offsetLeft - panel.offsetLeft;
+        const dy = tile.offsetTop - panel.offsetTop;
+        return [
+          {
+            sel: ".m-panel",
+            origin: "top left",
+            lockOrigin: true,
+            // The radius is counter-scaled so the start frame has the tile's own 6px corners.
+            frames: [
+              { transform: `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})`, borderRadius: `${6 / sx}px / ${6 / sy}px` },
+              { transform: "none", borderRadius: "8px" },
+            ],
+          },
+          // The panel's content would be squashed while it grows, so it fades in once there's room.
+          { sel: ".m-panel .l", frames: [{ opacity: 0 }, { opacity: 0, offset: 0.45 }, { opacity: 1 }] },
+        ];
+      }
+      case "swap": {
+        // Measured from the layout: the item starts in the left list's first slot and ends as the
+        // right list's third. The two items it leaves behind move up one slot to close the gap.
+        const mover = root.querySelector<HTMLElement>(".m-mover")!;
+        const stays = root.querySelectorAll<HTMLElement>(".m-stay");
+        const dx = stays[0].offsetLeft - mover.offsetLeft;
+        const dy = stays[0].offsetTop - mover.offsetTop;
+        const pitch = stays[1].offsetTop - stays[0].offsetTop;
+        return [
+          { sel: ".m-mover", frames: [{ transform: `translate(${dx}px, ${dy}px)` }, { transform: "none" }] },
+          { sel: ".m-stay", frames: [{ transform: `translateY(${pitch}px)` }, { transform: "none" }] },
+        ];
+      }
       case "tabs":
         return [{ sel: ".m-ink", frames: [{ transform: "translateX(0)" }, { transform: "translateX(100%)" }] }];
       case "badge":
@@ -127,11 +178,12 @@
     const anims: Animation[] = [];
     for (const p of parts) {
       root.querySelectorAll<HTMLElement>(p.sel).forEach((el) => {
-        if (p.origin || (motion.origin && /menu|dialog|panel|badge/.test(p.sel))) el.style.transformOrigin = motion.origin ?? p.origin!;
+        if (p.lockOrigin) el.style.transformOrigin = p.origin!;
+        else if (p.origin || (motion.origin && /menu|dialog|panel|badge/.test(p.sel))) el.style.transformOrigin = motion.origin ?? p.origin!;
         const frames = dir === "enter" ? p.frames : [...p.frames].reverse().map((f) => ({ ...f, offset: f.offset != null ? 1 - (f.offset as number) : undefined }));
         const a = el.animate(frames, {
           duration: none ? 0 : t.duration,
-          easing: t.easing,
+          easing: p.beats ? "linear" : t.easing,
           delay: none ? 0 : (p.order ?? 0) * (motion.stagger ?? 0),
           fill: "both",
         });
@@ -200,11 +252,13 @@
   {:else if kind === "drop"}
     <div class="m-floor"><div class="m-ball"></div></div>
   {:else if kind === "expand"}
-    <div class="m-grid"><span></span><span></span><span></span><span></span></div>
+    <div class="m-grid"><span class="m-open"></span><span></span><span></span><span></span></div>
     <div class="m-panel"><div class="l w50 dark"></div><div class="l w90"></div><div class="l w80"></div></div>
   {:else if kind === "swap"}
-    <div class="m-cols"><div class="m-col"><span></span><span></span><span></span></div><div class="m-col"><span></span><span></span></div></div>
-    <div class="m-mover"></div>
+    <div class="m-cols">
+      <div class="m-col"><span class="m-stay"></span><span class="m-stay"></span></div>
+      <div class="m-col"><span></span><span></span><span class="m-mover"></span></div>
+    </div>
   {:else if kind === "tabs"}
     <div class="m-tabs"><span>Day</span><span>Week</span><span>Month</span><div class="m-ink"></div></div>
     <div class="m-page low"><div class="l w80"></div><div class="l w60"></div></div>
@@ -265,7 +319,7 @@
   .m-knob { width: 18px; height: 18px; border-radius: 50%; background: var(--paper); transform: translateX(22px); }
 
   .m-heart-wrap { position: absolute; inset: 0; display: grid; place-items: center; }
-  .m-heart { width: 54px; height: 54px; fill: var(--red-pencil); }
+  .m-heart { width: 54px; height: 54px; fill: var(--red-pencil); stroke: var(--red-pencil); stroke-width: 1.6; stroke-linejoin: round; overflow: visible; }
 
   .m-floor { position: absolute; left: 20%; right: 20%; bottom: 22px; height: 1px; background: var(--graphite); }
   .m-ball { position: absolute; left: 50%; bottom: 0; width: 22px; height: 22px; margin-left: -11px; border-radius: 50%; background: var(--red-pencil); }
@@ -277,7 +331,7 @@
   .m-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; height: 100%; }
   .m-col { display: flex; flex-direction: column; gap: 8px; padding: 8px; border: 1px dashed var(--rule); border-radius: 6px; }
   .m-col span { height: 22px; border-radius: 5px; background: var(--m-softer); }
-  .m-mover { position: absolute; left: 24px; top: 24px; width: calc(50% - 38px); height: 22px; border-radius: 5px; background: var(--ink); transform: translate(150px, 46px); }
+  .m-col span.m-mover { position: relative; z-index: 1; background: var(--ink); }
 
   .m-tabs { position: relative; display: grid; grid-template-columns: repeat(3, 1fr); font-family: var(--font-mono); font-size: 11px; color: var(--graphite-strong); text-align: center; padding-bottom: 8px; border-bottom: 1px solid var(--rule); }
   .m-ink { position: absolute; left: 0; bottom: -1px; width: 33.333%; height: 2px; background: var(--ink); transform: translateX(100%); }

@@ -126,12 +126,12 @@
 <svelte:window onkeydown={key} />
 
 {#if !def || !Trial}
-  <div class="runner"><p class="fine">This drill is still being built. It will appear here and in the Eye Trainer.</p></div>
+  <div class="runner"><p class="fine">This drill is still being built. It will appear here and in the Eye trainer.</p></div>
 {:else}
 <div class="runner" data-drill={drill}>
   <header class="r-head">
     <div class="r-title">
-      <span class="smallcaps">Eye Trainer · {def.kind === "estimate" ? "estimate" : "choose"}</span>
+      <span class="smallcaps">Eye trainer · {def.kind === "estimate" ? "estimate" : "choose"}</span>
       <span class="serif">{def.name}</span>
     </div>
     {#if phase !== "intro"}

@@ -9,7 +9,7 @@ An arrival is news. It tells you something is here, and where, so it deserves a 
 
 <Beat kind="see">Four arrivals, four departures</Beat>
 
-Each specimen comes in, waits, and leaves. Hover one to play it again. Watch it twice: once for how it arrives, once for how it goes.
+Each specimen comes in, waits, and leaves. Hover or click one to play it again. Watch it twice: once for how it arrives, once for how it goes.
 
 <Figure n="9.1" caption="Four things arrive and leave, each from its own place">
   <Specimens items={[
@@ -163,7 +163,7 @@ A is this site's exit curve, `--ease-in`, at 200ms. B, in blue, is the enter cur
 In CSS, put the enter's timing on the open state and the exit's on the closed state, and give the enter a start with `@starting-style`. In JavaScript, play the exit first and remove the element only when `animation.finished` resolves. Remove it straight away and the exit never shows.
 
 <div class="snippets">
-<Snippet title="09 · Enter, Exit, Change: a menu from its button" lab="curve-bench" easing="--ease-out" duration={180} compare="token-in">
+<Snippet title="09 · Enter, exit, change: a menu from its button" lab="curve-bench" easing="--ease-out" duration={180} compare="token-in">
 
 ```css
 /* <button popovertarget="sort">Sort</button>
@@ -206,7 +206,7 @@ In CSS, put the enter's timing on the open state and the exit's on the closed st
 
 </Snippet>
 
-<Snippet title="09 · Enter, Exit, Change: remove after the exit" lab="curve-bench" easing="--ease-in" duration={196} compare="token-out">
+<Snippet title="09 · Enter, exit, change: remove after the exit" lab="curve-bench" easing="--ease-in" duration={196} compare="token-out">
 
 ```js
 // Enter on --ease-out. Exit on --ease-in, in 0.7× the time.

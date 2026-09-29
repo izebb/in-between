@@ -26,7 +26,7 @@
     /** Extra header actions. */
     actions?: Snippet;
     minHeight?: string;
-    /** "code-first": editor on the left, stage on the right (Canvas Sandbox). */
+    /** "code-first": editor on the left, stage on the right (Canvas sandbox). */
     layout?: "standard" | "code-first";
   }
   let { id, code, name, embedded = false, snapshot, link = new LinkState(), params, stage, time, codePanel, actions, minHeight, layout = "standard" }: Props = $props();

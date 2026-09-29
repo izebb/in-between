@@ -64,6 +64,13 @@
   }
 
   /* ---------- Chapter header ---------- */
+  /* A divider drawn as a frame ruler: a tick per frame, a taller one every fifth, like a timeline. */
+  .tick-rule {
+    height: 10px;
+    background:
+      linear-gradient(to right, color-mix(in srgb, var(--ink) 30%, transparent) 1px, transparent 1px) 0 100% / 40px 10px repeat-x,
+      linear-gradient(to right, color-mix(in srgb, var(--ink) 16%, transparent) 1px, transparent 1px) 0 100% / 8px 5px repeat-x;
+  }
   .chapter-head { padding-block: clamp(2rem, 6vw, 4.5rem) 2rem; }
   .chapter-head .part { color: var(--graphite-strong); }
   .chapter-head h1 { display: flex; align-items: baseline; gap: 0.35em; margin-top: 0.9rem; }
@@ -72,9 +79,6 @@
   .chapter-head .meta { margin-top: 1.5rem; display: flex; flex-wrap: wrap; gap: 0.5rem; }
 
   /* The four beats: SEE → FEEL → TUNE → WRITE → DRILL */
-  .beat { display: flex; flex-direction: column; gap: 0.45rem; }
-  .beat .smallcaps { color: var(--graphite-strong); }
-  .beat .smallcaps b { color: var(--ink); font-weight: 500; }
 
   /* ---------- Prev / next ---------- */
   .pager {
@@ -132,8 +136,90 @@
 
   /* ---------- Cards for lab bench / drills ---------- */
   .bench-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); border-top: 1px solid var(--rule); border-left: 1px solid var(--rule); }
-  .bench-item { background: var(--paper); border-right: 1px solid var(--rule); border-bottom: 1px solid var(--rule); padding: 1.1rem 1.1rem 1.25rem; text-decoration: none; display: flex; flex-direction: column; gap: 0.35rem; min-height: 9.5rem; transition: background-color var(--dur-quick) var(--ease-out); }
-  .bench-item:hover { background: var(--paper-raised); }
+  .bench-item { background: var(--paper); border-right: 1px solid var(--rule); border-bottom: 1px solid var(--rule); padding: 1.1rem 1.1rem 1.25rem; text-decoration: none; display: flex; flex-direction: column; gap: 0.35rem; min-height: 9.5rem; }
+
+  /* Hover: a blue-pencil outline is drawn as one line, from the top-left, all the way round until it
+     meets itself (an SVG rect, dashed to its own perimeter); leaving, it's taken back the way it came.
+     The title turns blue and the index number a light tint of the same blue (also offered as --ph-n,
+     for pages whose own styles colour the number). Under reduced motion the outline fades instead. */
+  .pencil-hover { position: relative; --ph-radius: 4px; }
+  .ph-outline { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+  .ph-outline rect {
+    width: calc(100% - 1px);
+    height: calc(100% - 1px);
+    rx: var(--ph-radius);
+    fill: none;
+    stroke: var(--blue-pencil);
+    stroke-width: 1;
+    /* One dash the length of the outline, and a longer gap: with a gap of exactly 1 the next dash
+       would begin at the closed path's end (its start), leaving a speck in the corner at rest. */
+    stroke-dasharray: 1 2;
+    stroke-dashoffset: 1;
+    transition: stroke-dashoffset calc(var(--dur-base) * 1.5) var(--ease-in);
+  }
+  .pencil-hover:focus-visible .ph-outline rect { stroke-dashoffset: 0; transition: stroke-dashoffset calc(var(--dur-scene) * 1.5) var(--ease-inout); }
+  .pencil-hover :is(.ph-title, .ph-n) { transition: color var(--dur-quick) var(--ease-out); }
+  .pencil-hover:focus-visible .ph-title { color: var(--blue-pencil); }
+  .pencil-hover:focus-visible { --ph-n: color-mix(in srgb, var(--blue-pencil) 55%, var(--paper)); }
+  .pencil-hover:focus-visible .ph-n { color: var(--ph-n); }
+  @media (hover: hover) {
+    .pencil-hover:hover .ph-outline rect { stroke-dashoffset: 0; transition: stroke-dashoffset calc(var(--dur-scene) * 1.5) var(--ease-inout); }
+    .pencil-hover:hover .ph-title { color: var(--blue-pencil); }
+    .pencil-hover:hover { --ph-n: color-mix(in srgb, var(--blue-pencil) 55%, var(--paper)); }
+    .pencil-hover:hover .ph-n { color: var(--ph-n); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ph-outline rect { stroke-dashoffset: 0; opacity: 0; transition: opacity var(--dur-quick) var(--ease-out); }
+    .pencil-hover:is(:hover, :focus-visible) .ph-outline rect { opacity: 1; }
+  }
+  :root[data-motion="reduce"] .ph-outline rect { stroke-dashoffset: 0; opacity: 0; transition: opacity var(--dur-quick) var(--ease-out); }
+  :root[data-motion="reduce"] .pencil-hover:is(:hover, :focus-visible) .ph-outline rect { opacity: 1; }
+  .bench-item.pencil-hover { --ph-radius: 0px; }
+
+  /* ---------- Outline numerals (OutlineNumber.astro) ----------
+     A hairline in the number's colour at rest. On a .pencil-hover's hover the blue pencil draws over
+     each figure in turn, and light-blue ink fills it once the pencil is round; leaving, the ink lifts
+     and the pencil retracts, quicker. --o-hair is the hairline in font units (1000 per em), so about
+     1px at the size it is set. Under reduced motion the inked figure fades in instead. */
+  .o-num { display: inline-flex; }
+  .o-num svg { display: block; overflow: visible; }
+  .o-hair { fill: none; stroke: currentColor; stroke-width: var(--o-hair, 28); }
+  .o-ink {
+    fill: color-mix(in srgb, var(--blue-pencil) 55%, var(--paper));
+    fill-opacity: 0;
+    stroke: var(--blue-pencil);
+    stroke-width: calc(var(--o-hair, 28) * 1.4);
+    stroke-linejoin: round;
+    stroke-linecap: round;
+    stroke-dasharray: 1 2; /* as .ph-outline: no speck where the path closes */
+    stroke-dashoffset: 1;
+    transition:
+      stroke-dashoffset calc(var(--dur-base) * 1.2) var(--ease-in),
+      fill-opacity var(--dur-quick) var(--ease-in);
+  }
+  .pencil-hover:focus-visible .o-ink {
+    stroke-dashoffset: 0;
+    fill-opacity: 1;
+    transition:
+      stroke-dashoffset calc(var(--dur-scene) * 1.2) var(--ease-inout) calc(var(--k) * var(--dur-instant)),
+      fill-opacity calc(var(--dur-base) * 1.6) var(--ease-out) calc(var(--dur-scene) + var(--k) * var(--dur-instant));
+  }
+  @media (hover: hover) {
+    .pencil-hover:hover .o-ink {
+      stroke-dashoffset: 0;
+      fill-opacity: 1;
+      transition:
+        stroke-dashoffset calc(var(--dur-scene) * 1.2) var(--ease-inout) calc(var(--k) * var(--dur-instant)),
+        fill-opacity calc(var(--dur-base) * 1.6) var(--ease-out) calc(var(--dur-scene) + var(--k) * var(--dur-instant));
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .o-ink, .pencil-hover:is(:hover, :focus-visible) .o-ink { stroke-dashoffset: 0; fill-opacity: 1; opacity: 0; transition: opacity var(--dur-quick) var(--ease-out); }
+    .pencil-hover:is(:hover, :focus-visible) .o-ink { opacity: 1; }
+  }
+  :root[data-motion="reduce"] :is(.o-ink, .pencil-hover:is(:hover, :focus-visible) .o-ink) { stroke-dashoffset: 0; fill-opacity: 1; opacity: 0; transition: opacity var(--dur-quick) var(--ease-out); }
+  :root[data-motion="reduce"] .pencil-hover:is(:hover, :focus-visible) .o-ink { opacity: 1; }
+
   .bench-item .serif { font-size: 1.5rem; line-height: 1.1; }
   .bench-item p { font-size: var(--text-sm); color: var(--graphite-strong); line-height: 1.45; }
   .bench-item .trains { margin-top: auto; }

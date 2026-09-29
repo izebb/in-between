@@ -154,6 +154,14 @@
           }
         },
         {
+          "name": "easing/reveal",
+          "type": "STRING",
+          "description": "masked text reveals (expo-out): lines rising out of a mask",
+          "values": {
+            "Default": "cubic-bezier(0.16, 1, 0.3, 1)"
+          }
+        },
+        {
           "name": "spring/snappy/response",
           "type": "FLOAT",
           "description": "direct manipulation",

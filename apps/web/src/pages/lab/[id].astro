@@ -54,6 +54,6 @@ const built: InstrumentId[] = ["spacing-chart", "curve-bench", "frame-stepper", 
   .used { color: var(--graphite); margin-left: auto; }
   .used a { color: var(--graphite-strong); }
   .soon { padding: 4rem 0; font-family: var(--font-display); font-size: var(--text-xl); color: var(--graphite-strong); }
-  :global(.posture-lab .instrument) { min-height: calc(100dvh - 190px); }
+  :global(.posture-lab .instrument) { min-height: calc(100dvh - 2 * var(--frame-inset) - 170px); }
   :global(.posture-lab .site-footer) { margin-top: 2rem; }
 </style>

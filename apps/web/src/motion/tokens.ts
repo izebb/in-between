@@ -3,8 +3,8 @@
 export const duration = {"instant":90,"quick":180,"base":280,"scene":480} as const;
 export const exitDuration = {"instant":63,"quick":126,"base":196,"scene":336} as const;
 export const exitRatio = 0.7;
-export const easing = {"out":[0.2,0.8,0.2,1],"in":[0.4,0,1,1],"inout":[0.65,0,0.35,1]} as const;
-export const easingCss = {"out":"cubic-bezier(0.2, 0.8, 0.2, 1)","in":"cubic-bezier(0.4, 0, 1, 1)","inout":"cubic-bezier(0.65, 0, 0.35, 1)"} as const;
+export const easing = {"out":[0.2,0.8,0.2,1],"in":[0.4,0,1,1],"inout":[0.65,0,0.35,1],"reveal":[0.16,1,0.3,1]} as const;
+export const easingCss = {"out":"cubic-bezier(0.2, 0.8, 0.2, 1)","in":"cubic-bezier(0.4, 0, 1, 1)","inout":"cubic-bezier(0.65, 0, 0.35, 1)","reveal":"cubic-bezier(0.16, 1, 0.3, 1)"} as const;
 export const spring = {
   "snappy": {
     "response": 0.3,
@@ -30,7 +30,7 @@ export const spring = {
 export const distance = {"rise":4,"nudge":8,"travel":24} as const;
 export const stagger = {"step":30} as const;
 export const color = {"paper":{"light":"#F5F3EE","dark":"#0E0F11"},"paper-raised":{"light":"#FAF9F5","dark":"#15161A"},"ink":{"light":"#16161A","dark":"#ECEAE4"},"graphite":{"light":"#8A8880","dark":"#6B6A66"},"graphite-strong":{"light":"#5E5C56","dark":"#9A9892"},"rule":{"light":"#E2DED5","dark":"#1F2024"},"blue-pencil":{"light":"#3D6BFF","dark":"#7C9BFF"},"red-pencil":{"light":"#FF3B1F","dark":"#FF5A3C"},"glow":{"light":"rgba(255,248,230,0)","dark":"rgba(255,248,230,.06)"}} as const;
-export const usage = {"duration":{"instant":"press states, toggles","quick":"hovers, small reveals","base":"panels, cards","scene":"page and chapter transitions"},"easing":{"out":"enter","in":"exit (exits are faster: ~0.7× enter)","inout":"on-screen moves"},"spring":{"snappy":"direct manipulation","soft":"playful confirmations"},"distance":{"rise":"page cut, figure reveal","nudge":"small enters: tooltips, menus","travel":"panels arriving from an edge"}} as const;
+export const usage = {"duration":{"instant":"press states, toggles","quick":"hovers, small reveals","base":"panels, cards","scene":"page and chapter transitions"},"easing":{"out":"enter","in":"exit (exits are faster: ~0.7× enter)","inout":"on-screen moves","reveal":"masked text reveals (expo-out): lines rising out of a mask"},"spring":{"snappy":"direct manipulation","soft":"playful confirmations"},"distance":{"rise":"page cut, figure reveal","nudge":"small enters: tooltips, menus","travel":"panels arriving from an edge"}} as const;
 
 export type DurationToken = keyof typeof duration;
 export type EasingToken = keyof typeof easing;

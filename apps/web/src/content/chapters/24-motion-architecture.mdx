@@ -191,7 +191,7 @@ Three things make a motion handoff work:
 This is the site's motion vocabulary as a sheet of drawings. The enter crowds its frames at the end, where it settles. The exit crowds them at the start and is gone at full speed. The move crowds both ends. The two springs have no duration of their own. Theirs were measured from the physics: `474ms` for `spring.snappy`, `727ms` for `spring.soft`.
 
 <Margin kind="note">
-  <p>The W3C Design Tokens Community Group publishes a JSON format for passing tokens between tools. A token is an object with a <code>$value</code> and a <code>$type</code>, and the types include <code>duration</code> and <code>cubicBezier</code>. This course's Export Desk writes its handoff tokens in that shape.</p>
+  <p>The W3C Design Tokens Community Group publishes a JSON format for passing tokens between tools. A token is an object with a <code>$value</code> and a <code>$type</code>, and the types include <code>duration</code> and <code>cubicBezier</code>. This course's Export desk writes its handoff tokens in that shape.</p>
 </Margin>
 
 What keeps all this true over time is **one source of truth**. Every token in this site lives in one JSON file, `src/motion/tokens.json`, and nobody edits anything else. A build script, `scripts/build-tokens.mjs`, compiles it into three notations each time the dev server or a build starts:
@@ -210,7 +210,7 @@ This site has no automated tests. It is checked by eye, in a browser. But it alr
 
 Animation is a function of time, and time is the one input a test can't normally set. Take it over, and motion becomes as testable as anything else.
 
-- **A deterministic clock.** The virtual clock in `src/lib/sandbox/clock.ts` replaces `requestAnimationFrame`, `performance.now` and `Date.now` in a page with virtual time. On every frame it also finds each CSS transition, CSS animation and Web Animation through `document.getAnimations()`, pauses it, and sets its `currentTime` itself. Time moves only when it is told to: one frame at a time, or fast-forward. It can fake a refresh rate too, with frames of exactly `1000 / 120` ms for a 120Hz display. The Frame Stepper uses it: [open the specimen sheet in the Frame Stepper](/lab/frame-stepper?s=eyJtb2RlIjoicGFnZSIsInVybCI6Ii9zeXN0ZW0ifQ) and step it. For code that runs its own loop, `@inbetween/core` has a `manualClock()` that you advance by hand.
+- **A deterministic clock.** The virtual clock in `src/lib/sandbox/clock.ts` replaces `requestAnimationFrame`, `performance.now` and `Date.now` in a page with virtual time. On every frame it also finds each CSS transition, CSS animation and Web Animation through `document.getAnimations()`, pauses it, and sets its `currentTime` itself. Time moves only when it is told to: one frame at a time, or fast-forward. It can fake a refresh rate too, with frames of exactly `1000 / 120` ms for a 120Hz display. The Frame stepper uses it: [open the specimen sheet in the Frame stepper](/lab/frame-stepper?s=eyJtb2RlIjoicGFnZSIsInVybCI6Ii9zeXN0ZW0ifQ) and step it. For code that runs its own loop, `@inbetween/core` has a `manualClock()` that you advance by hand.
 - **Snapshot frames.** With a fixed clock, frame 9 of a motion is the same picture on every run. Step to a few chosen frames and save what is there, as a screenshot or as computed values. Change a token by accident, and the snapshot changes.
 - **Assert the settle.** The frame that matters most is the last one. Fast-forward past the end and check the end state exactly: opacity `1`, no transform left over, the removed element really gone, nothing still running. `onSettle()` is the hook for this. It resolves when every animation in a group has finished or been cancelled.
 - **Test the interruption.** Start a motion, step to its middle, start the opposite one, and compare the frames on either side of the switch. Under a reverse rule, they should match.
@@ -278,7 +278,7 @@ Here is the whole path through this codebase, from a number in a file to a page.
 
 <Beat kind="tune">The handoff, as an instrument</Beat>
 
-The Export Desk takes one motion and writes it in every notation this course uses, plus a handoff for a designer. It starts on `--ease-out` over `--dur-base`: a panel arriving.
+The Export desk takes one motion and writes it in every notation this course uses, plus a handoff for a designer. It starts on `--ease-out` over `--dur-base`: a panel arriving.
 
 - Read the handoff card at the bottom. The motion is written once as a sentence a designer can check, and once as tokens, each with a `$type` and a `$value`.
 - Now make it the panel's exit. Type `--ease-in` into *Any easing* and `196` into the duration beside it, which is `--dur-base-exit`, then press *Convert*. Every notation above the handoff changes at once: CSS, WAAPI, Motion, GSAP and Canvas.
@@ -291,7 +291,7 @@ The Export Desk takes one motion and writes it in every notation this course use
 The code here is the system itself. First the source, and what the build writes from it.
 
 <div class="snippets">
-<Snippet title="24 · Motion Architecture: the source, tokens.json" lab="export-desk" easing="--ease-out" duration={280}>
+<Snippet title="24 · Motion architecture: the source, tokens.json" lab="export-desk" easing="--ease-out" duration={280}>
 
 ```json
 {
@@ -318,7 +318,7 @@ The code here is the system itself. First the source, and what the build writes 
 
 </Snippet>
 
-<Snippet title="24 · Motion Architecture: what the build writes, tokens.css" lab="curve-bench" easing="--ease-out" duration={280} compare="token-in">
+<Snippet title="24 · Motion architecture: what the build writes, tokens.css" lab="curve-bench" easing="--ease-out" duration={280} compare="token-in">
 
 ```css
 /* GENERATED from src/motion/tokens.json by scripts/build-tokens.mjs. Do not edit by hand. */
@@ -366,7 +366,7 @@ The code here is the system itself. First the source, and what the build writes 
 Both are excerpts: the real files hold every token. Then a primitive, both ways. The CSS form is declarative and covers entrances. The script form carries the interruption rule, and reads where the element is before it cancels anything.
 
 <div class="snippets">
-<Snippet title="24 · Motion Architecture: declarative primitives, motion.css" lab="curve-bench" easing="--ease-out" duration={280} compare="token-inout">
+<Snippet title="24 · Motion architecture: declarative primitives, motion.css" lab="curve-bench" easing="--ease-out" duration={280} compare="token-inout">
 
 ```css
 /* The motion layer: no raw durations or curves, only tokens.
@@ -396,7 +396,7 @@ Both are excerpts: the real files hold every token. Then a primitive, both ways.
 
 </Snippet>
 
-<Snippet title="24 · Motion Architecture: a primitive and its interruption rule" lab="curve-bench" easing="--ease-out" duration={280} compare="token-in">
+<Snippet title="24 · Motion architecture: a primitive and its interruption rule" lab="curve-bench" easing="--ease-out" duration={280} compare="token-in">
 
 ```js
 // A primitive: keyframes, timing from tokens, and a rule for interruptions.
@@ -456,7 +456,7 @@ export function play(el, primitive) {
 Here is a page the way most pages start. Every motion on it was written on the day it was needed. If it lived in this site's UI, the token check would report ten ad-hoc values in it.
 
 <div class="snippets">
-<Snippet title="24 · Motion Architecture: before, the CSS" lab="curve-bench" easing="cubic-bezier(.3,.7,.4,1)" duration={250} compare="token-out">
+<Snippet title="24 · Motion architecture: before, the CSS" lab="curve-bench" easing="cubic-bezier(.3,.7,.4,1)" duration={250} compare="token-out">
 
 ```css
 /* Before: every motion was invented on the spot. */
@@ -475,7 +475,7 @@ Here is a page the way most pages start. Every motion on it was written on the d
 
 </Snippet>
 
-<Snippet title="24 · Motion Architecture: before, the script" lab="exposure-sheet" source="list" extra={{ stagger: 75 }}>
+<Snippet title="24 · Motion architecture: before, the script" lab="exposure-sheet" source="list" extra={{ stagger: 75 }}>
 
 ```js
 // Before: numbers typed inline, no reduced motion, no plan for interruptions.
@@ -513,7 +513,7 @@ The refactor takes three moves, one per layer:
 3. **Patterns.** Where script choreographs, call the pattern: `listEnter` for the list, `panelOpen` and `panelClose` for the panel. Reduced motion and the interruption rule come with them.
 
 <div class="snippets">
-<Snippet title="24 · Motion Architecture: after, the CSS" lab="curve-bench" easing="--ease-out" duration={180} compare="token-in">
+<Snippet title="24 · Motion architecture: after, the CSS" lab="curve-bench" easing="--ease-out" duration={180} compare="token-in">
 
 ```css
 /* After: every value is a token, and common enters are primitives. */
@@ -542,7 +542,7 @@ The refactor takes three moves, one per layer:
 
 </Snippet>
 
-<Snippet title="24 · Motion Architecture: after, the script" lab="exposure-sheet" source="list" extra={{ stagger: 30 }}>
+<Snippet title="24 · Motion architecture: after, the script" lab="exposure-sheet" source="list" extra={{ stagger: 30 }}>
 
 ```js
 // After: a pattern for each moment. Patterns are made of primitives,

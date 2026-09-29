@@ -33,7 +33,7 @@ export interface WhatItSaysSpec {
 /** Name what the motion says. */
 export const whatItSays: DrillDef<WhatItSaysSpec, number> = {
   id: "what-it-says",
-  name: "What Does It Say?",
+  name: "What does it say?",
   prompt: "What does this motion tell you?",
   trains: "Motion as information",
   unlocksAfter: 1,

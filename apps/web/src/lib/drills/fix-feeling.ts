@@ -48,7 +48,7 @@ export interface FixAnswer {
 /** A broken animation and a feeling word. Fix it in one change. */
 export const fixFeeling: DrillDef<FixSpec, FixAnswer> = {
   id: "fix-feeling",
-  name: "Fix the Feeling",
+  name: "Fix the feeling",
   prompt: "It feels wrong. Name the cause, and fix it in one change.",
   trains: "Critique: feeling → cause → parameter → change one thing",
   unlocksAfter: 22,

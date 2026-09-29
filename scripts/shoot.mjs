@@ -44,9 +44,11 @@ for (const width of widths) {
       await page.evaluate(() => document.fonts.ready);
       if (args.full === "true" || args.scrollthrough) {
         // Walk the page so scroll-triggered reveals fire, then return to the top.
+        // The page scrolls inside the frame ([data-scroller]), not the window.
         await page.evaluate(async () => {
-          for (let y = 0; y < document.body.scrollHeight; y += 400) { window.scrollTo(0, y); await new Promise((r) => setTimeout(r, 40)); }
-          window.scrollTo(0, 0);
+          const sc = document.querySelector("[data-scroller]") ?? document.scrollingElement;
+          for (let y = 0; y < sc.scrollHeight; y += 400) { sc.scrollTop = y; await new Promise((r) => setTimeout(r, 40)); }
+          sc.scrollTop = 0;
         });
         await page.waitForTimeout(700);
       }
@@ -55,7 +57,7 @@ for (const width of widths) {
         if (a.hover) await page.hover(a.hover);
         if (a.eval) await page.evaluate(a.eval);
         if (a.wait) await page.waitForTimeout(a.wait);
-        if (a.scroll) await page.evaluate((y) => window.scrollTo(0, y), a.scroll);
+        if (a.scroll) await page.evaluate((y) => ((document.querySelector("[data-scroller]") ?? document.scrollingElement).scrollTop = y), a.scroll);
       }
       await page.waitForTimeout(wait);
       const slug = (p.split("?")[0].replace(/\//g, "_").replace(/^_$/, "_index") || "_index").slice(0, 80);
@@ -64,6 +66,11 @@ for (const width of widths) {
         const el = await page.$(args.selector);
         if (el) await el.screenshot({ path: resolve(out, name) });
       } else {
+        if (args.full === "true") {
+          // A full-page capture needs the document to be as tall as the content: unpin the frame for it.
+          await page.addStyleTag({ content: "html,body{height:auto!important;overflow:visible!important}.frame{position:static!important;overflow:visible!important}.scroller{overflow:visible!important}" });
+          await page.waitForTimeout(300);
+        }
         await page.screenshot({ path: resolve(out, name), fullPage: args.full === "true" });
       }
       console.log(resolve(out, name));
