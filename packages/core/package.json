@@ -1,0 +1,10 @@
+{
+  "name": "@inbetween/core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Motion math for Inbetween: cubic-bezier, springs, decay, linear(), loop. Zero dependencies.",
+  "exports": { ".": "./src/index.ts" },
+  "scripts": { "build": "tsc -p tsconfig.json" },
+  "devDependencies": { "typescript": "5.9.3" }
+}
