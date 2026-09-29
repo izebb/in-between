@@ -1,0 +1,11 @@
+{
+  "name": "@inbetween/codegen",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Lab state to CSS / WAAPI / Motion / GSAP / Canvas, as token streams with bound parameters.",
+  "exports": { ".": "./src/index.ts" },
+  "scripts": { "build": "tsc -p tsconfig.json" },
+  "dependencies": { "@inbetween/core": "workspace:*" },
+  "devDependencies": { "typescript": "5.9.3" }
+}

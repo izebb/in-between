@@ -1,0 +1,85 @@
+# Inbetween — build progress
+
+Source of truth: `CURRICULUM.md`. Task brief: `PROMPT.md`. This file is enough to resume from.
+
+## Status
+
+| # | Milestone | State |
+|---|---|---|
+| M0 | Design system | ✅ done |
+| M1 | Motion core | ✅ done |
+| M2 | First instruments (L1, L2, L5, Code Panel) | ⏳ next |
+| M3 | Part I live (ch 01–03 + 2 drills) | — |
+| M4 | Physics (L3, L7, ch 04–06) | — |
+| M5 | Choreography (L4, ch 07–11) | — |
+| M6 | Interaction + Canvas (ch 12–19) | — |
+| M7 | Craft + Journal (L8, L9, ch 20–22, calibration graph) | — |
+| M8 | Special Topics (L10, ch 23–25) | — |
+
+## How to run
+
+```sh
+pnpm install
+pnpm dev          # http://localhost:4321  (compiles tokens + copies vendor bundles first)
+pnpm build        # packages typecheck, then astro check + astro build → apps/web/dist
+pnpm lint:motion  # policy: no ad-hoc durations/curves outside the token sources
+node scripts/shoot.mjs --pages /,/system --out ./screenshots --themes light,dark --widths 1280,375 [--full]
+```
+
+`scripts/shoot.mjs` is a *viewing* tool (headless system Chromium via playwright-core), not a test.
+
+## Repo map
+
+- `packages/core` — zero-dep motion math (`src/*.ts`, imports use `.ts` extensions so Node can run it directly):
+  bezier (Newton + bisection), easing (keywords, steps, power, parseEasing), linear (parse/eval/`toLinear` with RDP),
+  spring (closed-form under/critical/over-damped, response/bounce ↔ k/c/m, settle time, `springToLinear`),
+  decay (λ and iOS rate, `project`, rubberband), loop (rAF + dt + manual clock), playhead (shared scrub/step clock),
+  motion (`Move`/`EasingSpec`, `resolveMove`), sample (frames, spacing), keyframes, interpolate (`damp`), integrators
+  (Euler / semi-implicit / Verlet / RK4), noise (Perlin, simplex, seeded random), velocity tracker.
+- `packages/codegen` — (M2) lab state → CSS / WAAPI / Motion / GSAP / Canvas token streams with bound params.
+- `packages/editor` — (M2) CodeMirror 6 extensions.
+- `apps/web`
+  - `src/motion/tokens.json` — **single source of truth** for colour + motion tokens. `scripts/build-tokens.mjs`
+    compiles it to `src/styles/tokens.css`, `src/motion/tokens.ts`, `public/tokens.figma.json` (springs → CSS `linear()` via core).
+  - `src/motion/` — the app's motion system, layered as ch. 24 teaches: `tokens` → `primitives.ts` → `orchestration.ts`
+    → `patterns.ts` (page cut, figure reveal, token morph) → `policy.ts` (reduced motion, frequency budget, interruption
+    contract). `inspector.ts` = hold Alt over anything that moves. `boot.ts` runs per page.
+  - `src/styles/` — `index.css` declares layer order: reset, tokens, base, type, layout, components, code, figures, lab, motion, utilities.
+  - `src/lib/curriculum.ts` — outline: parts, 25 chapters (slug, summary, specimen, instruments, drill), 10 instruments.
+  - `src/lib/specimens.ts` — index hover specimens (canvas; still = onion skin, hover = plays).
+  - `src/lib/store.ts` — IndexedDB (idb-keyval): chapters read, drill sessions, journal.
+  - `src/content/chapters/*.mdx` — chapter bodies (frontmatter: `number`, `lede`). Route: `/chapters/<slug>`.
+  - `src/components/mdx/` — `Figure` (plate + caption + Still toggle), `Margin`, `Beat`; exported map in `index.ts`
+    (passed to `<Content components>` so MDX needs no imports). Svelte islands get thin `.astro` wrappers that apply `client:*`.
+  - `src/pages/system.astro` — specimen sheet (living catalog of tokens/primitives).
+
+## Decisions
+
+- **No tests** (user instruction, 2026-09-29): no Vitest suites, no Playwright snapshots. Verification is by looking in the
+  browser (`scripts/shoot.mjs`) and throwaway scratch checks. Core math was checked once against references
+  (ease(0.5)=0.8024; closed-form springs match RK4 to 1e-11; linear() round-trip < tolerance). `pnpm test` does not exist.
+- **pnpm only** (user instruction).
+- Astro **5.18.2** (curriculum says Astro 5; latest is 7), `@astrojs/svelte` 7.2.5, `@astrojs/mdx` 4.3.14, Svelte 5.57, TypeScript 5.9.
+- pnpm 11 uses `allowBuilds` in `pnpm-workspace.yaml` (esbuild on, sharp off — no image optimisation needed).
+- Packages export TS source (`exports: ./src/index.ts`); their `build` is a `tsc --noEmit` typecheck.
+- Added tokens beyond §1.6 (logged, all in tokens.json): `--paper-raised`, `--graphite-strong` (secondary *text* that must pass
+  contrast; `--graphite` stays for axes/grids), exit durations (`--dur-*-exit` = 0.7×), distances (`rise 4`, `nudge 8`,
+  `travel 24`), `--stagger-step: 30ms`, springs compiled to `--spring-*` + `--spring-*-dur`.
+- Reduced motion policy = "reduce, don't remove": distance tokens drop to 0 (rises become fades), draw-ins/springs stop;
+  figures render their onion skin still. User override via View popover (`data-motion="reduce|full"` on `<html>`).
+- Page cut uses Astro `<ClientRouter />` + `transition:animate={pageCut}` on `<main>`; header uses `transition:animate="none"`.
+- Colours in code: numbers are blue pencil (the knobs, "what could be"); a changed token flashes red. Shiki uses the
+  `css-variables` theme mapped to the pencil palette, so both themes work at zero JS.
+- Dev toolbar disabled (it overlapped content).
+
+## Known issues / todo
+
+- Spacing-chart tick labels collide where frames bunch up → the real SpacingChart must thin labels.
+- Chapters show "in preparation" on the index until their MDX exists.
+
+## Next (M2)
+
+1. `packages/codegen`: `Scene = Move[]` → dialects {css, waapi, motion, gsap, canvas}; output `{ text, bindings[{path, from, to, format, parse}], lines[{targets}] }`.
+2. `packages/editor`: bound-params field (ranges mapped through changes), drag-number, token flash, link-hover, pencil theme.
+3. Sandbox runtime (`<iframe srcdoc sandbox="allow-scripts">`) with virtual clock + sampler posting frames back.
+4. Svelte: controls (Slider, Seg, NumberScrub), `CodePanel`, `InstrumentShell`, `SpacingChart` (L1), `CurveBench` (L2), `FrameStepper` (L5); lab routes `/lab/<id>` reading `?s=` state.

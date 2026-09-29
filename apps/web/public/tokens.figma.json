@@ -1,0 +1,215 @@
+{
+  "$description": "GENERATED from src/motion/tokens.json by scripts/build-tokens.mjs. Do not edit by hand.",
+  "collections": [
+    {
+      "name": "Inbetween / Color",
+      "modes": [
+        "Paper",
+        "Lightbox"
+      ],
+      "variables": [
+        {
+          "name": "paper",
+          "type": "COLOR",
+          "description": "background",
+          "values": {
+            "Paper": "#F5F3EE",
+            "Lightbox": "#0E0F11"
+          }
+        },
+        {
+          "name": "paper-raised",
+          "type": "COLOR",
+          "description": "cards, panels, lab stage",
+          "values": {
+            "Paper": "#FAF9F5",
+            "Lightbox": "#15161A"
+          }
+        },
+        {
+          "name": "ink",
+          "type": "COLOR",
+          "description": "text, primary strokes",
+          "values": {
+            "Paper": "#16161A",
+            "Lightbox": "#ECEAE4"
+          }
+        },
+        {
+          "name": "graphite",
+          "type": "COLOR",
+          "description": "secondary text, grid, axes",
+          "values": {
+            "Paper": "#8A8880",
+            "Lightbox": "#6B6A66"
+          }
+        },
+        {
+          "name": "graphite-strong",
+          "type": "COLOR",
+          "description": "secondary text that must pass contrast",
+          "values": {
+            "Paper": "#5E5C56",
+            "Lightbox": "#9A9892"
+          }
+        },
+        {
+          "name": "rule",
+          "type": "COLOR",
+          "description": "hairlines, peg-bar lines",
+          "values": {
+            "Paper": "#E2DED5",
+            "Lightbox": "#1F2024"
+          }
+        },
+        {
+          "name": "blue-pencil",
+          "type": "COLOR",
+          "description": "ghosts, paths, rough: what could be",
+          "values": {
+            "Paper": "#3D6BFF",
+            "Lightbox": "#7C9BFF"
+          }
+        },
+        {
+          "name": "red-pencil",
+          "type": "COLOR",
+          "description": "keys, current frame: what is",
+          "values": {
+            "Paper": "#FF3B1F",
+            "Lightbox": "#FF5A3C"
+          }
+        },
+        {
+          "name": "glow",
+          "type": "COLOR",
+          "description": "lightbox glow under figures",
+          "values": {
+            "Paper": "rgba(255,248,230,0)",
+            "Lightbox": "rgba(255,248,230,.06)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Inbetween / Motion",
+      "modes": [
+        "Default"
+      ],
+      "variables": [
+        {
+          "name": "duration/instant",
+          "type": "FLOAT",
+          "description": "press states, toggles",
+          "values": {
+            "Default": 90
+          }
+        },
+        {
+          "name": "duration/quick",
+          "type": "FLOAT",
+          "description": "hovers, small reveals",
+          "values": {
+            "Default": 180
+          }
+        },
+        {
+          "name": "duration/base",
+          "type": "FLOAT",
+          "description": "panels, cards",
+          "values": {
+            "Default": 280
+          }
+        },
+        {
+          "name": "duration/scene",
+          "type": "FLOAT",
+          "description": "page and chapter transitions",
+          "values": {
+            "Default": 480
+          }
+        },
+        {
+          "name": "easing/out",
+          "type": "STRING",
+          "description": "enter",
+          "values": {
+            "Default": "cubic-bezier(0.2, 0.8, 0.2, 1)"
+          }
+        },
+        {
+          "name": "easing/in",
+          "type": "STRING",
+          "description": "exit (exits are faster: ~0.7× enter)",
+          "values": {
+            "Default": "cubic-bezier(0.4, 0, 1, 1)"
+          }
+        },
+        {
+          "name": "easing/inout",
+          "type": "STRING",
+          "description": "on-screen moves",
+          "values": {
+            "Default": "cubic-bezier(0.65, 0, 0.35, 1)"
+          }
+        },
+        {
+          "name": "spring/snappy/response",
+          "type": "FLOAT",
+          "description": "direct manipulation",
+          "values": {
+            "Default": 0.3
+          }
+        },
+        {
+          "name": "spring/snappy/bounce",
+          "type": "FLOAT",
+          "description": "direct manipulation",
+          "values": {
+            "Default": 0
+          }
+        },
+        {
+          "name": "spring/soft/response",
+          "type": "FLOAT",
+          "description": "playful confirmations",
+          "values": {
+            "Default": 0.5
+          }
+        },
+        {
+          "name": "spring/soft/bounce",
+          "type": "FLOAT",
+          "description": "playful confirmations",
+          "values": {
+            "Default": 0.15
+          }
+        },
+        {
+          "name": "distance/rise",
+          "type": "FLOAT",
+          "description": "page cut, figure reveal",
+          "values": {
+            "Default": 4
+          }
+        },
+        {
+          "name": "distance/nudge",
+          "type": "FLOAT",
+          "description": "small enters: tooltips, menus",
+          "values": {
+            "Default": 8
+          }
+        },
+        {
+          "name": "distance/travel",
+          "type": "FLOAT",
+          "description": "panels arriving from an edge",
+          "values": {
+            "Default": 24
+          }
+        }
+      ]
+    }
+  ]
+}

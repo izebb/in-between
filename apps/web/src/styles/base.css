@@ -1,0 +1,57 @@
+@layer base {
+  html {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 100%;
+    font-feature-settings: "cv11", "ss01";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    scrollbar-color: var(--rule) transparent;
+  }
+  body {
+    background: var(--paper);
+    font-size: 1.0625rem; /* 17px */
+    line-height: 1.6;
+    overflow-x: clip;
+  }
+  ::selection { background: color-mix(in srgb, var(--blue-pencil) 22%, transparent); }
+
+  a {
+    color: inherit;
+    text-decoration-line: underline;
+    text-decoration-color: color-mix(in srgb, var(--ink) 28%, transparent);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.2em;
+    transition: text-decoration-color var(--dur-quick) var(--ease-out);
+  }
+  a:hover { text-decoration-color: var(--ink); }
+
+  :focus-visible {
+    outline: 1.5px solid var(--blue-pencil);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  hr {
+    border: 0;
+    border-top: 1px solid var(--rule);
+    margin-block: 3rem;
+  }
+
+  .visually-hidden {
+    position: absolute !important;
+    width: 1px; height: 1px;
+    overflow: hidden; clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .skip-link {
+    position: absolute;
+    left: 1rem; top: -4rem;
+    background: var(--ink); color: var(--paper);
+    padding: 0.5rem 0.75rem; z-index: 100;
+    font-size: 0.875rem;
+  }
+  .skip-link:focus { top: 1rem; }
+}

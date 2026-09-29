@@ -1,0 +1,65 @@
+@layer figures {
+  :root {
+    --plate-bg: var(--paper-raised);
+    --ghost-stroke: 1.25px;
+  }
+  /* Lightbox: figures sit on a faint plate, lit from below. */
+  :root[data-theme="dark"] {
+    --plate-bg: radial-gradient(120% 110% at 50% 108%, rgba(255, 248, 230, 0.075), transparent 62%), linear-gradient(var(--glow), var(--glow)), var(--paper);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --plate-bg: radial-gradient(120% 110% at 50% 108%, rgba(255, 248, 230, 0.075), transparent 62%), linear-gradient(var(--glow), var(--glow)), var(--paper);
+    }
+  }
+
+  .plate {
+    position: relative;
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    background: var(--plate-bg);
+    container-type: inline-size;
+  }
+  .plate-stage { padding: clamp(0.75rem, 2.5cqi, 1.5rem); }
+  .plate > figcaption {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+    padding: 0.5rem 0.6rem 0.5rem 1rem;
+    border-top: 1px solid var(--rule);
+  }
+  .plate .fig-n { color: var(--ink); }
+  .plate .fig-cap { color: var(--graphite-strong); }
+  .plate .fig-tools { display: flex; gap: 0.25rem; margin-left: auto; }
+  .plate .fig-tools .btn { color: var(--graphite-strong); }
+
+  /* ---------- SVG vocabulary shared by every figure ---------- */
+  .fig svg { overflow: visible; }
+  .fig .ax { stroke: var(--graphite); stroke-width: 1; fill: none; vector-effect: non-scaling-stroke; }
+  .fig .grid { stroke: var(--rule); stroke-width: 1; fill: none; vector-effect: non-scaling-stroke; }
+  .fig .ink { stroke: var(--ink); fill: none; stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+  .fig .ink-fill { fill: var(--ink); }
+  .fig .ghost { stroke: var(--blue-pencil); fill: none; stroke-width: var(--ghost-stroke); vector-effect: non-scaling-stroke; }
+  .fig .ghost-fill { fill: var(--blue-pencil); }
+  .fig .path { stroke: var(--blue-pencil); fill: none; stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+  .fig .path.dashed { stroke-dasharray: 3 4; }
+  .fig .key { fill: var(--red-pencil); }
+  .fig .key-stroke { stroke: var(--red-pencil); fill: none; stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+  .fig .label { fill: var(--graphite-strong); font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.04em; font-variant-numeric: tabular-nums; text-transform: none; }
+  .fig .label.upper { text-transform: uppercase; letter-spacing: 0.08em; }
+  .fig .label.ink-label { fill: var(--ink); }
+  .fig .muted { opacity: 0.4; }
+
+  /* Hover on any figure shows its onion skin. */
+  .fig .onion { opacity: 0; transition: opacity var(--dur-quick) var(--ease-out); }
+  .fig:hover .onion, .fig:focus-within .onion, .fig.show-onion .onion, .fig.is-still .onion { opacity: 1; }
+
+  /* Readouts under figures */
+  .readout { display: flex; flex-wrap: wrap; gap: 0.25rem 1.25rem; font-family: var(--font-mono); font-size: var(--text-xs); color: var(--graphite-strong); font-variant-numeric: tabular-nums; }
+  .readout b { color: var(--ink); font-weight: 500; }
+
+  .fig-row { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); }
+  .fig-note { font-size: var(--text-sm); color: var(--graphite-strong); line-height: 1.5; }
+}

@@ -1,0 +1,12 @@
+---
+/** Marginalia: definitions, history, and "in the wild" references, in the right rail. */
+interface Props {
+  kind?: "wild" | "def" | "history" | "note" | "read";
+}
+const labels = { wild: "In the wild", def: "Definition", history: "History", note: "Note", read: "Read" };
+const { kind = "note" } = Astro.props;
+---
+<aside class="margin-note" data-kind={kind}>
+  <span class="smallcaps">{labels[kind]}</span>
+  <slot />
+</aside>

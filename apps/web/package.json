@@ -1,0 +1,37 @@
+{
+  "name": "@inbetween/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "tokens": "node scripts/build-tokens.mjs && node scripts/vendor.mjs",
+    "dev": "pnpm tokens && astro dev",
+    "build": "pnpm tokens && astro check && astro build",
+    "preview": "astro preview"
+  },
+  "dependencies": {
+    "@astrojs/mdx": "4.3.14",
+    "@astrojs/svelte": "7.2.5",
+    "@fontsource-variable/inter": "^5.3.0",
+    "@fontsource-variable/jetbrains-mono": "^5.3.0",
+    "@fontsource/instrument-serif": "^5.3.0",
+    "@inbetween/codegen": "workspace:*",
+    "@inbetween/core": "workspace:*",
+    "@inbetween/editor": "workspace:*",
+    "astro": "5.18.2",
+    "d3-interpolate": "^3.0.1",
+    "d3-scale": "^4.0.2",
+    "d3-shape": "^3.2.0",
+    "gsap": "^3.15.0",
+    "idb-keyval": "^6.3.0",
+    "motion": "^13.4.5",
+    "svelte": "^5.57.1"
+  },
+  "devDependencies": {
+    "@astrojs/check": "0.9.10",
+    "@types/d3-interpolate": "^3.0.4",
+    "@types/d3-scale": "^4.0.9",
+    "@types/d3-shape": "^3.1.7",
+    "typescript": "5.9.3"
+  }
+}

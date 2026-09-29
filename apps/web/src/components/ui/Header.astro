@@ -1,0 +1,25 @@
+---
+import PegBar from "./PegBar.astro";
+import Prefs from "./Prefs.astro";
+const path = Astro.url.pathname.replace(/\/$/, "") || "/";
+const links = [
+  { href: "/", label: "Contents", match: (p: string) => p === "/" || p.startsWith("/chapters") },
+  { href: "/lab", label: "Lab", match: (p: string) => p.startsWith("/lab") && !p.startsWith("/lab/eye-trainer") },
+  { href: "/lab/eye-trainer", label: "Eye Trainer", match: (p: string) => p.startsWith("/lab/eye-trainer") },
+];
+---
+<header class="site-header" transition:animate="none">
+  <PegBar />
+  <div class="masthead page" class:list={{ wide: Astro.props.wide }}>
+    <a class="wordmark" href="/">Inbetween</a>
+    <nav class="site-nav" aria-label="Main">
+      {links.map((l) => (
+        <a href={l.href} aria-current={l.match(path) ? "page" : undefined}>{l.label}</a>
+      ))}
+      <Prefs />
+    </nav>
+  </div>
+</header>
+<style>
+  .masthead.wide { max-width: none; }
+</style>

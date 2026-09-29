@@ -1,0 +1,166 @@
+---
+/**
+ * The specimen sheet: a living catalog of the design system and the motion system.
+ * Chapter 24 uses this page as its "documenting motion" example.
+ */
+import Base from "~/layouts/Base.astro";
+import Figure from "~/components/mdx/Figure.astro";
+import Margin from "~/components/mdx/Margin.astro";
+import tokens from "~/motion/tokens.json";
+import { spring as springTokens, exitDuration } from "~/motion/tokens";
+import { cubicBezier } from "@inbetween/core";
+
+const colors = Object.entries(tokens.color);
+const durations = Object.entries(tokens.duration);
+const easings = Object.entries(tokens.easing);
+
+// A static spacing chart, drawn at build time, to show the figure grammar.
+const ease = cubicBezier(0.2, 0.8, 0.2, 1);
+const frames = 12;
+const W = 640;
+const x0 = 40;
+const x1 = W - 40;
+const ticks = Array.from({ length: frames + 1 }, (_, i) => x0 + (x1 - x0) * ease(i / frames));
+const curvePath = Array.from({ length: 61 }, (_, i) => {
+  const x = i / 60;
+  return `${i ? "L" : "M"}${(x * 180).toFixed(1)},${(120 - ease(x) * 120).toFixed(1)}`;
+}).join("");
+---
+<Base title="Specimen sheet" description="The Inbetween design system and motion tokens, live.">
+  <div class="page sheet">
+    <header class="chapter-head prose">
+      <span class="smallcaps part">System · specimen sheet</span>
+      <h1><span class="ch-n">§</span> <span>The Animator’s Desk</span></h1>
+      <p class="lede">Paper, graphite, and two pencils. Everything on this page is a token; nothing is ad hoc.</p>
+    </header>
+
+    <div class="prose">
+      <h2>Colour</h2>
+      <p>Blue pencil is for time that has passed or is about to happen. Red pencil is for what is: the key, the current frame. Red never appears on a button.</p>
+      <div class="wide swatches">
+        {colors.map(([name, c]) => (
+          <div class="swatch">
+            <div class="chips">
+              <span class="c" style={`background:${c.light}`} />
+              <span class="c" style={`background:${c.dark}`} />
+            </div>
+            <span class="mono tok">--{name}</span>
+            <span class="mono val">{c.light} · {c.dark}</span>
+            <span class="use">{c.meaning}</span>
+          </div>
+        ))}
+      </div>
+
+      <h2>Type</h2>
+      <div class="wide type-specimens">
+        <div><span class="smallcaps">Display · Instrument Serif</span><p class="t-display"><span class="ch-n">02</span> Timing</p></div>
+        <div><span class="smallcaps">Body · Inter</span><p>Duration is weight, mood, and importance. A heavy thing takes longer to start and longer to stop.</p></div>
+        <div><span class="smallcaps">Numbers · JetBrains Mono</span><p class="mono t-mono">280ms · cubic-bezier(.2, .8, .2, 1) · 17 fr</p></div>
+        <div><span class="smallcaps">Caption</span><p class="smallcaps">Fig. 2.3 — Ease-out, 12 fr, spacing chart</p></div>
+      </div>
+
+      <h2>Figures and marginalia</h2>
+      <Margin kind="def">
+        <p><b>Spacing chart.</b> The animator’s note of where each drawing falls between two keys. Wide gaps read as fast, tight gaps as slow.</p>
+      </Margin>
+      <p>A figure is a plate: a live diagram with a number and a caption. It breaks out of the text column the way plates do in a book. Notes sit in the right rail, beside the paragraph they explain.</p>
+
+      <Figure n="0.1" caption="Ease-out, 12 fr, spacing chart">
+        <svg class="sample-chart" viewBox={`0 0 ${W} 150`} role="img" aria-label="Spacing chart: twelve frames, ease-out. Gaps shrink toward the end.">
+          <line class="ax reveal-axes" pathLength="1" x1={x0} y1="70" x2={x1} y2="70" />
+          <g class="reveal-ghosts">
+            {ticks.slice(1, -1).map((x) => <circle class="ghost" cx={x} cy="40" r="11" opacity="0.55" />)}
+            {ticks.map((x, i) => (
+              <>
+                <line class="ghost" x1={x} y1="62" x2={x} y2="78" />
+                <text class="label" x={x} y="98" text-anchor="middle">{i}</text>
+              </>
+            ))}
+          </g>
+          <g class="reveal-key">
+            <circle class="key-stroke" cx={x0} cy="70" r="7" />
+            <circle class="key-stroke" cx={x1} cy="70" r="7" />
+            <circle class="key" cx={x1} cy="40" r="11" />
+          </g>
+          <text class="label upper" x={x0} y="130">key 1</text>
+          <text class="label upper" x={x1} y="130" text-anchor="end">key 2</text>
+        </svg>
+      </Figure>
+
+      <h2>Motion tokens</h2>
+      <p>Hover a row to play it. Hold <kbd>Alt</kbd> over the moving dot to inspect it. Exits run at {tokens.exitRatio}× the enter.</p>
+      <div class="wide token-table">
+        {durations.map(([k, d]) => (
+          <div class="token-row" tabindex="0">
+            <span class="mono tok">--dur-{k}</span>
+            <span class="mono val">{d.value}ms · exit {exitDuration[k as keyof typeof exitDuration]}ms</span>
+            <span class="use">{d.use}</span>
+            <span class="track"><span class="dot" style={`transition: translate var(--dur-${k}) var(--ease-out)`} /></span>
+          </div>
+        ))}
+        {easings.map(([k, e]) => (
+          <div class="token-row" tabindex="0">
+            <span class="mono tok">--ease-{k}</span>
+            <span class="mono val">cubic-bezier({e.value.join(", ")})</span>
+            <span class="use">{e.use}</span>
+            <span class="track"><span class="dot" style={`transition: translate var(--dur-scene) var(--ease-${k})`} /></span>
+          </div>
+        ))}
+        {Object.entries(springTokens).map(([k, s]) => (
+          <div class="token-row" tabindex="0">
+            <span class="mono tok">spring.{k}</span>
+            <span class="mono val">response {s.response} · bounce {s.bounce} → {s.duration}ms</span>
+            <span class="use">{s.use}</span>
+            <span class="track"><span class="dot" style={`transition: translate var(--spring-${k}-dur) var(--spring-${k})`} /></span>
+          </div>
+        ))}
+      </div>
+
+      <h2>Controls</h2>
+      <div class="controls-row">
+        <button class="btn">Replay</button>
+        <button class="btn" aria-pressed="true">Pressed</button>
+        <button class="btn ghost">Ghost</button>
+        <button class="btn solid">Open in Lab</button>
+        <div class="seg"><button aria-pressed="true">CSS</button><button>WAAPI</button><button>Motion</button><button>GSAP</button><button>Canvas</button></div>
+        <span class="chip">L2 · Curve Bench</span>
+      </div>
+      <p class="fig-note">Curve for --ease-out:</p>
+      <svg width="200" height="140" viewBox="-10 -10 200 140" class="fig" aria-hidden="true">
+        <path class="grid" d="M0,120H180M0,0H180M180,0V120" />
+        <path class="ax" d="M0,0V120H180" />
+        <path class="ink" d={curvePath} />
+      </svg>
+    </div>
+  </div>
+</Base>
+
+<style>
+  .sheet .wide { margin-block: 1.5rem 2rem; }
+  .swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 210px), 1fr)); gap: 1rem; }
+  .swatch { display: flex; flex-direction: column; gap: 0.2rem; font-size: var(--text-sm); }
+  .chips { display: flex; height: 44px; border: 1px solid var(--rule); border-radius: 6px; overflow: hidden; margin-bottom: 0.35rem; }
+  .chips .c { flex: 1; }
+  .tok { font-size: var(--text-sm); }
+  .val { font-size: var(--text-xs); color: var(--graphite-strong); }
+  .use { font-size: var(--text-sm); color: var(--graphite-strong); }
+  .type-specimens { display: grid; gap: 1.25rem; }
+  .type-specimens > div { display: grid; grid-template-columns: 14rem 1fr; gap: 1rem; align-items: baseline; border-top: 1px solid var(--rule); padding-top: 1rem; }
+  .type-specimens .smallcaps { color: var(--graphite-strong); }
+  .t-display { font-family: var(--font-display); font-size: var(--text-2xl); line-height: 1; }
+  .t-mono { font-size: 1rem; }
+  .sample-chart { width: 100%; height: auto; }
+  .token-table { display: flex; flex-direction: column; }
+  .token-row { display: grid; grid-template-columns: 11rem 17rem 1fr 180px; gap: 1rem; align-items: center; padding: 0.6rem 0; border-top: 1px solid var(--rule); outline-offset: 0; }
+  .token-row .track { position: relative; height: 12px; border-bottom: 1px solid var(--rule); }
+  .token-row .dot { position: absolute; left: 0; top: 2px; width: 8px; height: 8px; border-radius: 50%; background: var(--graphite); }
+  .token-row:hover .dot, .token-row:focus-visible .dot { translate: 172px 0; background: var(--red-pencil); }
+  .controls-row { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; }
+  @media (max-width: 860px) {
+    .type-specimens > div { grid-template-columns: 1fr; gap: 0.25rem; }
+    .token-row { grid-template-columns: 1fr 120px; }
+    .token-row .val, .token-row .use { grid-column: 1; }
+    .token-row .track { grid-column: 2; grid-row: 1 / span 3; }
+    .token-row:hover .dot, .token-row:focus-visible .dot { translate: 112px 0; }
+  }
+</style>

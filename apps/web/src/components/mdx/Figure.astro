@@ -1,0 +1,47 @@
+---
+/**
+ * A plate: a live figure with a numbered caption. FIG. 2.3 — EASE-OUT, 12 FR
+ * The "still" tool previews the reduced-motion version: ghosts stay, movement stops.
+ */
+interface Props {
+  n: string;
+  caption: string;
+  /** Draw-in reveal as it scrolls into view (axes → ghosts → key). */
+  reveal?: boolean;
+  id?: string;
+  /** Hide the still toggle (for figures with no motion of their own). */
+  static?: boolean;
+}
+const { n, caption, reveal = true, id, static: isStatic = false } = Astro.props;
+---
+<figure class="plate fig" data-reveal={reveal ? "" : undefined} id={id ?? `fig-${n.replace(/\./g, "-")}`} data-fig={n}>
+  <div class="plate-stage"><slot /></div>
+  <figcaption>
+    <span class="smallcaps"><span class="fig-n">Fig. {n}</span> <span class="fig-cap">— {caption}</span></span>
+    <span class="fig-tools">
+      <slot name="tools" />
+      {!isStatic && (
+        <button class="btn ghost small still-toggle" type="button" aria-pressed="false" title="Preview the reduced-motion version">
+          Still
+        </button>
+      )}
+    </span>
+  </figcaption>
+</figure>
+
+<script>
+  function wire() {
+    document.querySelectorAll<HTMLButtonElement>(".still-toggle:not([data-wired])").forEach((b) => {
+      b.dataset.wired = "";
+      b.addEventListener("click", () => {
+        const plate = b.closest(".plate");
+        if (!plate) return;
+        const on = !plate.classList.contains("is-still");
+        plate.classList.toggle("is-still", on);
+        b.setAttribute("aria-pressed", String(on));
+        plate.dispatchEvent(new CustomEvent("ib:still", { detail: on }));
+      });
+    });
+  }
+  document.addEventListener("astro:page-load", wire);
+</script>

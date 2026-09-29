@@ -1,0 +1,23 @@
+---
+import Base from "~/layouts/Base.astro";
+import { instruments } from "~/lib/curriculum";
+---
+<Base title="The Lab" posture="lab">
+  <div class="page">
+    <header class="chapter-head">
+      <span class="smallcaps part">The Lab</span>
+      <h1><span>A bench of instruments</span></h1>
+      <p class="lede">Every lesson opens one of these, pre-configured. Parameters on the left, stage in the centre, time underneath, code on the right.</p>
+    </header>
+    <div class="bench-list">
+      {instruments.map((i) => (
+        <a class="bench-item" href={`/lab/${i.id}`}>
+          <span class="smallcaps">{i.code}</span>
+          <span class="serif">{i.name}</span>
+          <p>{i.does}</p>
+          <span class="smallcaps trains">Trains · {i.trains}</span>
+        </a>
+      ))}
+    </div>
+  </div>
+</Base>

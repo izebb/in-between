@@ -1,0 +1,63 @@
+---
+import "@fontsource/instrument-serif/400.css";
+import "@fontsource/instrument-serif/400-italic.css";
+import "@fontsource-variable/inter";
+import "@fontsource-variable/jetbrains-mono";
+import "~/styles/index.css";
+import { ClientRouter } from "astro:transitions";
+import Header from "~/components/ui/Header.astro";
+import Footer from "~/components/ui/Footer.astro";
+import { pageCut } from "~/motion/patterns";
+
+interface Props {
+  title: string;
+  description?: string;
+  posture?: "read" | "lab";
+}
+const { title, description = "A field manual and laboratory for motion on the web.", posture = "read" } = Astro.props;
+const fullTitle = title === "Inbetween" ? title : `${title} · Inbetween`;
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta name="theme-color" content="#F5F3EE" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0E0F11" media="(prefers-color-scheme: dark)" />
+    <script is:inline>
+      // Apply theme and motion preferences before first paint (and after every page swap).
+      (function () {
+        function apply(doc) {
+          var r = doc.documentElement;
+          try {
+            var t = localStorage.getItem("ib-theme");
+            var m = localStorage.getItem("ib-motion");
+            if (t && t !== "system") r.setAttribute("data-theme", t); else r.removeAttribute("data-theme");
+            if (m && m !== "system") r.setAttribute("data-motion", m); else r.removeAttribute("data-motion");
+          } catch (e) {}
+          r.classList.add("js");
+        }
+        apply(document);
+        if (!window.__ibPrefs) {
+          window.__ibPrefs = true;
+          document.addEventListener("astro:before-swap", function (e) { apply(e.newDocument); });
+        }
+      })();
+    </script>
+    <ClientRouter />
+  </head>
+  <body class:list={[`posture-${posture}`]}>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <Header wide={posture === "lab"} />
+    <main id="main" transition:animate={pageCut}>
+      <slot />
+    </main>
+    <Footer />
+    <script>
+      import "~/motion/boot";
+    </script>
+  </body>
+</html>

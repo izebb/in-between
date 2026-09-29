@@ -1,0 +1,93 @@
+/* GENERATED from src/motion/tokens.json by scripts/build-tokens.mjs. Do not edit by hand. */
+
+@layer tokens {
+  :root {
+    color-scheme: light;
+    --paper: #F5F3EE;
+    --paper-raised: #FAF9F5;
+    --ink: #16161A;
+    --graphite: #8A8880;
+    --graphite-strong: #5E5C56;
+    --rule: #E2DED5;
+    --blue-pencil: #3D6BFF;
+    --red-pencil: #FF3B1F;
+    --glow: rgba(255,248,230,0);
+
+    --font-display: "Instrument Serif", "Newsreader", Georgia, serif;
+    --font-body: "Inter Variable", "Inter", system-ui, sans-serif;
+    --font-mono: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, monospace;
+
+    /* Durations (§1.6). Exits run at 0.7× the enter. */
+    --dur-instant: 90ms; /* press states, toggles */
+    --dur-instant-exit: 63ms;
+    --dur-quick: 180ms; /* hovers, small reveals */
+    --dur-quick-exit: 126ms;
+    --dur-base: 280ms; /* panels, cards */
+    --dur-base-exit: 196ms;
+    --dur-scene: 480ms; /* page and chapter transitions */
+    --dur-scene-exit: 336ms;
+
+    /* Curves */
+    --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1); /* enter */
+    --ease-in: cubic-bezier(0.4, 0, 1, 1); /* exit (exits are faster: ~0.7× enter) */
+    --ease-inout: cubic-bezier(0.65, 0, 0.35, 1); /* on-screen moves */
+
+    /* Springs, compiled to linear() by @inbetween/core */
+    /* spring.snappy: response 0.3, bounce 0 (direct manipulation) */
+    --spring-snappy: linear(0, 0.0046 1%, 0.0173 2%, 0.044 3.33%, 0.0793 4.67%, 0.1097 5.67%, 0.154 7%, 0.3698 13%, 0.4605 15.67%, 0.5132 17.33%, 0.5623 19%, 0.6415 22%, 0.6804 23.67%, 0.7158 25.33%, 0.7478 27%, 0.7766 28.67%, 0.8025 30.33%, 0.8301 32.33%, 0.8717 36%, 0.9087 40.33%, 0.9372 45%, 0.9595 50.33%, 0.9761 56.67%, 0.9868 63.67%, 0.9936 72%, 1);
+    --spring-snappy-dur: 474ms;
+    /* spring.soft: response 0.5, bounce 0.15 (playful confirmations) */
+    --spring-soft: linear(0, 0.004 1%, 0.0201 2.33%, 0.0464 3.67%, 0.09 5.33%, 0.1313 6.67%, 0.1882 8.33%, 0.4092 14.33%, 0.5141 17.33%, 0.5681 19%, 0.6187 20.67%, 0.6655 22.33%, 0.7001 23.67%, 0.7323 25%, 0.7691 26.67%, 0.8023 28.33%, 0.8319 30%, 0.8582 31.67%, 0.8813 33.33%, 0.9193 36.67%, 0.9502 40.33%, 0.9734 44.33%, 0.9904 49%, 1.0008 54.33%, 1.005 59.33%, 1.0063 65.67%, 1);
+    --spring-soft-dur: 727ms;
+
+    /* Distances */
+    --dist-rise: 4px; /* page cut, figure reveal */
+    --dist-nudge: 8px; /* small enters: tooltips, menus */
+    --dist-travel: 24px; /* panels arriving from an edge */
+
+    /* Orchestration */
+    --stagger-step: 30ms;
+  }
+
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --paper: #0E0F11;
+    --paper-raised: #15161A;
+    --ink: #ECEAE4;
+    --graphite: #6B6A66;
+    --graphite-strong: #9A9892;
+    --rule: #1F2024;
+    --blue-pencil: #7C9BFF;
+    --red-pencil: #FF5A3C;
+    --glow: rgba(255,248,230,.06);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --paper: #0E0F11;
+      --paper-raised: #15161A;
+      --ink: #ECEAE4;
+      --graphite: #6B6A66;
+      --graphite-strong: #9A9892;
+      --rule: #1F2024;
+      --blue-pencil: #7C9BFF;
+      --red-pencil: #FF5A3C;
+      --glow: rgba(255,248,230,.06);
+    }
+  }
+
+  /* Policy: reduce, don't remove. Movement stops; fades and ghosts stay. */
+  :root[data-motion="reduce"] {
+    --dist-rise: 0px;
+    --dist-nudge: 0px;
+    --dist-travel: 0px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :root:not([data-motion="full"]) {
+      --dist-rise: 0px;
+      --dist-nudge: 0px;
+      --dist-travel: 0px;
+    }
+  }
+}

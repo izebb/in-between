@@ -1,0 +1,134 @@
+@layer layout {
+  :root {
+    --gutter: clamp(16px, 4vw, 48px);
+    --page-max: 1240px;
+    --rail: 15rem;
+    --rail-gap: 3.5rem;
+    --header-h: 76px;
+  }
+
+  .page {
+    width: 100%;
+    max-width: var(--page-max);
+    margin-inline: auto;
+    padding-inline: var(--gutter);
+  }
+
+  /* ---------- Header: the peg bar is the one ornament we allow ---------- */
+  .site-header {
+    position: relative;
+    z-index: 20;
+  }
+  .pegbar {
+    display: block;
+    width: 100%;
+    height: 22px;
+    color: var(--graphite);
+  }
+  .pegbar .rule { stroke: var(--rule); }
+  .pegbar .hole { fill: var(--paper); stroke: var(--graphite); }
+  :root[data-theme="dark"] .pegbar .hole { fill: rgba(255, 248, 230, 0.10); }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .pegbar .hole { fill: rgba(255, 248, 230, 0.10); }
+  }
+
+  .masthead {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-block: 0.5rem 1rem;
+  }
+  .wordmark {
+    font-family: var(--font-display);
+    font-size: 1.625rem;
+    line-height: 1;
+    text-decoration: none;
+    letter-spacing: -0.01em;
+  }
+  .wordmark em { color: var(--graphite-strong); }
+  .site-nav {
+    display: flex;
+    align-items: center;
+    gap: clamp(0.75rem, 2.4vw, 1.75rem);
+    font-size: var(--text-sm);
+  }
+  .site-nav a { text-decoration: none; color: var(--graphite-strong); }
+  .site-nav a:hover, .site-nav a[aria-current="page"] { color: var(--ink); }
+  .site-nav a[aria-current="page"] { text-decoration: underline; text-decoration-color: var(--ink); text-underline-offset: 0.35em; }
+
+  /* ---------- Reading posture: a 64ch column and a right rail ---------- */
+  .prose {
+    font-size: var(--text-md);
+    max-width: calc(var(--measure) + var(--rail) + var(--rail-gap));
+    padding-right: calc(var(--rail) + var(--rail-gap));
+    margin-inline: auto;
+  }
+  .prose > * + * { margin-top: 1.1em; }
+  .prose > h2 { margin-top: 3.25rem; margin-bottom: -0.1em; }
+  .prose > h3 { margin-top: 2rem; }
+  .prose ul, .prose ol { padding-left: 1.25em; }
+  .prose li + li { margin-top: 0.35em; }
+  .prose li::marker { color: var(--graphite); }
+  .prose blockquote {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: var(--text-lg);
+    line-height: 1.35;
+    color: var(--graphite-strong);
+    border-left: 1px solid var(--rule);
+    padding-left: 1.25rem;
+  }
+
+  /* Plates break out of the text column, like figures in a book. */
+  .prose > .plate,
+  .prose > .wide {
+    width: calc(100% + var(--rail) + var(--rail-gap));
+    margin-block: 2.5rem;
+  }
+
+  /* Marginalia: Tufte-style sidenotes in the rail. Place before the paragraph they annotate. */
+  .margin-note {
+    float: right;
+    clear: right;
+    width: var(--rail);
+    margin-right: calc(-1 * (var(--rail) + var(--rail-gap)));
+    margin-top: 0.3rem !important;
+    margin-bottom: 1.25rem;
+    font-size: var(--text-sm);
+    line-height: 1.5;
+    color: var(--graphite-strong);
+  }
+  .margin-note .smallcaps { display: block; color: var(--graphite); margin-bottom: 0.3rem; }
+  .margin-note p + p { margin-top: 0.5em; }
+  .margin-note a { color: var(--ink); }
+
+  @media (max-width: 1080px) {
+    .prose { max-width: var(--measure); padding-right: 0; }
+    .prose > .plate, .prose > .wide { width: 100%; }
+    .margin-note {
+      float: none;
+      width: auto;
+      margin: 1.5rem 0 !important;
+      padding-left: 0.875rem;
+      border-left: 1px solid var(--rule);
+    }
+  }
+
+  /* ---------- Footer ---------- */
+  .site-footer {
+    margin-top: 6rem;
+    border-top: 1px solid var(--rule);
+    padding-block: 1.5rem 3rem;
+    font-size: var(--text-sm);
+    color: var(--graphite-strong);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+  .site-footer a { color: inherit; }
+
+  /* ---------- Lab posture: full bleed ---------- */
+  .lab-page { width: 100%; padding-inline: var(--gutter); }
+}

@@ -1,0 +1,60 @@
+---
+import Base from "~/layouts/Base.astro";
+import { getCollection, render } from "astro:content";
+import { chapterBySlug, chapters, pad2, partOf, instrumentById } from "~/lib/curriculum";
+import { mdxComponents } from "~/components/mdx";
+
+export async function getStaticPaths() {
+  const entries = await getCollection("chapters");
+  return entries.map((entry) => ({ params: { slug: entry.id }, props: { entry } }));
+}
+
+const { entry } = Astro.props;
+const meta = chapterBySlug(entry.id)!;
+const part = partOf(meta);
+const { Content } = await render(entry);
+const written = new Set((await getCollection("chapters")).map((c) => c.id));
+const idx = chapters.findIndex((c) => c.slug === meta.slug);
+const prev = chapters.slice(0, idx).reverse().find((c) => written.has(c.slug));
+const next = chapters.slice(idx + 1).find((c) => written.has(c.slug));
+---
+<Base title={`${pad2(meta.number)} ${meta.title}`} description={meta.summary}>
+  <article class="page chapter" data-chapter={meta.number}>
+    <header class="chapter-head prose">
+      <span class="smallcaps part">{part.numeral === "—" ? "Capstone" : `Part ${part.numeral} · ${part.title}`}</span>
+      <h1><span class="ch-n">{pad2(meta.number)}</span> <span>{meta.title}</span></h1>
+      <p class="lede">{entry.data.lede}</p>
+      <div class="meta">
+        {meta.instruments.map((id) => {
+          const i = instrumentById(id);
+          return <a class="chip" href={`/lab/${id}`}>{i.code} · {i.name}</a>;
+        })}
+      </div>
+    </header>
+    <div class="prose chapter-body">
+      <Content components={mdxComponents} />
+    </div>
+    <nav class="pager prose" aria-label="Chapters">
+      {prev && (
+        <a class="prev" href={`/chapters/${prev.slug}`}>
+          <span class="smallcaps">← {pad2(prev.number)}</span>
+          <span class="serif">{prev.title}</span>
+        </a>
+      )}
+      {next && (
+        <a class="next" href={`/chapters/${next.slug}`}>
+          <span class="smallcaps">{pad2(next.number)} →</span>
+          <span class="serif">{next.title}</span>
+        </a>
+      )}
+    </nav>
+  </article>
+</Base>
+
+<script>
+  import { markChapterRead } from "~/lib/store";
+  document.addEventListener("astro:page-load", () => {
+    const el = document.querySelector<HTMLElement>("[data-chapter]");
+    if (el) markChapterRead(Number(el.dataset.chapter));
+  });
+</script>

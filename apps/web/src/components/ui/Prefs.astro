@@ -1,0 +1,76 @@
+---
+// View preferences: theme, motion policy, frame tick. A native popover; no framework.
+---
+<button class="pref-toggle" popovertarget="prefs" aria-label="View settings">
+  <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.25" fill="none" stroke="currentColor" stroke-width="1.25"/><path d="M8 1.75a6.25 6.25 0 0 1 0 12.5z" fill="currentColor"/></svg>
+  <span class="pref-label">View</span>
+</button>
+<div id="prefs" popover class="prefs" data-prefs>
+  <div class="prefs-row">
+    <span class="label">Theme</span>
+    <div class="seg" role="group" aria-label="Theme">
+      <button data-pref="theme" data-value="system">System</button>
+      <button data-pref="theme" data-value="light">Paper</button>
+      <button data-pref="theme" data-value="dark">Lightbox</button>
+    </div>
+  </div>
+  <div class="prefs-row">
+    <span class="label">Motion</span>
+    <div class="seg" role="group" aria-label="Motion">
+      <button data-pref="motion" data-value="system">System</button>
+      <button data-pref="motion" data-value="full">Full</button>
+      <button data-pref="motion" data-value="reduce">Reduced</button>
+    </div>
+  </div>
+  <div class="prefs-row">
+    <span class="label">Frame tick</span>
+    <div class="seg" role="group" aria-label="Frame tick sound">
+      <button data-pref="sound" data-value="off">Off</button>
+      <button data-pref="sound" data-value="on">On</button>
+    </div>
+  </div>
+  <p class="prefs-hint">Hold <kbd>Alt</kbd> over anything that moves to inspect its timing and curve.</p>
+</div>
+
+<style>
+  .prefs {
+    position: fixed;
+    inset: auto;
+    top: calc(var(--header-h) - 6px);
+    right: var(--gutter);
+    margin: 0;
+    width: min(330px, calc(100vw - 2 * var(--gutter)));
+    padding: 0.9rem 1rem 1rem;
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    background: var(--paper-raised);
+    color: var(--ink);
+    box-shadow: 0 10px 40px -18px rgb(0 0 0 / 0.35);
+    display: none;
+    flex-direction: column;
+    gap: 0.75rem;
+    opacity: 0;
+    translate: 0 calc(-1 * var(--dist-nudge));
+    transition:
+      opacity var(--dur-quick-exit) var(--ease-in),
+      translate var(--dur-quick-exit) var(--ease-in),
+      display var(--dur-quick-exit) allow-discrete,
+      overlay var(--dur-quick-exit) allow-discrete;
+  }
+  .prefs:popover-open {
+    display: flex;
+    opacity: 1;
+    translate: 0 0;
+    transition:
+      opacity var(--dur-quick) var(--ease-out),
+      translate var(--dur-quick) var(--ease-out),
+      display var(--dur-quick) allow-discrete,
+      overlay var(--dur-quick) allow-discrete;
+  }
+  @starting-style {
+    .prefs:popover-open { opacity: 0; translate: 0 calc(-1 * var(--dist-nudge)); }
+  }
+  .prefs-row { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; }
+  .prefs-hint { font-size: var(--text-sm); color: var(--graphite-strong); line-height: 1.45; border-top: 1px solid var(--rule); padding-top: 0.75rem; }
+  @media (max-width: 520px) { .pref-label { display: none; } }
+</style>

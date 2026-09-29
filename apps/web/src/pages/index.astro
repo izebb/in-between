@@ -1,0 +1,185 @@
+---
+import Base from "~/layouts/Base.astro";
+import { getCollection } from "astro:content";
+import { chapters, parts, pad2, instruments } from "~/lib/curriculum";
+
+const written = new Set((await getCollection("chapters")).map((c) => c.id));
+const byPart = parts.map((p) => ({ part: p, items: chapters.filter((c) => c.part === p.numeral) }));
+---
+<Base title="Inbetween">
+  <div class="page index">
+    <section class="hero">
+      <p class="smallcaps kicker">A field manual and laboratory for motion on the web</p>
+      <h1 class="wordmark-xl">Inbetween</h1>
+      <div class="hero-grid">
+        <p class="intro">
+          In animation, an <em class="serif-italic">inbetween</em> is a frame drawn between two keys. This course lives in
+          that gap: between design and code, between the start state and the end state, between copying a value and
+          knowing why it’s right.
+        </p>
+        <blockquote class="epigraph">
+          <p>“Animation is not the art of drawings that move, but the art of movements that are drawn.”</p>
+          <cite class="smallcaps">Norman McLaren</cite>
+        </blockquote>
+      </div>
+      <ol class="beats" role="list" aria-label="The four beats of every lesson">
+        <li><span class="smallcaps">See</span><span>a live figure shows the idea</span></li>
+        <li><span class="smallcaps">Feel</span><span>you judge it with your eyes, not numbers</span></li>
+        <li><span class="smallcaps">Tune</span><span>an instrument, one variable at a time</span></li>
+        <li><span class="smallcaps">Write</span><span>the code, last, as notation</span></li>
+      </ol>
+    </section>
+
+    <section class="toc" aria-labelledby="contents-h">
+      <h2 id="contents-h" class="smallcaps toc-title">Contents</h2>
+      {byPart.map(({ part, items }) => (
+        <div class="toc-part">
+          <div class="part-head">
+            <span class="smallcaps part-n">{part.numeral === "—" ? "Capstone" : `Part ${part.numeral}`}</span>
+            <h3 class="part-title serif">{part.title}</h3>
+            <p class="part-blurb">{part.blurb}</p>
+          </div>
+          <ol class="rows" role="list">
+            {items.map((c) => {
+              const live = written.has(c.slug);
+              const Tag = live ? "a" : "div";
+              return (
+                <li>
+                  <Tag class:list={["row", { soon: !live }]} href={live ? `/chapters/${c.slug}` : undefined} data-specimen-row>
+                    <span class="row-n serif">{pad2(c.number)}</span>
+                    <span class="row-text">
+                      <span class="row-title serif">{c.title}</span>
+                      <span class="row-sum">{c.summary}</span>
+                    </span>
+                    <canvas class="specimen" data-specimen={c.specimen} width="128" height="36" aria-hidden="true" />
+                  </Tag>
+                </li>
+              );
+            })}
+          </ol>
+        </div>
+      ))}
+    </section>
+
+    <section class="bench" aria-labelledby="lab-h">
+      <div class="bench-head">
+        <h2 id="lab-h" class="smallcaps toc-title">The Lab</h2>
+        <p class="part-blurb">A bench of instruments. Parameters on the left, stage in the centre, time underneath, code on the right.</p>
+      </div>
+      <div class="bench-list">
+        {instruments.map((i) => (
+          <a class="bench-item" href={`/lab/${i.id}`}>
+            <span class="smallcaps">{i.code}</span>
+            <span class="serif">{i.name}</span>
+            <p>{i.does}</p>
+            <span class="smallcaps trains">Trains · {i.trains}</span>
+          </a>
+        ))}
+      </div>
+    </section>
+  </div>
+</Base>
+
+<script>
+  import { createLoop, type Loop } from "@inbetween/core";
+  import { specimens, readPencils } from "~/lib/specimens";
+  import { prefersReducedMotion } from "~/motion/policy";
+
+  function setup() {
+    const canvases = [...document.querySelectorAll<HTMLCanvasElement>("canvas[data-specimen]")];
+    if (!canvases.length) return;
+    const dpr = Math.min(2, devicePixelRatio || 1);
+    let pencils = readPencils();
+
+    const draw = (cv: HTMLCanvasElement, t: number | null) => {
+      const fn = specimens[cv.dataset.specimen!];
+      const ctx = cv.getContext("2d");
+      if (!fn || !ctx) return;
+      const w = 128, h = 36;
+      if (cv.width !== w * dpr) { cv.width = w * dpr; cv.height = h * dpr; }
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, w, h);
+      fn({ ctx, w, h, c: pencils }, t);
+    };
+    const drawAllStill = () => { pencils = readPencils(); canvases.forEach((c) => draw(c, null)); };
+    drawAllStill();
+
+    let loop: Loop | null = null;
+    const stop = (cv: HTMLCanvasElement) => { loop?.stop(); loop = null; draw(cv, null); };
+    document.querySelectorAll<HTMLElement>("[data-specimen-row]").forEach((row) => {
+      const cv = row.querySelector<HTMLCanvasElement>("canvas")!;
+      const start = () => {
+        if (prefersReducedMotion()) return;
+        loop?.stop();
+        loop = createLoop(({ time }) => draw(cv, (time % 1.2) / 1.2));
+      };
+      row.addEventListener("pointerenter", start);
+      row.addEventListener("focus", start);
+      row.addEventListener("pointerleave", () => stop(cv));
+      row.addEventListener("blur", () => stop(cv));
+    });
+    addEventListener("ib:prefs", drawAllStill);
+    matchMedia("(prefers-color-scheme: dark)").addEventListener("change", drawAllStill);
+  }
+  document.addEventListener("astro:page-load", setup);
+</script>
+
+<style>
+  .index { padding-bottom: 2rem; }
+  .hero { padding-block: clamp(2.5rem, 8vw, 6rem) clamp(2rem, 5vw, 3.5rem); border-bottom: 1px solid var(--rule); }
+  .kicker { color: var(--graphite-strong); }
+  .wordmark-xl { font-family: var(--font-display); font-size: var(--text-3xl); line-height: 0.95; letter-spacing: -0.02em; margin-top: 0.75rem; }
+  .hero-grid { display: grid; grid-template-columns: minmax(0, 38rem) minmax(0, 18rem); justify-content: space-between; gap: 2rem 4rem; margin-top: 2rem; align-items: end; }
+  .intro { font-size: 1.1875rem; line-height: 1.55; }
+  .intro em { font-size: 1.12em; }
+  .epigraph p { font-family: var(--font-display); font-style: italic; font-size: 1.25rem; line-height: 1.3; color: var(--graphite-strong); }
+  .epigraph cite { display: block; margin-top: 0.6rem; font-style: normal; color: var(--graphite); }
+  .beats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; margin-top: 2.75rem; background: var(--rule); border: 1px solid var(--rule); }
+  .beats li { background: var(--paper); padding: 0.8rem 0.9rem; display: flex; flex-direction: column; gap: 0.2rem; font-size: var(--text-sm); color: var(--graphite-strong); }
+  .beats .smallcaps { color: var(--ink); }
+
+  .toc { padding-top: 3rem; }
+  .toc-title { color: var(--graphite-strong); }
+  .toc-part { display: grid; grid-template-columns: minmax(0, 15rem) minmax(0, 1fr); gap: 1rem 3rem; padding-block: 2rem; border-bottom: 1px solid var(--rule); }
+  .part-head { position: sticky; top: 1rem; align-self: start; }
+  .part-n { color: var(--graphite); }
+  .part-title { font-size: 1.75rem; line-height: 1.1; margin-top: 0.3rem; }
+  .part-blurb { font-size: var(--text-sm); color: var(--graphite-strong); margin-top: 0.4rem; line-height: 1.45; }
+
+  .rows { margin: 0; padding: 0; }
+  .rows li + li .row { border-top: 1px solid var(--rule); }
+  .row {
+    display: grid;
+    grid-template-columns: 3rem minmax(0, 1fr) 128px;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.85rem 0.5rem;
+    margin-inline: -0.5rem;
+    text-decoration: none;
+    border-radius: 4px;
+    transition: background-color var(--dur-quick) var(--ease-out);
+  }
+  a.row:hover, a.row:focus-visible { background: color-mix(in srgb, var(--ink) 3.5%, transparent); }
+  .row-n { font-size: 1.625rem; color: var(--graphite); font-variant-numeric: tabular-nums lining-nums; line-height: 1; }
+  .row-text { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
+  .row-title { font-size: 1.4rem; line-height: 1.15; }
+  .row-sum { font-size: var(--text-sm); color: var(--graphite-strong); line-height: 1.4; }
+  .specimen { width: 128px; height: 36px; opacity: 0.9; }
+  .row.soon { opacity: 0.45; }
+  .row.soon .row-title::after { content: " · in preparation"; font-family: var(--font-mono); font-size: var(--text-xs); letter-spacing: 0.06em; text-transform: uppercase; color: var(--graphite); }
+
+  .bench { padding-top: 4rem; }
+  .bench-head { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem 2rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
+
+  @media (max-width: 860px) {
+    .hero-grid { grid-template-columns: minmax(0, 1fr); }
+    .beats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .toc-part { grid-template-columns: minmax(0, 1fr); gap: 0.75rem; }
+    .part-head { position: static; }
+  }
+  @media (max-width: 560px) {
+    .row { grid-template-columns: 2.25rem minmax(0, 1fr); }
+    .specimen { grid-column: 2; width: 128px; }
+    .row-title { font-size: 1.25rem; }
+  }
+</style>

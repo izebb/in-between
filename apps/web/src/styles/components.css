@@ -1,0 +1,136 @@
+@layer components {
+  /* ---------- Buttons: ink and hairline. Never red. ---------- */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4em;
+    min-height: 30px;
+    padding: 0 0.75rem;
+    font-size: var(--text-sm);
+    line-height: 1;
+    color: var(--ink);
+    border: 1px solid var(--rule);
+    border-radius: 5px;
+    background: transparent;
+    white-space: nowrap;
+    text-decoration: none;
+    transition:
+      border-color var(--dur-quick) var(--ease-out),
+      background-color var(--dur-quick) var(--ease-out),
+      transform var(--dur-instant) var(--ease-out);
+  }
+  .btn:hover { border-color: var(--graphite); }
+  .btn:active { transform: translateY(1px); }
+  .btn[aria-pressed="true"] { background: color-mix(in srgb, var(--ink) 9%, transparent); border-color: var(--graphite); }
+  .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  .btn.ghost { border-color: transparent; color: var(--graphite-strong); }
+  .btn.ghost:hover { color: var(--ink); background: color-mix(in srgb, var(--ink) 5%, transparent); }
+  .btn.icon { width: 30px; padding: 0; }
+  .btn.small { min-height: 24px; padding: 0 0.5rem; font-size: var(--text-xs); }
+  .btn svg { width: 14px; height: 14px; flex: none; }
+  .btn.solid { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .btn.solid:hover { background: color-mix(in srgb, var(--ink) 86%, var(--paper)); }
+
+  /* ---------- Segmented control ---------- */
+  .seg {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 2px;
+    padding: 2px;
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+  }
+  .seg > button {
+    min-height: 24px;
+    padding: 0 0.55rem;
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    letter-spacing: 0.02em;
+    color: var(--graphite-strong);
+    transition: background-color var(--dur-quick) var(--ease-out), color var(--dur-quick) var(--ease-out);
+  }
+  .seg > button:hover { color: var(--ink); }
+  .seg > button[aria-pressed="true"] { color: var(--ink); background: color-mix(in srgb, var(--ink) 9%, transparent); }
+
+  /* ---------- Small-caps labels and chips ---------- */
+  .label { font-family: var(--font-mono); font-size: var(--text-xs); letter-spacing: 0.08em; text-transform: uppercase; color: var(--graphite-strong); }
+  .chip {
+    display: inline-flex; align-items: center; gap: 0.35em;
+    font-family: var(--font-mono); font-size: var(--text-xs); letter-spacing: 0.04em;
+    padding: 0.2em 0.55em; border-radius: 999px;
+    border: 1px solid var(--rule); color: var(--graphite-strong);
+  }
+
+  /* ---------- Chapter header ---------- */
+  .chapter-head { padding-block: clamp(2rem, 6vw, 4.5rem) 2rem; }
+  .chapter-head .part { color: var(--graphite-strong); }
+  .chapter-head h1 { display: flex; align-items: baseline; gap: 0.35em; margin-top: 0.9rem; }
+  .chapter-head .ch-n { color: var(--graphite); font-variant-numeric: tabular-nums lining-nums; }
+  .chapter-head .lede { margin-top: 1rem; max-width: 36ch; }
+  .chapter-head .meta { margin-top: 1.5rem; display: flex; flex-wrap: wrap; gap: 0.5rem; }
+
+  /* The four beats: SEE → FEEL → TUNE → WRITE → DRILL */
+  .beat { display: flex; flex-direction: column; gap: 0.45rem; }
+  .beat .smallcaps { color: var(--graphite-strong); }
+  .beat .smallcaps b { color: var(--ink); font-weight: 500; }
+
+  /* ---------- Prev / next ---------- */
+  .pager {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
+    margin-top: 5rem; border-top: 1px solid var(--rule); padding-top: 1.5rem;
+  }
+  .pager a { text-decoration: none; display: flex; flex-direction: column; gap: 0.25rem; }
+  .pager a:hover .serif { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 0.2em; }
+  .pager .next { text-align: right; grid-column: 2; }
+  .pager .serif { font-size: var(--text-lg); line-height: 1.2; }
+
+  /* ---------- Snippet card ---------- */
+  .snippet {
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    background: var(--paper-raised);
+    overflow: hidden;
+  }
+  .snippet-head {
+    display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
+    padding: 0.45rem 0.5rem 0.45rem 0.9rem;
+    border-bottom: 1px solid var(--rule);
+  }
+  .snippet-head .smallcaps { color: var(--graphite-strong); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .snippet-actions { display: flex; gap: 0.25rem; flex: none; }
+  .snippet pre { margin: 0 !important; border: 0 !important; border-radius: 0 !important; background: transparent !important; }
+  .snippets { display: grid; gap: 1rem; }
+
+  /* ---------- Theme / preferences toggles ---------- */
+  .pref-toggle { display: inline-flex; align-items: center; gap: 0.35rem; color: var(--graphite-strong); font-size: var(--text-sm); }
+  .pref-toggle:hover { color: var(--ink); }
+  .pref-toggle svg { width: 16px; height: 16px; }
+
+  /* ---------- Motion inspector (hold Alt over anything that moves) ---------- */
+  .inspector {
+    position: fixed; z-index: 1000; pointer-events: none;
+    min-width: 200px;
+    padding: 0.6rem 0.7rem 0.55rem;
+    background: var(--paper-raised);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    box-shadow: 0 6px 24px -12px rgb(0 0 0 / 0.35);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    line-height: 1.5;
+    color: var(--ink);
+  }
+  .inspector svg { margin-top: 0.35rem; }
+  .inspector .k { color: var(--graphite-strong); }
+  .inspect-outline { outline: 1px dashed var(--blue-pencil) !important; outline-offset: 2px; }
+
+  /* ---------- Cards for lab bench / drills ---------- */
+  .bench-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); border-top: 1px solid var(--rule); border-left: 1px solid var(--rule); }
+  .bench-item { background: var(--paper); border-right: 1px solid var(--rule); border-bottom: 1px solid var(--rule); padding: 1.1rem 1.1rem 1.25rem; text-decoration: none; display: flex; flex-direction: column; gap: 0.35rem; min-height: 9.5rem; transition: background-color var(--dur-quick) var(--ease-out); }
+  .bench-item:hover { background: var(--paper-raised); }
+  .bench-item .serif { font-size: 1.5rem; line-height: 1.1; }
+  .bench-item p { font-size: var(--text-sm); color: var(--graphite-strong); line-height: 1.45; }
+  .bench-item .trains { margin-top: auto; }
+}

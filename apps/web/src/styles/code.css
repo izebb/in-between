@@ -1,0 +1,38 @@
+@layer code {
+  /* The pencil palette for code: numbers are the knobs (blue: what could be);
+     a changed number flashes red (what is). Everything else stays in graphite and ink. */
+  :root {
+    --code-bg: var(--paper-raised);
+    --code-comment: var(--graphite);
+    --code-keyword: var(--graphite-strong);
+    --code-string: color-mix(in srgb, var(--ink) 78%, var(--blue-pencil));
+    --code-number: var(--blue-pencil);
+    --code-fn: var(--ink);
+    --code-prop: color-mix(in srgb, var(--ink) 88%, var(--graphite));
+    --code-punct: var(--graphite);
+
+    --shiki-foreground: var(--ink);
+    --shiki-background: transparent;
+    --shiki-token-constant: var(--code-number);
+    --shiki-token-string: var(--code-string);
+    --shiki-token-string-expression: var(--code-string);
+    --shiki-token-comment: var(--code-comment);
+    --shiki-token-keyword: var(--code-keyword);
+    --shiki-token-parameter: var(--ink);
+    --shiki-token-function: var(--code-fn);
+    --shiki-token-punctuation: var(--code-punct);
+    --shiki-token-link: var(--blue-pencil);
+  }
+
+  pre.astro-code, .prose pre {
+    font-size: 0.8125rem;
+    line-height: 1.65;
+    padding: 0.9rem 1rem;
+    overflow-x: auto;
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    background: var(--code-bg) !important;
+    tab-size: 2;
+  }
+  pre.astro-code code { font-family: var(--font-mono); }
+}

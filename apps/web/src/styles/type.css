@@ -1,0 +1,77 @@
+@layer type {
+  :root {
+    --text-xs: 0.6875rem;   /* 11: captions, labels */
+    --text-sm: 0.8125rem;   /* 13: UI, marginalia */
+    --text-md: 1.0625rem;   /* 17: body */
+    --text-lg: 1.375rem;    /* 22: lede */
+    --text-xl: 2rem;        /* 32: section titles */
+    --text-2xl: clamp(2.5rem, 1.6rem + 3.6vw, 4.5rem); /* chapter titles */
+    --text-3xl: clamp(3.25rem, 2rem + 6vw, 6.5rem);    /* the wordmark on the index */
+    --measure: 64ch;
+  }
+
+  h1, h2, h3, h4 { font-weight: 400; line-height: 1.1; text-wrap: balance; }
+
+  .display, h1 {
+    font-family: var(--font-display);
+    font-size: var(--text-2xl);
+    letter-spacing: -0.01em;
+    line-height: 1;
+  }
+  h2 {
+    font-family: var(--font-display);
+    font-size: var(--text-xl);
+    letter-spacing: -0.005em;
+  }
+  h3 {
+    font-family: var(--font-body);
+    font-size: var(--text-md);
+    font-weight: 600;
+    line-height: 1.35;
+  }
+  em, i { font-style: italic; }
+  .serif { font-family: var(--font-display); }
+  .serif-italic { font-family: var(--font-display); font-style: italic; }
+  strong, b { font-weight: 600; }
+  p { text-wrap: pretty; }
+
+  /* Numbers are measurements: mono, tabular. */
+  .mono, code, kbd, samp, pre {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+  .num { font-variant-numeric: tabular-nums; }
+
+  /* FIG. 2.3 — EASE-OUT, 12 FR */
+  .smallcaps {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .lede {
+    font-family: var(--font-display);
+    font-size: var(--text-lg);
+    line-height: 1.35;
+    color: var(--graphite-strong);
+    font-style: italic;
+  }
+
+  :not(pre) > code {
+    font-size: 0.86em;
+    padding: 0.08em 0.3em;
+    border-radius: 3px;
+    background: color-mix(in srgb, var(--ink) 6%, transparent);
+    white-space: nowrap;
+  }
+
+  kbd {
+    font-size: 0.8em;
+    padding: 0.05em 0.35em;
+    border: 1px solid var(--rule);
+    border-bottom-width: 2px;
+    border-radius: 4px;
+  }
+}
