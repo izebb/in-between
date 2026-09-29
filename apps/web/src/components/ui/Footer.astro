@@ -1,7 +1,7 @@
 ---
-import RotaryDial from "./RotaryDial.svelte";
+import Watch from "./Watch.svelte";
 
-// The dial stands only at the foot of the home page.
+// The watch stands only at the foot of the home page.
 const home = Astro.url.pathname.replace(/\/$/, "") === "";
 ---
 <footer class="site-footer page" data-persp-self>
@@ -11,6 +11,6 @@ const home = Astro.url.pathname.replace(/\/$/, "") === "";
       <a href="/">Contents</a> · <a href="/lab">Lab</a> · <a href="/lab/eye-trainer">Eye trainer</a> · <a href="/tokens.figma.json">Tokens</a>
     </span>
   </div>
-  <!-- A rotary dial standing on the bottom edge of the page: only its upper half is in view. -->
-  {home && <RotaryDial client:visible />}
+  <!-- A small watch keeping the reader's time, at the left. -->
+  {home && <Watch client:visible />}
 </footer>
