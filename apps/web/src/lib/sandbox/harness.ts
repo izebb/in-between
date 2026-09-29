@@ -108,7 +108,7 @@ function runtime(o: HarnessOptions) {
     if (cs.scale && cs.scale !== "none") sc *= parseFloat(cs.scale);
     var rot = Math.atan2(m.b, m.a) * 180 / Math.PI;
     if (cs.rotate && cs.rotate !== "none") rot += parseFloat(cs.rotate);
-    return [r.left + r.width / 2, r.top + r.height / 2, sc, parseFloat(cs.opacity), rot];
+    return [r.left + r.width / 2, r.top + r.height / 2, sc, parseFloat(cs.opacity), rot, r.width, r.height];
   }
   function measureCanvas(name) {
     var subj = canvasApi && canvasApi.subjects && canvasApi.subjects[name];
@@ -167,6 +167,8 @@ function runtime(o: HarnessOptions) {
     realRAF(function () { realRAF(function () {
       if (DIALECT === "canvas") { sizeCanvas(); window.addEventListener("resize", sizeCanvas); }
       sample(0);
+      // Your JS runs only now: the page is laid out, so measurements (FLIP, getBoundingClientRect) are real.
+      if (window.__ibUser) window.__ibUser();
       if (DIALECT === "css") {
         var stage = document.querySelector(".stage");
         TARGETS.forEach(function (n) { var el = document.querySelector("." + n); if (el) getComputedStyle(el).transform; });
@@ -226,7 +228,7 @@ export function buildSrcdoc(o: HarnessOptions): string {
       ? `<script>${canvasLoader(o)}</script><script>window.__ibStart();window.__ibLoad(${esc(JSON.stringify(o.code))}, false);</script>`
       : o.dialect === "css"
         ? `<script>window.__ibStart();</script>`
-        : `<script>window.__ibStart();</script><script>try{(function(){\n${esc(rewriteImports(o.code))}\n})();}catch(e){parent.postMessage({ib:1,type:"error",message:String(e&&e.message||e)},"*");}</script>`;
+        : `<script>window.__ibUser=function(){try{(function(){\n${esc(rewriteImports(o.code))}\n})();}catch(e){parent.postMessage({ib:1,type:"error",message:String(e&&e.message||e)},"*");}};</script><script>window.__ibStart();</script>`;
 
   return `<!doctype html><html><head><meta charset="utf-8">
 <style>

@@ -3,9 +3,9 @@
    * FLIP by hand: First, Last, Invert, Play. Step through the four beats and see what each one does,
    * or run them together. The ghosts show the recorded First (blue) and Last (red) boxes.
    */
-  import { tick } from "svelte";
+  import { tick, onMount } from "svelte";
   import { parseSpec, waapiTiming } from "~/lib/spec";
-  import { prefs } from "~/lib/prefs.svelte";
+  import { prefs, watchPlateStill } from "~/lib/prefs.svelte";
 
   let { easing = "--ease-inout", duration = 420 }: { easing?: string; duration?: number } = $props();
 
@@ -19,6 +19,9 @@
   let last = new Map<number, DOMRect>();
   let ghosts = $state<{ id: number; r: DOMRect; kind: "first" | "last" }[]>([]);
   let busy = $state(false);
+  let rootEl: HTMLElement;
+  let still = $state(false);
+  onMount(() => watchPlateStill(rootEl, (v) => (still = v)));
 
   const LINES = [
     "const first = el.getBoundingClientRect();   // F",
@@ -60,7 +63,7 @@
       const anims = [...els.values()].map((el) => {
         const from = el.style.transform;
         el.style.transform = "";
-        return el.animate([{ transform: from }, { transform: "none" }], { duration: prefs.reduced ? 0 : t.duration, easing: t.easing });
+        return el.animate([{ transform: from }, { transform: "none" }], { duration: prefs.reduced || still ? 0 : t.duration, easing: t.easing });
       });
       await Promise.all(anims.map((a) => a.finished.catch(() => undefined)));
       busy = false;
@@ -89,7 +92,7 @@
   const labels = ["Ready", "First: measured", "Last: layout changed, measured", "Invert: pushed back to First", "Play: animated to none"];
 </script>
 
-<div class="flip">
+<div class="flip" bind:this={rootEl}>
   <div class="controls">
     <div class="beats smallcaps" aria-live="polite">
       {#each ["F", "L", "I", "P"] as b, i (b)}<span class:on={phase >= i + 1}>{b}</span>{/each}

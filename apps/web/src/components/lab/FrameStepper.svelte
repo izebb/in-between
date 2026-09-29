@@ -141,6 +141,7 @@ box.animate(
     if (d === lab.dialect) return;
     lab.dialect = d;
     lab.code = d === "css" ? CSS_DEMO : JS_DEMO;
+    runCode = lab.code; // change language and code together, so the stage never runs CSS as JS
   }
   let runCode = $state(lab.code);
   let debounce: ReturnType<typeof setTimeout> | null = null;

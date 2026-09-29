@@ -99,6 +99,10 @@
     border-bottom: 1px solid var(--rule);
   }
   .snippet-head .smallcaps { color: var(--graphite-strong); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  @media (max-width: 560px) {
+    .snippet-head { align-items: flex-start; }
+    .snippet-head .smallcaps { white-space: normal; line-height: 1.5; }
+  }
   .snippet-actions { display: flex; gap: 0.25rem; flex: none; }
   .snippet pre { margin: 0 !important; border: 0 !important; border-radius: 0 !important; background: transparent !important; }
   .snippets { display: grid; gap: 1rem; }

@@ -34,7 +34,13 @@ for (const width of widths) {
     page.on("pageerror", (e) => errors.push(`${theme}/${width}: ${e.message}`));
     page.on("console", (m) => m.type() === "error" && errors.push(`${theme}/${width} console: ${m.text()}`));
     for (const p of pages) {
-      await page.goto(base + p, { waitUntil: "networkidle" });
+      // The dev server may reload mid-run (files changing): retry once.
+      try {
+        await page.goto(base + p, { waitUntil: "networkidle", timeout: 60000 });
+      } catch {
+        await page.waitForTimeout(1500);
+        await page.goto(base + p, { waitUntil: "load", timeout: 90000 });
+      }
       await page.evaluate(() => document.fonts.ready);
       if (args.full === "true" || args.scrollthrough) {
         // Walk the page so scroll-triggered reveals fire, then return to the top.

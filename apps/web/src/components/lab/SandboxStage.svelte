@@ -190,7 +190,7 @@
 
   /** Onion skin from measured frames: the sample nearest each frame on the grid. */
   const ghosts = $derived.by(() => {
-    const out: { target: string; x: number; y: number; s: number; o: number; k: number }[] = [];
+    const out: { target: string; x: number; y: number; w: number; h: number; o: number; k: number }[] = [];
     if (!samples.length) return out;
     const frameMs = 1000 / fps;
     const last = samples[samples.length - 1].t;
@@ -201,7 +201,7 @@
       while (j < samples.length - 1 && Math.abs(samples[j + 1].t - t) <= Math.abs(samples[j].t - t)) j++;
       for (const target of targets) {
         const v = samples[j].s[target];
-        if (v) out.push({ target, x: v[0], y: v[1], s: v[2], o: v[3], k });
+        if (v) out.push({ target, x: v[0], y: v[1], w: v[5] ?? 40 * v[2], h: v[6] ?? 40 * v[2], o: v[3], k });
       }
     }
     return out;
@@ -224,14 +224,14 @@
     {#each ghosts as g, i (i)}
       <rect
         class="ghost"
-        x={g.x - 20 * g.s}
-        y={g.y - 20 * g.s}
-        width={40 * g.s}
-        height={40 * g.s}
+        x={g.x - g.w / 2}
+        y={g.y - g.h / 2}
+        width={g.w}
+        height={g.h}
         rx="6"
         opacity={0.25 + 0.5 * Math.max(0.15, g.o)}
       />
-      <line class="ghost" x1={g.x} x2={g.x} y1={g.y + 30} y2={g.y + 38} />
+      <line class="ghost" x1={g.x} x2={g.x} y1={g.y + g.h / 2 + 10} y2={g.y + g.h / 2 + 18} />
     {/each}
   </svg>
   {/if}

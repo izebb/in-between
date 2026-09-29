@@ -1,0 +1,264 @@
+---
+number: 11
+lede: "A screen has no place of its own. Motion gives it one, and people draw a map from it."
+---
+
+export const easeOut = { type: "cubic", x1: 0.2, y1: 0.8, x2: 0.2, y2: 1 };
+export const easeIn = { type: "cubic", x1: 0.4, y1: 0, x2: 1, y2: 1 };
+
+export const push = {
+  use: "overlap",
+  layout: "boxes",
+  stagger: 0,
+  staggerProp: "x",
+  scene: {
+    title: "A push, as in figure 11.1",
+    moves: [
+      { target: "old", property: "x", from: 60, to: 0, duration: 252, delay: 0, easing: easeIn },
+      { target: "old", property: "opacity", from: 1, to: 0.5, duration: 252, delay: 0, easing: easeIn },
+      { target: "new", property: "x", from: 200, to: 0, duration: 360, delay: 0, easing: easeOut },
+    ],
+  },
+};
+
+A screen is a rectangle of pixels that gets swapped for another rectangle. On its own it has no position: nothing says where it is, or where the last one went. Motion adds that. Where a screen comes from says where it lives. Where it goes says where to find it again.
+
+Keep those directions consistent and people build a map of the app without trying. They know Home is back to the left and the page they came from is still there. Pick directions at random and the app turns into a pile of screens.
+
+<Beat kind="see">A small app, as a place</Beat>
+
+This phone holds a small app: Home, an Inbox, a message, and a reply. Tap *Inbox*, open a message, then tap *Reply*. Then find your way back to Home. Watch where each screen comes from and where it goes, and keep an eye on the map beside it. Leave the checkbox ticked for now.
+
+<Figure n="11.1" caption="An app as a place: x for sequence, z for depth">
+  <Spatial />
+</Figure>
+
+You saw two kinds of move. Going deeper slid the new screen in from the right, and the one you left gave way to the left. Back ran along the same line the other way. The reply did something else. It rose from below and sat *on top of* the message, and the message sank back a little behind it. The map records both: the screens lie in a row, and the reply floats above the end of it.
+
+<Beat kind="feel">Where is Home?</Beat>
+
+Now switch the model off. Untick *Consistent spatial model* under the map in figure 11.1 and take the same trip: Inbox, a message, Reply, and back to Home. Every push and every back still moves, with the same timing and the same curve. Only the directions are picked at random.
+
+Halfway back, stop and point to Home. With the model on, you could. Now a screen can arrive from any side, and back can go any way. Each move is fine on its own, but together they add up to nothing, and the map beside the phone no longer agrees with what you saw. Tick the box again and take the trip once more. The app is a place again.
+
+<Beat kind="more">The promise</Beat>
+
+A spatial model is a promise. Every transition either keeps it or breaks it, and it has three parts:
+
+- **Forward always comes from the same side.** In a left-to-right language, the next thing arrives from the right, where the eye goes next.
+- **Back returns the way you came.** The screen you left is where you left it, and going back retraces the path.
+- **Things on top come toward you, then go back.** A sheet or a dialog is not the next step. It is a layer over this one, and when it closes you are where you were.
+
+Two axes do most of the work: **x for sequence** and **z for hierarchy**.
+
+<Beat kind="more">x is sequence</Beat>
+
+<Margin kind="wild">
+  <p>On iPhone, each new screen in a navigation stack slides in from the right. Swipe in from the left edge and the top screen follows your finger back to the right, the way it came. A full-height sheet rises from the bottom, and the screen behind it shrinks back a little.</p>
+</Margin>
+
+Left to right is the order of things: pages in a book, steps in a form, screens in a navigation stack. Going deeper *pushes* a screen onto the stack. Back *pops* it off. The next screen is always to the right of this one, so a push arrives from the right, and back moves everything the other way.
+
+In figure 11.1 the arriving screen travels the full width in 360ms with `--ease-out`. The screen it replaces moves 30% of the width the same way and fades to half in 252ms with `--ease-in`: 0.7× the time, the exit rule from chapter 03. Going back swaps the sides and changes nothing else.
+
+<Margin kind="def">
+  <p><b>Parallax.</b> When you move, near things slide past faster than far things. So of two layers moving together, the one that moves less looks further away.</p>
+</Margin>
+
+That short 30% move does real work. The two screens move the same way at different speeds, so the slower one looks further away: *under* the new one, not beside it. A push is mostly x, with a little z.
+
+Which side is "forward" comes from reading. In Arabic or Hebrew, text runs right to left, and the model mirrors: forward arrives from the left, and the back arrow points right. Mirror the whole model at once, never one transition on its own.
+
+<Beat kind="more">z is hierarchy</Beat>
+
+Depth is for things that sit *on* the page rather than *after* it: sheets, dialogs, popovers, menus. They don't take you anywhere. They come toward you, you deal with them, and they go back, leaving you where you were.
+
+In figure 11.1 the reply sheet rises over 360ms with `--ease-out`. At the same time, the page behind it scales to `0.93` and drops to 85% brightness over 280ms. Three cues carry one message: the page is smaller because it is further away, it is darker because it is under something, and the sheet casts a shadow onto it.
+
+The cues must agree. This is solid drawing from chapter 07: a card that lifts grows a little, and its shadow spreads and softens, both at once. If one cue contradicts the others, say a dialog that grows while its shadow shrinks, or a page that brightens as it sinks, the eye can't place the thing at all.
+
+<Margin kind="read">
+  <p>Material Design's motion guidelines name this the <i>shared axis</i> pattern: screens with a spatial or navigational relationship move together along the x, y or z axis.</p>
+</Margin>
+
+Don't mix the axes. A settings panel that slides in from the right reads as the next step, and people look for the way back. A new screen that grows up out of the page reads as a layer, and people look for a close button. Pick the axis from what the thing *is*.
+
+<Beat kind="more">Edges</Beat>
+
+Some things belong to an edge of the screen. A toast lives at the bottom. A bottom sheet waits below the bottom edge, and a side drawer off the left or the right. These things don't need a place in the sequence or the stack. They come from their edge and leave through it. Mostly that means y: up from the bottom, down from the top.
+
+<Figure n="11.2" caption="From an edge, and toward you">
+  <Specimens items={[
+    { kind: "toast", direction: "loop", label: "From the bottom", note: "A toast rises from the edge it lives on, and sinks back into it.", motion: { easing: "--ease-out", duration: 280, distance: 24 } },
+    { kind: "drawer", direction: "loop", label: "From the side", note: "A drawer slides out from its side and leaves the same way.", motion: { easing: "--ease-out", duration: 360 } },
+    { kind: "modal", direction: "loop", label: "Toward you", note: "A dialog comes up out of the page: it grows a little and the page behind it dims.", motion: { easing: "--ease-out", duration: 280 } }
+  ]} height={150} />
+</Figure>
+
+Hover or tap each one to replay it. Every one leaves the way it came. A toast that rises from the bottom and then flies off to the right has made a second promise and broken the first.
+
+<Beat kind="more">Depth you can turn</Beat>
+
+CSS can draw real depth. Give an element `perspective` and its children can turn in 3D. `rotateY(180deg)` turns a card over to show its back, and as it turns, the near edge grows and the far edge shrinks. The value of `perspective` is how far your eye is from the page. For a card about 300px wide, `800px` turns it naturally. At `300px` you are so close that the near edge balloons. At `2000px` the turn looks almost flat.
+
+<Margin kind="history">
+  <p>The widgets in Mac OS X Tiger's Dashboard turned over like cards to show their settings on the back.</p>
+</Margin>
+
+A flip is a spatial promise too. It says the back was always there, on the other side of the same card: a widget's settings are *behind* it, not somewhere else. Use it rarely. 3D turns are loud. One flip in a product is a small delight; a flip on every card is noise.
+
+<Beat kind="tune">A push, on one clock</Beat>
+
+This is the push from figure 11.1 on an exposure sheet. The two boxes stand for the two screens: `old` is the one you leave, `new` the one you arrive on. `new` travels 200px to its place, and `old` travels 60px the same way, 30% as far. Play it, then pick the `old · x` bar on the sheet and change its **To**.
+
+<Lab id="exposure-sheet" extra={push} code={false} />
+
+- **`120`**: the old screen now moves right, into the path of the new one. The two collide, and you are back in the scrambled app.
+- **`60`**: the old screen doesn't move at all. The new one slides over a still page, and reads as a layer on top: more like a drawer than a next step.
+
+Set it back to `0` and read the sheet. Both screens start on the same frame, and `old` finishes first: the exit is shorter.
+
+<Beat kind="write">The notation</Beat>
+
+A same-document view transition can run figure 11.1's push and pop. Decide the direction *before* the transition starts, and let one variable carry it: a `data-direction` attribute on `<html>` flips `--dir`, and a right-to-left page flips it again. The keyframes never change, only the sign. Under reduced motion the slides are skipped, and the browser's default cross-fade runs instead.
+
+Newer browsers can also hand the direction to the transition itself: pass `types: ['back']` along with the `update` callback to `startViewTransition()`, and match it in CSS with `:active-view-transition-type(back)` on the root. The attribute works wherever view transitions do.
+
+<div class="snippets">
+<Snippet title="11 · Spatial Models: push and pop as a view transition" lab="exposure-sheet" extra={push}>
+
+```css
+/* Which way is forward? 1: from the right. -1: from the left. */
+html { --dir: 1; }
+html[data-direction="back"] { --dir: -1; }
+html[dir="rtl"] { --dir: -1; }                        /* mirror the model */
+html[dir="rtl"][data-direction="back"] { --dir: 1; }
+
+@media (prefers-reduced-motion: no-preference) {
+  /* The screen you arrive on travels the full width, on top. */
+  ::view-transition-new(root) {
+    animation: 360ms cubic-bezier(.2, .8, .2, 1) both arrive;
+  }
+
+  /* The screen you leave moves 30% the same way, and fades. */
+  ::view-transition-old(root) {
+    animation: 252ms cubic-bezier(.4, 0, 1, 1) both give-way;
+  }
+}
+
+@keyframes arrive {
+  from { transform: translateX(calc(100% * var(--dir))); }
+}
+
+@keyframes give-way {
+  to { transform: translateX(calc(-30% * var(--dir))); opacity: 0.5; }
+}
+```
+
+</Snippet>
+
+<Snippet title="11 · Spatial Models: pick the direction, then transition" lab="exposure-sheet" extra={push}>
+
+```js
+// Set the direction first, so the CSS knows which way to slide.
+function navigate(update, direction = 'forward') {
+  if (!document.startViewTransition) return update();
+  const html = document.documentElement;
+  html.dataset.direction = direction;
+  const transition = document.startViewTransition(update);
+  transition.finished.finally(() => delete html.dataset.direction);
+  return transition;
+}
+
+navigate(() => showPage('inbox'));         // forward: from the right
+navigate(() => showPage('home'), 'back');  // back: from the left
+```
+
+</Snippet>
+
+<Snippet title="11 · Spatial Models: a navigation stack in WAAPI" lab="exposure-sheet" extra={push}>
+
+```js
+// Pages sit on top of each other (position: absolute; inset: 0)
+// in a container with overflow: clip. dir: 1 forward, -1 back.
+const ARRIVE = { duration: 360, easing: 'cubic-bezier(.2, .8, .2, 1)' };
+const LEAVE = { duration: 252, easing: 'cubic-bezier(.4, 0, 1, 1)' };
+
+async function slide(from, to, dir) {
+  if (getComputedStyle(from).direction === 'rtl') dir = -dir; // mirror
+  from.after(to); // the arriving page goes on top
+  to.hidden = false;
+  if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const leave = from.animate([
+      { transform: 'none', opacity: 1 },
+      { transform: `translateX(${-30 * dir}%)`, opacity: 0.5 },
+    ], { ...LEAVE, fill: 'forwards' }); // hold until the new page lands
+    await to.animate([
+      { transform: `translateX(${100 * dir}%)` },
+      { transform: 'none' },
+    ], ARRIVE).finished;
+    leave.cancel();
+  }
+  from.hidden = true;
+}
+
+const stack = [document.querySelector('.page')];
+
+function forward(page) {
+  const from = stack.at(-1);
+  stack.push(page);
+  return slide(from, page, 1);
+}
+
+function back() {
+  if (stack.length < 2) return;
+  const from = stack.pop();
+  return slide(from, stack.at(-1), -1); // same path, other way
+}
+```
+
+</Snippet>
+
+<Snippet title="11 · Spatial Models: a card flip in 3D" lab="curve-bench" easing="--ease-inout" duration={480} property="rotate" to={180}>
+
+```css
+.card {
+  perspective: 800px;            /* how far your eye is from the card */
+}
+
+.card-inner {
+  position: relative;
+  transform-style: preserve-3d;  /* the faces keep their own depth */
+  transition: transform 480ms cubic-bezier(.65, 0, .35, 1);
+}
+
+.card.is-flipped .card-inner {
+  transform: rotateY(180deg);
+}
+
+.card-front,
+.card-back {
+  backface-visibility: hidden;   /* a face turned away is not drawn */
+}
+
+.card-back {
+  position: absolute;
+  inset: 0;
+  transform: rotateY(180deg);    /* the back starts face down */
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-inner { transition: none; }
+}
+```
+
+</Snippet>
+</div>
+
+Whichever version you use, send the browser's own back button through it too. However someone goes back, it should look like back.
+
+<Beat kind="drill">Where did it come from?</Beat>
+
+Two versions of a panel or a tile. Pick the one that tells you where things are, then name the reason in one word.
+
+<Drill kind="blind-ab" topic="spatial" trials={5} chapter={11} />

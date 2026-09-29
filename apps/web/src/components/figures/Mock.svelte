@@ -146,7 +146,12 @@
   export async function play() {
     stop();
     if (!root) return;
-    if (direction === "enter") await run("enter");
+    if (direction === "enter" && motion.none) {
+      // A cut: gone, then simply there. Without the gap there'd be nothing to see.
+      await run("exit");
+      await new Promise<void>((r) => (timer = setTimeout(r, 260)));
+      await run("enter");
+    } else if (direction === "enter") await run("enter");
     else if (direction === "exit") await run("exit");
     else {
       await run("enter");

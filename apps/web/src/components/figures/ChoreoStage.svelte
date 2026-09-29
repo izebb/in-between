@@ -49,7 +49,7 @@
 </div>
 
 <style>
-  .choreo { position: relative; padding: 1.25rem 1.5rem; display: flex; flex-direction: column; justify-content: center; gap: 10px; }
+  .choreo { position: relative; overflow: hidden; padding: 1.25rem 1.5rem; display: flex; flex-direction: column; justify-content: center; gap: 10px; }
   .layout-boxes { flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: flex-start; gap: 18px; }
   .layout-cards { display: grid; grid-template-columns: repeat(3, 1fr); align-content: center; }
   .slot { position: relative; }
@@ -70,6 +70,6 @@
   .ghost-el { position: absolute; inset: 0; background: transparent !important; border: 1px solid var(--blue-pencil) !important; box-shadow: none; opacity: 0.55 !important; pointer-events: none; }
   .av { width: 16px; height: 16px; border-radius: 50%; background: color-mix(in srgb, var(--ink) 16%, transparent); flex: none; }
   .ln { height: 7px; border-radius: 4px; background: color-mix(in srgb, var(--ink) 14%, transparent); }
-  .tag { margin-left: auto; font-size: 10px; color: var(--graphite-strong); }
+  .tag { margin-left: auto; font-size: 10px; color: var(--graphite-strong); white-space: nowrap; }
   .layout-boxes .tag { margin: 0; color: var(--paper); }
 </style>

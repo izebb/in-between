@@ -8,7 +8,7 @@
   import { cubicBezier } from "@inbetween/core";
   import { prefs } from "~/lib/prefs.svelte";
 
-  let { duration = 360, coherent: startCoherent = true }: { duration?: number; coherent?: boolean } = $props();
+  let { duration = 360, coherent: startCoherent = true, hint = "Tap through the app. Then turn the model off and do it again." }: { duration?: number; coherent?: boolean; hint?: string } = $props();
 
   type Page = "home" | "inbox" | "message";
   const TITLES: Record<Page, string> = { home: "Home", inbox: "Inbox", message: "Message" };
@@ -113,7 +113,7 @@
       <text class="label" x="190" y="30" text-anchor="middle">sheet</text>
     </svg>
     <label class="check"><input type="checkbox" bind:checked={coherent} /> Consistent spatial model</label>
-    <p class="hint">Tap through the app. Then turn the model off and do it again.</p>
+    <p class="hint">{hint}</p>
   </div>
 </div>
 

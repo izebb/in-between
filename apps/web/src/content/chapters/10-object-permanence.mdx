@@ -1,0 +1,324 @@
+---
+number: 10
+lede: "A thing that vanishes here and appears there is two things, unless motion shows it is one."
+---
+
+export const flipJs = `// FLIP: First, Last, Invert, Play.
+const timing = { duration: 420, easing: 'cubic-bezier(.65, 0, .35, 1)' };
+
+function flip(el, change) {
+  // F: where it is on screen now. Stop a FLIP that's still running.
+  const first = el.getBoundingClientRect();
+  el.getAnimations().forEach((a) => a.cancel());
+
+  // L: the layout jumps, in one step. Measure where it landed.
+  change();
+  const last = el.getBoundingClientRect();
+
+  // I: the transform that puts it back on First.
+  const dx = first.left - last.left;
+  const dy = first.top - last.top;
+  const sx = first.width / last.width;
+  const sy = first.height / last.height;
+  const invert = \`translate(\${dx}px, \${dy}px) scale(\${sx}, \${sy})\`;
+
+  // P: play the transform away, to none.
+  return el.animate(
+    [
+      { transformOrigin: '0 0', transform: invert },
+      { transformOrigin: '0 0', transform: 'none' },
+    ],
+    timing,
+  );
+}
+
+// The stage is laid out on its first frame. Then the box's layout
+// jumps to a new place, and FLIP makes it travel there.
+const box = document.querySelector('.box');
+requestAnimationFrame(() => {
+  flip(box, () => {
+    box.style.left = '60%';
+    box.style.top = '24px';
+  });
+});
+`;
+
+Hide a toy under a cloth in front of a very young baby, and the baby stops looking for it. Out of sight is gone. Some months later, the same baby lifts the cloth. It has learned that things go on existing when you can't see them, and from then on it never has to think about it again. The world keeps its things.
+
+A screen doesn't. When a layout changes in a single frame, the screen doesn't move anything: some pixels go dark and others light up. Whether the thumbnail you tapped and the big picture that replaced it are the same thing is a guess the eye has to make. Motion can take the guess away. If the thumbnail travels to its new place and grows into the picture, it was never gone.
+
+<Beat kind="see">One thing, or two?</Beat>
+
+Tap a row to open it, then go back. Do it once with **Shared elements** on and once with it off.
+
+<Figure n="10.1" caption="List to detail, shared elements on or off">
+  <ViewTransition />
+</Figure>
+
+With shared elements on, the colour block you tapped travels and grows into the picture at the top of the detail view, and the title moves into the heading. You never lose the thing you tapped. It just went somewhere. Going back, it returns to its own row, so you know where you were.
+
+With them off, the list dissolves and the detail view fades in over it. Nothing is broken, but you saw two screens, not one thing moving. Going back, the eye has to search the list for the row it left.
+
+<Beat kind="feel">What did you open?</Beat>
+
+Watch a tile open and close, with motion and without. Then ask which tile it was.
+
+<FeelAB
+  mode="toggle"
+  question="A tile opens into its detail view, then closes again. Try it with motion, then without."
+  kind="expand"
+  direction="loop"
+  options={[
+    { label: "With motion", motion: { easing: "--ease-out", duration: 460 } },
+    { label: "Cut", motion: { none: true } }
+  ]}
+  explain="With the cut, a panel appears from nowhere and then a tile is simply there again. Which tile was it? You have to work it out. With motion, the tile grows into the panel and the panel shrinks back into the tile. It is one thing that changed size, so you never ask what you opened, or where it went."
+/>
+
+<Beat kind="more">One thing or two</Beat>
+
+<Margin kind="history">
+  <p>Jean Piaget described <i>object permanence</i> in his studies of infants: the understanding that a thing goes on existing when it can no longer be seen.</p>
+</Margin>
+
+The eye is always matching what it sees now against what it saw a moment ago. When something moves a little between frames, the match is easy: the same thing, moved. When it jumps across the screen, or changes size, in a single frame, there is nothing to match. What's left is a disappearance and an appearance, and the eye's default reading of that is two different things.
+
+A shared-element transition exists to keep identity. The motion says *this is the thing you tapped*, and it says it without a label.
+
+<Margin kind="wild">
+  <p>In the Photos app on iPhone, a photo you tap grows out of its thumbnail to fill the screen. Drag it down and it shrinks back into its own square in the grid, so you never lose your place.</p>
+</Margin>
+
+It matters most in three places:
+
+- **Something opens into more of itself.** A thumbnail into a photo, a card into an article, a row into its detail page.
+- **Something moves within a list.** A table re-sorts, a to-do is dragged up, a new item at the top pushes the rest down. If every row jumps, you lose your place. If the rows slide, you keep it.
+- **Something small marks where you are.** A tab's underline, a selected segment. If it slides, it is one marker. If it blinks from tab to tab, it is a new marker every time.
+
+<Margin kind="note">
+  <p>This site follows that rule. Chapter changes run through Astro's <code>&lt;ClientRouter /&gt;</code>, which swaps pages inside a view transition where the browser supports one. The chapter body isn't treated as one thing: the old page fades out and the new one fades in with a 4px rise.</p>
+</Margin>
+
+It matters just as much *not* to do it when the two things aren't the same. A morph is a claim of identity. If the title of one chapter morphed into the title of the next, it would say they were the same chapter. Between different things, the honest move is a cut, or a quick cross-fade.
+
+<Beat kind="more">FLIP by hand</Beat>
+
+Say a card moves from one list to another. In the DOM that's one line: append it to the other list. The browser lays out the page again, and the card is simply in its new place. To make it travel instead, the obvious idea is to animate `top` and `left`, or `width` and `height`, from the old values to the new ones.
+
+<Margin kind="def">
+  <p><b>Layout.</b> The browser's work of deciding where every box goes and how big it is. Change one box's size and its neighbours may move, so the browser has to check them too.</p>
+</Margin>
+
+Don't. Those are layout properties. Change one and the browser has to work out again where every affected box goes, on every frame of the animation. A transform is applied after layout: it moves or scales a box's pixels without changing where anything else goes, and the browser can often run it on the compositor with no layout or paint at all. Layout is expensive to animate. Transforms are cheap.
+
+<Margin kind="history">
+  <p>Paul Lewis named the technique, and the acronym, in his blog post <i>FLIP Your Animations</i>.</p>
+</Margin>
+
+FLIP gets the best of both. Let the layout change happen at once, for real, then use a transform to fake the trip. It is named after its four steps:
+
+1. **First.** Measure the element where it is now, with `getBoundingClientRect()`.
+2. **Last.** Make the change. The element jumps to its new place. Measure it again.
+3. **Invert.** Work out the transform that puts it back: translate by First minus Last, and scale by First's size over Last's. Apply it. The element *looks* as if it never moved, though its layout is already at Last.
+4. **Play.** Animate the transform to `none`. The element travels from First to Last on transforms alone.
+
+<Figure n="10.2" caption="FLIP by hand: First, Last, Invert, Play">
+  <Flip />
+</Figure>
+
+Step through it with **Next beat**. After *Last*, the tiles have already jumped: the red outlines are their new layout. After *Invert*, each tile sits on its blue dashed outline again, where it started, although its layout is at Last. *Play* only takes a transform away.
+
+Two details make it work:
+
+- **No flash.** First, Last and Invert run in the same task, before the browser paints. The screen never shows the element at Last without its transform. The first frame anyone sees is the element at First.
+- **Measuring is the cost.** Reading `getBoundingClientRect()` right after a change makes the browser lay out the page there and then. FLIP pays for layout twice, up front, instead of on every frame.
+
+Scale is where FLIP gets awkward. Scaling a box scales everything in it: text squashes, rounded corners flatten, borders thin. For a photo that's fine. For a card full of text, keep the scale small, or counter-scale the children.
+
+A FLIP can also be interrupted without a jump. `getBoundingClientRect()` includes transforms, so if a new FLIP starts mid-flight, First is where the element is *on screen*, and the new trip starts from there. It doesn't keep its speed the way a spring does (chapter 05), but it doesn't teleport either.
+
+<Beat kind="more">The platform version</Beat>
+
+FLIP means measuring and inverting each element yourself. The View Transitions API does it for you, for the whole page at once. You call `document.startViewTransition()` with a function that changes the DOM, and the browser:
+
+1. Captures the page as it looks now: the old state.
+2. Runs your function. The DOM changes in one step, but the screen isn't updated yet.
+3. Captures the new state.
+4. On a layer above the page, animates from the old state to the new one. By default that's a cross-fade of the whole page.
+
+On its own, that's a dissolve. The part that keeps identity is `view-transition-name`. Give an element a name and the browser captures it apart from the rest of the page. If an element in the old state and an element in the new state have the same name, the browser treats them as one thing: it takes the old box and the new box and animates between them. That's FLIP, done by the browser, and it works even when the two were never the same DOM node.
+
+Each name gets a small tree of pseudo-elements, which you style with CSS:
+
+| Pseudo-element | What it is | By default |
+|---|---|---|
+| `::view-transition-group(name)` | the box that travels | moves and resizes from the old box to the new |
+| `::view-transition-old(name)` | a picture of the old state | fades out |
+| `::view-transition-new(name)` | a picture of the new state | fades in |
+
+Everything without a name is captured together, under the name `root`. That's the whole-page cross-fade.
+
+Two rules. A name may belong to only one element at a time in each state; if two share it, the browser skips the transition. So in a list, name only the item that was tapped, just before the transition starts. And while the transition runs, you are watching pictures on a layer above the page. The DOM underneath has already changed.
+
+Figure 10.1 is a real view transition. The colour block and the title carry names only while **Shared elements** is on, and only in the row you tapped. Turn it off and nothing has a name, so all that's left is `root`: the dissolve.
+
+<Beat kind="more">Between pages, and in React</Beat>
+
+A view transition can also run from one page to another. Put `@view-transition { navigation: auto; }` in the CSS of both pages, and a navigation between them animates, with no JavaScript. It only works within one origin. Names work the same way: a list page can give each thumbnail its own name, `photo-12` for item 12, and the detail page for item 12 gives its hero the same name. The thumbnail grows into the hero across the page load.
+
+Where the API is missing, `document.startViewTransition` is undefined and pages navigate the way they always have. So check for it, and when it isn't there, just make the change.
+
+In React, Motion does FLIP for you. Add `layout` to a `motion` element and whenever a render moves or resizes it, it animates there with transforms. Give two elements the same `layoutId`, and when one replaces the other, the new one grows out of the old one's box. That's a shared element without the View Transitions API, and like any Motion animation it can be interrupted mid-flight.
+
+<Beat kind="tune">Step a FLIP</Beat>
+
+This is FLIP written out, running on the stage. The box's layout jumps to a new place in one step; the four steps make it travel. Play it at 0.1×, or step it with the arrow keys on the scrubber.
+
+- Step through the first few frames. The layout has already jumped to Last, but the box is still drawn at First. The transform is all that holds it there.
+- Drag `duration` down to 0. That's the change without FLIP: a jump.
+- Change `left` and `top` to anything you like. FLIP never needs to know where the layout will put the box. It measures, then inverts.
+
+<Lab id="frame-stepper" dialect="js" source={flipJs} />
+
+<Beat kind="write">The notation</Beat>
+
+FLIP by hand works anywhere and on anything. The View Transitions API lets the browser do the measuring. Motion's `layout` does it inside React. All three share one idea: measure where the thing was and where it is now, then carry it across without animating the page's layout.
+
+<div class="snippets">
+<Snippet title="10 · Object Permanence: FLIP by hand" lab="frame-stepper" dialect="js" source={flipJs}>
+
+```js
+// FLIP: First, Last, Invert, Play.
+const timing = { duration: 420, easing: 'cubic-bezier(.65, 0, .35, 1)' };
+
+function flip(el, change) {
+  // F: where it is on screen now. Stop a FLIP that's still running.
+  const first = el.getBoundingClientRect();
+  el.getAnimations().forEach((a) => a.cancel());
+
+  // L: the layout jumps, in one step. Measure where it landed.
+  change();
+  const last = el.getBoundingClientRect();
+
+  // I: the transform that puts it back on First.
+  const dx = first.left - last.left;
+  const dy = first.top - last.top;
+  const sx = first.width / last.width;
+  const sy = first.height / last.height;
+  const invert = `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})`;
+
+  // P: play the transform away, to none.
+  return el.animate(
+    [
+      { transformOrigin: '0 0', transform: invert },
+      { transformOrigin: '0 0', transform: 'none' },
+    ],
+    timing,
+  );
+}
+
+// Move a card to the other list, and let it travel there.
+todo.addEventListener('click', (event) => {
+  const card = event.target.closest('.card');
+  if (card) flip(card, () => done.prepend(card));
+});
+```
+
+</Snippet>
+
+<Snippet title="10 · Object Permanence: shared elements in CSS" lab="curve-bench" easing="cubic-bezier(.65,0,.35,1)" duration={420}>
+
+```css
+/* Between pages: put this in the CSS of both pages. */
+@view-transition {
+  navigation: auto;
+}
+
+/* The same name, before and after, marks the same thing.
+   One element per name in each state. */
+.detail .hero {
+  view-transition-name: photo;
+}
+
+/* The group is the trip: it moves and resizes from the old box to the new. */
+::view-transition-group(photo) {
+  animation-duration: 420ms;
+  animation-timing-function: cubic-bezier(.65, 0, .35, 1);
+}
+
+/* Everything unnamed is "root", and cross-fades. Keep it quick. */
+::view-transition-group(root) {
+  animation-duration: 180ms;
+}
+```
+
+</Snippet>
+
+<Snippet title="10 · Object Permanence: a view transition in JS" lab="curve-bench" easing="cubic-bezier(.65,0,.35,1)" duration={420}>
+
+```js
+// Name only the thumbnail that was tapped, then change the DOM
+// inside startViewTransition(). `showDetail` is your own update.
+async function openDetail(card) {
+  const thumb = card.querySelector('.thumb');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  if (!document.startViewTransition || reduce) {
+    showDetail(card.dataset.id); // no API, or no motion wanted: just change
+    return;
+  }
+
+  thumb.style.viewTransitionName = 'photo';
+  const transition = document.startViewTransition(() => {
+    thumb.style.viewTransitionName = ''; // the name moves to .detail .hero
+    showDetail(card.dataset.id);
+  });
+  await transition.finished;
+}
+```
+
+</Snippet>
+
+<Snippet title="10 · Object Permanence: layout and layoutId in Motion" lab="curve-bench" easing="cubic-bezier(.65,0,.35,1)" duration={420}>
+
+```jsx
+import { motion } from 'motion/react';
+
+const move = { duration: 0.42, ease: [0.65, 0, 0.35, 1] };
+
+// layout: when the card's place in the list changes, it travels there.
+function Card({ item, onOpen }) {
+  return (
+    <motion.li layout transition={move} onClick={() => onOpen(item.id)}>
+      <motion.img
+        layoutId={`photo-${item.id}`}
+        transition={move}
+        src={item.src}
+        alt=""
+      />
+      {item.title}
+    </motion.li>
+  );
+}
+
+// layoutId: the same id as the card's photo, so it grows out of the card.
+function Detail({ item }) {
+  return (
+    <motion.img
+      layoutId={`photo-${item.id}`}
+      transition={move}
+      src={item.src}
+      alt=""
+    />
+  );
+}
+```
+
+</Snippet>
+</div>
+
+<Beat kind="drill">Which one kept it?</Beat>
+
+Two versions of the same change. Pick the one that keeps track of the thing that moved, then name why.
+
+<Drill kind="blind-ab" topic="permanence" trials={5} chapter={10} />

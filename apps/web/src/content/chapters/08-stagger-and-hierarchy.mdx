@@ -1,0 +1,236 @@
+---
+number: 8
+lede: "What moves first is seen first. A stagger sets the reading order, and a small one is enough."
+---
+
+export const rows = ["a", "b", "c", "d", "e"].flatMap((target) => [
+  { target, property: "y", from: 20, to: 0, duration: 360, easing: "--ease-out" },
+  { target, property: "opacity", from: 0, to: 1, duration: 240, easing: "linear" },
+]);
+
+export const arrival = [
+  { target: "new", property: "opacity", from: 0, to: 1, duration: 240, delay: 140, easing: "linear" },
+  { target: "new", property: "scale", from: 0.94, to: 1, duration: 360, delay: 140, easing: "--ease-out" },
+  { target: "b", property: "y", from: -44, to: 0, duration: 300, easing: "--ease-inout" },
+  { target: "c", property: "y", from: -44, to: 0, duration: 300, easing: "--ease-inout" },
+  { target: "d", property: "y", from: -44, to: 0, duration: 300, easing: "--ease-inout" },
+];
+
+export const row = { easing: "--ease-out", duration: 280, distance: 12 };
+
+When several things arrive at once, the eye has to decide where to look first. Motion can decide for it. Start the same move on each item a moment after the one before, and the eye follows the wave: first, second, third. That offset is a stagger.
+
+A stagger is an instruction: read this, then this, then this. It also ranks things, because what moves first is seen first. Get the order right and a list reads as easily as a sentence. Make the gaps too long and people sit and wait for your list to finish arriving.
+
+<Beat kind="see">Five rows, twice</Beat>
+
+Five rows arrive together. Under them is their exposure sheet, the animator's timing chart: one line per track, time running across in frames. Each bar is one move, from the moment it starts to the moment it lands. Every row has two moves: it rises into place, and it fades in.
+
+<Figure n="8.1" caption="Five rows, all at once">
+  <Choreo tracks={rows} />
+</Figure>
+
+Now the same five rows with one change. Each row starts a moment after the one above it.
+
+<Figure n="8.2" caption="The same five rows, one after another">
+  <Choreo tracks={rows} stagger={40} />
+</Figure>
+
+Look at the sheets first. In figure 8.1 the bars stand in one column: everything starts on the same frame. In figure 8.2 they form a staircase, and the stage follows it. The first list lands as a single block, and your eye has to pick a place to start. The second has a direction. It starts at the top and runs down, and your eye goes with it, top row first, the way you would read the list anyway.
+
+<Beat kind="feel">How long a gap?</Beat>
+
+Three lists. Only the gap between one row and the next is different. Don't count. Just watch.
+
+<FeelAB
+  question="A list loads. Which one leads your eye down it without making you wait?"
+  kind="list"
+  options={[
+    { motion: { ...row, stagger: 0 }, caption: "280ms rows · no stagger · done at 280ms" },
+    { motion: { ...row, stagger: 30 }, caption: "280ms rows · 30ms stagger · done at 400ms" },
+    { motion: { ...row, stagger: 150 }, caption: "280ms rows · 150ms stagger · done at 880ms" }
+  ]}
+  answer={1}
+  explain="A lands as one block: five rows but no order, so your eye has to pick a place to start. C starts each row just as the one before it settles, so you watch five separate arrivals and wait for the last. B is one motion that runs down the list. It leads the eye from top to bottom, and it's finished in not much more time than a single row takes."
+/>
+
+<Beat kind="more">Small steps</Beat>
+
+<Margin kind="def">
+  <p><b>Stagger.</b> The same move on several items, each one started a fixed step after the one before. The step is the time between two starts, not the length of the move.</p>
+</Margin>
+
+Now the numbers. In the FEEL, every row took 280ms. Only the step between starts changed: 0ms, 30ms and 150ms.
+
+<Margin kind="history">
+  <p>On paper, an animator's exposure sheet (the X-sheet, or dope sheet) runs down the page: one row per frame, with columns for the soundtrack, each layer of drawings, and the camera. A software timeline turns it on its side.</p>
+</Margin>
+
+A 60Hz screen draws a new frame every 16.7ms, so a 30ms step is about two frames. That's too short to see five separate starts. The eye sees one motion with a direction, running down the list. At 150ms the step is nine frames, and each row has almost landed before the next one begins. Now there are five events, and you wait through each of them.
+
+Nothing about a row got slower. Each one still takes 280ms. The *list* got slower: it isn't finished until its last row lands, at 400ms with the small step and at 880ms with the large one. That extra time is all in the steps.
+
+| Step | Frames at 60Hz | Reads as |
+|---|---|---|
+| 0ms | 0 | one block |
+| 20–40ms | 1.2–2.4 | one gesture, with a direction |
+| 60–80ms | 3.6–4.8 | a visible cascade |
+| 150ms and up | 9 and up | a wait |
+
+For most lists, keep the step between 20 and 40ms. Figure 8.2 uses 40ms, about two and a half frames. Many small things, like the cells of a grid, sit at the low end. A few large ones, like cards, can take the high end.
+
+<Beat kind="more">The count multiplies it</Beat>
+
+The last item starts (n − 1) steps after the first. The step is small, but it's multiplied by the number of items, and the list is only done when its last item lands. With a 280ms move:
+
+| Items | 30ms step: last one lands | 80ms step: last one lands |
+|---|---|---|
+| 5 | 400ms | 600ms |
+| 10 | 550ms | 1000ms |
+| 20 | 850ms | 1800ms |
+| 50 | 1750ms | 4200ms |
+
+A step that feels quick on five items makes you wait on fifty. So put a limit on it. There are two ways.
+
+<Margin kind="wild">
+  <p>GSAP's <code>stagger</code> takes either <code>each</code>, the time between one start and the next, or <code>amount</code>, the total time shared out across all the items. With <code>amount</code>, a longer list simply gets a smaller step.</p>
+</Margin>
+
+- **Cap the index.** Stagger only the first six to eight items. The rest start together with the last staggered one. By then the order is set, and rows further down are often off screen, where nobody sees their order anyway. Capped at the eighth row, a 30ms step never adds more than 210ms, however long the list.
+- **Give the cascade a budget.** Decide how long the whole stagger may take, and divide it by the count. A long list gets a smaller step and sweeps in, in the same time as a short one.
+
+<Beat kind="more">Who leads</Beat>
+
+A stagger ranks things. The first to move is the first to be seen, so it had better be the one that matters most. Everything after it reads as following.
+
+- **A container leads its contents.** The panel arrives, then what is in it. Contents that arrive before their container have nowhere to land.
+- **A heading leads its body.** The title, then the lines under it.
+- **The news leads the context.** When one thing changes, it moves first, or it moves alone.
+
+Here a new row arrives at the top of a list.
+
+<Figure n="8.3" caption="The rest move as one, the new row alone">
+  <Choreo tracks={arrival} />
+</Figure>
+
+The old rows are context. They move down together, in one block, to make room, and they don't stagger: a stagger would turn each of them into something to read. The new row gets a move of its own. It starts as the gap opens and settles last, so it's where the eye comes to rest.
+
+That's the other thing a stagger says: *these are separate items.* Five rows with a stagger are five things. The same five in unison are one thing. Stagger what should be read one by one, and move context as a block. And if everything on a page staggers, nothing leads.
+
+<Beat kind="more">Other orders</Beat>
+
+Top to bottom is the default because it's how a list is read. It isn't the only order.
+
+- **Where reading starts.** Across a row, begin where the reader begins: the left in English, the right in Arabic or Hebrew.
+- **Centre out.** Start from the item the user touched and spread to its neighbours, like a ripple. The motion begins where attention already is.
+- **Last first.** When the eye is already at the end, start there. A list pinned to the bottom of the screen can run upward.
+- **Random.** No order at all, so nothing leads. It reads as sparkle, not as a list, and is rarely right in an interface.
+
+<Beat kind="tune">Find where it breaks</Beat>
+
+This is the list from figure 8.2 in the Exposure Sheet. The **Step** slider re-spaces every row at once.
+
+- Drag **Step** down to 0. The staircase collapses into a column, and the list lands as a block.
+- Take it past 80ms and watch the bottom row. You start waiting for it.
+- Find the largest step that still feels like one gesture to you.
+- Set **Order** to *centre out*. The middle row leads, and the motion spreads both ways.
+- Start from **Cascade**: six cards on a spring, rippling out from one of them.
+
+<Lab id="exposure-sheet" source="list" code={false} />
+
+<Beat kind="write">The notation</Beat>
+
+A stagger is nothing but a delay: each item waits its index times the step. In CSS that's `animation-delay`, and each item has to know its index. Write it into the markup as a custom property, `style="--i: 2"`, and multiply: `calc(var(--i) * 30ms)`.
+
+Or let the browser count. `sibling-index()` gives an element's position among its siblings, starting at 1, and `sibling-count()` gives how many there are. Both are new, and not every browser supports them yet, so put a fallback line above. A browser that doesn't understand a declaration drops it and keeps the one before. That only works if the new line has no `var()` in it: a declaration with a `var()` is accepted when the stylesheet is read and can only fail later, once the variable is filled in. Then it falls back to the property's initial value, not to the line above.
+
+Two details matter in every version. Give the animation a fill of `both`, so each item holds its first frame while it waits for its turn; without it, a row sits there fully visible, then vanishes and fades back in. And keep the step small and limited, with a cap or a budget.
+
+<div class="snippets">
+<Snippet title="08 · Stagger: a delay per row" lab="exposure-sheet" source="list">
+
+```css
+/* Each row carries its index in the markup: <li style="--i: 3"> */
+.list li {
+  animation: rise 280ms cubic-bezier(.2, .8, .2, 1) both;
+  /* 30ms per row. From the eighth row on, all start together. */
+  animation-delay: calc(min(var(--i, 0), 7) * 30ms);
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(12px); }
+}
+```
+
+</Snippet>
+
+<Snippet title="08 · Stagger: let the browser count" lab="exposure-sheet" source="list">
+
+```css
+/* sibling-index() is 1 for the first child. It is new: a browser
+   that doesn't know it drops that line and keeps the one above
+   (no --i in the markup means no stagger, just a plain rise). */
+.list li {
+  animation: rise 280ms cubic-bezier(.2, .8, .2, 1) both;
+  animation-delay: calc(min(var(--i, 0), 7) * 30ms);
+  animation-delay: calc(min(sibling-index() - 1, 7) * 30ms);
+}
+```
+
+</Snippet>
+
+<Snippet title="08 · Stagger: WAAPI, with a budget" lab="exposure-sheet" source="list">
+
+```js
+const rows = [...document.querySelectorAll('.list li')];
+
+// 30ms between starts, but the whole cascade never takes
+// more than 240ms: a longer list gets a smaller step.
+const step = Math.min(30, 240 / Math.max(1, rows.length - 1));
+
+rows.forEach((row, i) => {
+  row.animate(
+    [
+      { opacity: 0, transform: 'translateY(12px)' },
+      { opacity: 1, transform: 'none' },
+    ],
+    {
+      duration: 280,
+      delay: i * step,
+      easing: 'cubic-bezier(.2, .8, .2, 1)',
+      fill: 'both', // hold the first frame while waiting
+    },
+  );
+});
+```
+
+</Snippet>
+
+<Snippet title="08 · Stagger: Motion's stagger()" lab="exposure-sheet" source="list">
+
+```js
+import { animate, stagger } from 'motion';
+
+// Motion counts in seconds: 0.03 is 30ms between starts.
+animate(
+  '.list li',
+  { opacity: [0, 1], y: [12, 0] },
+  { duration: 0.28, ease: [0.2, 0.8, 0.2, 1], delay: stagger(0.03) },
+);
+
+// Other orders: from 'first' (the default), 'last', 'center', or an index.
+animate(
+  '.toolbar button',
+  { opacity: [0, 1], scale: [0.9, 1] },
+  { duration: 0.2, delay: stagger(0.03, { from: 'center' }) },
+);
+```
+
+</Snippet>
+</div>
+
+<Beat kind="drill">Judge the gap</Beat>
+
+Two versions of the same list. Pick the better one, then name why in one word. Watch the bottom row: is it part of the gesture, or are you waiting for it?
+
+<Drill kind="blind-ab" topic="stagger" trials={5} chapter={8} />

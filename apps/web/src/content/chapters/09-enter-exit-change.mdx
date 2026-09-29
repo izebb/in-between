@@ -1,0 +1,244 @@
+---
+number: 9
+lede: "An entrance asks for attention and an exit hands it back, so they are never the same motion run backwards."
+---
+
+Most interface motion is one of three events. Something arrives: a menu, a toast, a dialog. Something leaves. Or something stays and changes: a switch flips, a tab is chosen, a card opens. Each is a different job, and each has its own shape.
+
+An arrival is news. It tells you something is here, and where, so it deserves a moment. A departure only confirms what you already asked for. You have moved on, so it should be quick. And both should say where the thing lives: it came from somewhere, and it goes back there.
+
+<Beat kind="see">Four arrivals, four departures</Beat>
+
+Each specimen comes in, waits, and leaves. Hover one to play it again. Watch it twice: once for how it arrives, once for how it goes.
+
+<Figure n="9.1" caption="Four things arrive and leave, each from its own place">
+  <Specimens items={[
+    { kind: "menu", label: "Menu", note: "Grows out of its button, folds back into it.", direction: "loop", motion: { duration: 180, origin: "top left" } },
+    { kind: "toast", label: "Toast", note: "Rises from the bottom edge, sinks back to it.", direction: "loop", motion: { duration: 280 } },
+    { kind: "drawer", label: "Drawer", note: "Slides in from its side, out the same way.", direction: "loop", motion: { duration: 380 } },
+    { kind: "modal", label: "Dialog", note: "Belongs to no edge, so it grows from the middle.", direction: "loop", motion: { duration: 280 } }
+  ]} />
+</Figure>
+
+Two things hold for all four. The arrival is the longer half. The thing slows into place, and you have time to see where it landed. The departure is shorter and speeds up as it goes, so it is gone almost before you look. And each one leaves the way it came: the menu folds back into its button, the toast sinks to the edge it rose from, the drawer slides out the side it came in on.
+
+<Beat kind="feel">Which one gets out of the way?</Beat>
+
+Don't count. Watch what is left on the screen.
+
+<FeelAB
+  question="You pressed Close. Which dialog gets out of the way?"
+  kind="modal"
+  direction="exit"
+  options={[
+    { motion: { easing: "ease-out", duration: 480, exitEasing: "ease-out", exitDuration: 480 }, caption: "exit · 480ms · ease-out" },
+    { motion: { easing: "--ease-in", duration: 196, exitEasing: "--ease-in", exitDuration: 196 }, caption: "exit · 196ms · --ease-in" }
+  ]}
+  answer={1}
+  explain="B holds for an instant, then speeds away and is gone. A starts to leave at once but takes its time finishing. By the moment B is gone, A is still half there, a fading ghost between you and the page you wanted back. You already decided the dialog should go. The exit only has to confirm it."
+/>
+
+<Beat kind="more">Enters are generous, exits are quick</Beat>
+
+Now the numbers. An entrance is news, and the eye needs a moment to find the new thing, see what it is, and see where it settled. So an enter gets time, and it decelerates. It starts fast, so it answers the click at once, then spends a long stretch settling while the eye catches up. That is ease-out.
+
+An exit is a receipt. The user closed the dialog or dismissed the toast, and their attention is already on what is underneath. So the exit is shorter, and it accelerates. It starts gently, so you can see which thing is leaving, and it is fastest at the moment it disappears. That is ease-in. It can travel less than the enter did, or only fade: a hint of direction is enough.
+
+<Margin kind="note">
+  <p>Material Design names the same pair: things entering the screen use <i>decelerated</i> easing, things leaving use <i>accelerated</i> easing. Its accelerated curve is <code>cubic-bezier(0.4, 0, 1, 1)</code>, the same curve as this site's <code>--ease-in</code>.</p>
+</Margin>
+
+This site's tokens are built on that asymmetry. Every duration has an exit twin at 0.7× the time, named with `-exit` on the end, and enters and exits get opposite curves.
+
+| Used for | Enter | Exit |
+|---|---|---|
+| Press, toggle | `--dur-instant` 90ms | 63ms |
+| Hover, menu | `--dur-quick` 180ms | 126ms |
+| Panel, card, dialog | `--dur-base` 280ms | 196ms |
+| Page, scene | `--dur-scene` 480ms | 336ms |
+| Curve | `--ease-out` | `--ease-in` |
+
+So a panel enters over `--dur-base`, 280ms, and leaves over `--dur-base-exit`, 196ms. It arrives on `--ease-out`, `cubic-bezier(.2, .8, .2, 1)`, and leaves on `--ease-in`, `cubic-bezier(.4, 0, 1, 1)`.
+
+There is nothing magic about 0.7. The rule is the direction: an exit is shorter than its enter, never longer.
+
+<Figure n="9.2" caption="An enter and two exits on one clock">
+  <SpacingChart rows={[
+    { label: "enter · --ease-out", easing: "--ease-out", duration: 280 },
+    { label: "exit · --ease-in", easing: "--ease-in", duration: 196 },
+    { label: "exit · the enter reused", easing: "--ease-out", duration: 280, tone: "blue" }
+  ]} />
+</Figure>
+
+Read the ghosts. The enter's crowd at the end: that is the settle, where the eye catches up. The exit's crowd at the start and spread wide at the end: it is still speeding up when it goes. The blue row is the common mistake, one `transition` written once and used both ways. Its exit settles on the way out. It covers 90% of the way in its first 110ms and spends the other 170ms creeping through the last 10%, nearly invisible and still in the way.
+
+<Beat kind="more">Where does it come from?</Beat>
+
+An enter also says where the thing came from, and an exit says where it went. When those match what caused them, the interface feels like a place with parts, not a slideshow.
+
+<Margin kind="def">
+  <p><b>transform-origin.</b> The point a scale or a rotation happens around. That point stays still; everything else grows toward it or away from it. The default is the centre.</p>
+</Margin>
+
+- **A menu grows from its button.** Scale it from the corner that touches the button, with `transform-origin`, and it seems to come out of the button. Close it and it folds back in.
+- **A toast comes from the edge it lives on.** A toast at the bottom rises from the bottom. A banner at the top drops from the top.
+- **A drawer slides in from its side** and leaves the same way.
+- **A deleted item goes nowhere.** It fades where it stands, then the gap closes and the items below move up into its place. It doesn't fly off to a corner.
+- **A dialog belongs to no edge**, so it scales from its centre. If it opens from one particular thing, like a photo in a grid, it can grow out of that thing instead. That is chapter 10.
+
+The same menu, twice. Only the origin of its scale differs.
+
+<FeelAB
+  question="Which menu came from the button?"
+  kind="menu"
+  options={[
+    { motion: { easing: "ease-out", duration: 400, origin: "top left" }, caption: "transform-origin: top left" },
+    { motion: { easing: "ease-out", duration: 400, origin: "center" }, caption: "transform-origin: center" }
+  ]}
+  answer={0}
+  explain="A grows down from the edge that touches the button, so it seems to unfold out of it. B grows from its own middle: its top edge starts below the button and climbs up to meet it, so the menu appears in the air nearby and then attaches itself. The curve and the timing are identical. One CSS property made the difference."
+/>
+
+<Margin kind="wild">
+  <p>On iPhone, an app opens by growing out of its icon on the Home Screen. Go back home and it shrinks into that icon again. The icon is where the app lives, so that is where it comes from and where it goes.</p>
+</Margin>
+
+Getting the origin right costs nothing: the motion is the same length, with the same curve. It only has to start from the right place. When it is wrong, the eye notices before you can say why.
+
+<Beat kind="more">Change: the same thing, a new state</Beat>
+
+Not everything is coming or going. A switch flips. A tab is chosen. A Save button becomes Saved. The thing stays, and only its state changes. That calls for the third kind of motion: change it in place.
+
+<Figure n="9.3" caption="Three changes in place">
+  <Specimens items={[
+    { kind: "tabs", label: "Tabs", note: "One underline slides to the new tab.", direction: "loop", motion: { easing: "--ease-inout", duration: 280, exitEasing: "--ease-inout", exitDuration: 280 } },
+    { kind: "toggle", label: "Switch", note: "The knob travels. On and off are one object in two places.", direction: "loop", motion: { easing: "--ease-inout", duration: 180, exitEasing: "--ease-inout", exitDuration: 180 } },
+    { kind: "expand", label: "Card to panel", note: "The card grows into its own detail.", direction: "loop", motion: { easing: "--ease-inout", duration: 380, exitEasing: "--ease-inout", exitDuration: 380 } }
+  ]} />
+</Figure>
+
+An exit followed by an enter says: that thing is gone, and here is a different one. For a new item, that is true. For the same object in a new state, it is a small lie, and the eye pays for it by having to find the thing again. So keep it on screen and change it:
+
+- **Move it.** The tab underline slides to the new tab. It doesn't vanish under one and appear under the next.
+- **Morph its size.** The card grows into its panel. A button widens to fit its longer label.
+- **Cross-fade the content, not the container.** The button stays where it is while *Save* fades into *Saved* inside it.
+
+A change starts and ends on screen, so a move like the tab underline takes the on-screen curve, `--ease-inout`, or a spring, not an enter's ease-out or an exit's ease-in. Going back is just another change, so a tab or a switch takes the same time in both directions. When one direction is really a dismissal, like closing a panel you opened, it can borrow the exit's quicker timing. Chapter 10 takes this idea across the screen, with shared elements.
+
+<Beat kind="more">Enter and exit in CSS</Beat>
+
+For a long time, a CSS transition could not animate an element that is shown and hidden with `display`, in either direction:
+
+- **Enter.** An element that was `display: none` has no previous style, so there is nothing to transition from. It simply appears.
+- **Exit.** `display` is not a value that can be in between. It switches to `none` at once, and the element vanishes before any fade can play.
+
+<Margin kind="def">
+  <p><b>Discrete property.</b> One with no values in between, like <code>display</code>: it is <code>block</code> or <code>none</code>, never half of each. By default, a transition skips it and it changes at once.</p>
+</Margin>
+
+Two features fix it. `@starting-style` gives an element a style to start from on the first frame it is shown; the browser transitions from there to its real style. `transition-behavior: allow-discrete`, usually written as `allow-discrete` inside the `transition` shorthand, lets `display` take part in the transition. When one end is `none`, the element stays displayed for the whole transition: it switches on at the very start of an enter and off at the very end of an exit.
+
+<Figure n="9.4" caption="A real hidden panel, @starting-style and allow-discrete" static>
+  <Discrete />
+</Figure>
+
+The panel above really is toggled with the `hidden` attribute, and its CSS is beside it. The `@starting-style` block is where the enter begins. The `[hidden]` rule is where the exit ends, and it carries the exit's own duration and curve.
+
+That works because a transition always takes its timing from the state it is going *to*. Opening moves toward the open rule, so the open rule holds the enter's timing. Closing moves toward the closed rule, so the closed rule holds the exit's. Asymmetry in CSS is just two rules with two timings.
+
+A popover or a modal `<dialog>` sits in the top layer, above the rest of the page, and closing it takes it out of the top layer at once. Add `overlay` to the transition, with `allow-discrete` too, and it stays on top until its exit has finished. This site's View menu, at the top right, is a popover built this way: open it and close it and you will see the asymmetry. Where these features are missing, the element still shows and hides. It just doesn't animate.
+
+<Beat kind="tune">Design an exit</Beat>
+
+A is this site's exit curve, `--ease-in`, at 200ms. B, in blue, is the enter curve, `--ease-out`, played at the same length for comparison.
+
+- Read the velocity graphs. The enter is fastest on its first frame and spends its end settling. The exit is slowest on its first frame and fastest on its last. Roughly, one is the other turned around.
+- Drag the duration up to 400ms. An ease-in covers only a tenth of the way in its first quarter, so the start now reads as a pause: you close the thing and it hesitates. Bring it back to 200ms and the pause shrinks to three frames, too short to see.
+- Click **ease-out** for A. The exit now leaves at once and then lingers, like the blue row of figure 9.2.
+
+<Lab id="curve-bench" easing="--ease-in" duration={200} compare="token-out" code={false} />
+
+<Beat kind="write">The notation</Beat>
+
+In CSS, put the enter's timing on the open state and the exit's on the closed state, and give the enter a start with `@starting-style`. In JavaScript, play the exit first and remove the element only when `animation.finished` resolves. Remove it straight away and the exit never shows.
+
+<div class="snippets">
+<Snippet title="09 · Enter, Exit, Change: a menu from its button" lab="curve-bench" easing="--ease-out" duration={180} compare="token-in">
+
+```css
+/* <button popovertarget="sort">Sort</button>
+   <div id="sort" class="menu" popover>…</div>
+   Place the menu under its button (anchor positioning or a script). */
+:root {
+  --dur-quick: 180ms;
+  --dur-quick-exit: 126ms;                  /* 0.7× */
+  --ease-out: cubic-bezier(.2, .8, .2, 1);  /* enter */
+  --ease-in: cubic-bezier(.4, 0, 1, 1);     /* exit */
+}
+
+.menu {
+  transform-origin: top left;               /* the corner at the button */
+  opacity: 0;
+  scale: 0.95;
+  /* Closing: quick, accelerating away. */
+  transition:
+    opacity var(--dur-quick-exit) var(--ease-in),
+    scale var(--dur-quick-exit) var(--ease-in),
+    display var(--dur-quick-exit) allow-discrete,
+    overlay var(--dur-quick-exit) allow-discrete;
+}
+
+.menu:popover-open {
+  opacity: 1;
+  scale: 1;
+  /* Opening: longer, settling into place. */
+  transition:
+    opacity var(--dur-quick) var(--ease-out),
+    scale var(--dur-quick) var(--ease-out),
+    display var(--dur-quick) allow-discrete,
+    overlay var(--dur-quick) allow-discrete;
+}
+
+@starting-style {
+  .menu:popover-open { opacity: 0; scale: 0.95; }  /* the enter starts here */
+}
+```
+
+</Snippet>
+
+<Snippet title="09 · Enter, Exit, Change: remove after the exit" lab="curve-bench" easing="--ease-in" duration={196} compare="token-out">
+
+```js
+// Enter on --ease-out. Exit on --ease-in, in 0.7× the time.
+const ENTER = { duration: 280, easing: 'cubic-bezier(.2, .8, .2, 1)' };
+const EXIT = { duration: 196, easing: 'cubic-bezier(.4, 0, 1, 1)' };
+
+// A toast lives at the bottom edge: it rises from there and sinks back.
+const below = { opacity: 0, transform: 'translateY(16px)' };
+const inPlace = { opacity: 1, transform: 'none' };
+
+function showToast(toast) {
+  document.body.append(toast);
+  toast.animate([below, inPlace], ENTER);
+}
+
+async function dismissToast(toast) {
+  toast.inert = true; // it's leaving: no more clicks or focus
+  const exit = toast.animate([inPlace, below], { ...EXIT, fill: 'forwards' });
+  try {
+    await exit.finished;
+  } catch {
+    return; // the exit was cancelled: something else took over the toast
+  }
+  toast.remove();
+}
+```
+
+</Snippet>
+</div>
+
+<Beat kind="drill">Blind A/B: enter and exit</Beat>
+
+Two versions of the same arrival or departure. Pick the one that feels right, then name what gave it away: the length, the curve, or where it came from.
+
+<Drill kind="blind-ab" topic="enter-exit" trials={5} chapter={9} />

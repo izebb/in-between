@@ -66,6 +66,8 @@ Use `<Beat>` headings in this order. `kind="more"` makes a plain section heading
   onion-skin spacing chart. Or `curve="ease-out" frames={12}` for one row. `tone: "blue"` marks a comparison row.
   `readout={false}` hides ms/frame counts (use before FEEL). `chart={false}` hides the tick chart.
 - `<CurvePlot easing="--ease-out" compare="linear" duration={600} velocity label compareLabel />` — curve + velocity + motion.
+  Colours: the main curve is ink (solid), `compare` is blue (dashed); the moving dot is red. (SpringPlot differs: its
+  first spring is the red/ink one, later springs blue.)
 - `<SpringPlot springs={[{ response: 0.5, bounce: 0.3, label: "bouncy" }, { stiffness: 170, damping: 26, mass: 1 }]} envelope />`
   — spring position over real time, settle marker, overshoot; first spring red, others blue.
   `readout={false}` hides every number (use it before FEEL). Big overshoots stay inside the track.
@@ -125,7 +127,9 @@ Motion (`MockMotion`): `{ easing, duration, distance, stagger, exitEasing, exitD
 ### Instruments and code
 - `<Lab id="spacing-chart|curve-bench|spring-bench|exposure-sheet|frame-stepper|canvas-sandbox" easing duration distance compare code={false} />`
   Spring bench shorthand: `response bounce` or `stiffness damping mass`. Frame stepper / canvas sandbox: `source={x}`.
-  Canvas sandbox: `program="bouncing-ball"`. Exposure sheet: `source="list|overlap|unison|cascade"` picks a preset.
+  Canvas sandbox: `program="bouncing-ball"`. Exposure sheet: `source="list|overlap|unison|cascade"` picks a preset,
+  or pass a custom scene with `extra={{ scene: { moves: [...] }, layout, stagger, staggerProp }}` (easings in a custom
+  scene must be spec objects such as `{ type: "cubic", x1, y1, x2, y2 }`, not shorthand strings).
   Data stage (L10): `<Lab id="data-stage" extra={{ from: "a-z", to: "by-value", keying: "data", staging: "together", stagger: 30 }} />`
   (states: a-z, by-value, 2024, north, grouped; keying data|index; staging together|staged; renderer svg|canvas).
   Specimen journal: `<Lab id="specimen-journal" />`. Export desk: `<Lab id="export-desk" easing="…" duration={…} />`.

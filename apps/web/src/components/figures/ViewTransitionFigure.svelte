@@ -5,7 +5,7 @@
    * so the browser morphs them instead of cutting.
    */
   import { tick, onMount } from "svelte";
-  import { prefs } from "~/lib/prefs.svelte";
+  import { prefs, watchPlateStill } from "~/lib/prefs.svelte";
   import { waapiTiming, parseSpec } from "~/lib/spec";
 
   let { easing = "--ease-inout", duration = 420 }: { easing?: string; duration?: number } = $props();
@@ -21,9 +21,12 @@
   let active = $state<number | null>(null);
   let supported = $state(true);
   let shared = $state(true);
+  let root: HTMLElement;
+  let still = $state(false);
   onMount(() => {
     prefs.start();
     supported = typeof document !== "undefined" && "startViewTransition" in document;
+    return watchPlateStill(root, (v) => (still = v));
   });
 
   function styleFor() {
@@ -35,24 +38,29 @@
     if (next !== null) active = next;
     await tick();
     const doc = document as Document & { startViewTransition?: (cb: () => Promise<void> | void) => { finished: Promise<void> } };
-    if (!supported || prefs.reduced || !doc.startViewTransition) {
+    if (!supported || prefs.reduced || still || !doc.startViewTransition) {
       open = next;
       return;
     }
     const tag = document.createElement("style");
     tag.textContent = styleFor();
     document.head.appendChild(tag);
+    // The page's own chapter cut is a view transition on <main>: keep it out of this one.
+    const main = document.querySelector<HTMLElement>("main");
+    const prevName = main?.style.viewTransitionName ?? "";
+    if (main) main.style.viewTransitionName = "none";
     const vt = doc.startViewTransition(async () => {
       open = next;
       await tick();
     });
     await vt.finished.catch(() => undefined);
     tag.remove();
+    if (main) main.style.viewTransitionName = prevName;
   }
   const name = (part: string, id: number) => (shared && active === id ? `vt-${uid}-${part}` : "none");
 </script>
 
-<div class="vt">
+<div class="vt" bind:this={root}>
   <div class="bar">
     <label class="check"><input type="checkbox" bind:checked={shared} /> Shared elements</label>
     {#if !supported}<span class="note">This browser has no View Transitions yet: the state just changes. FLIP or Motion's <code>layout</code> does the same job.</span>{/if}

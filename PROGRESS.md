@@ -10,11 +10,11 @@ Source of truth: `CURRICULUM.md`. Task brief: `PROMPT.md`. This file is enough t
 | M1 | Motion core | ✅ done |
 | M2 | First instruments (L1, L2, L5, Code Panel) | ✅ done |
 | M3 | Part I live (ch 01–03 + 2 drills) | ✅ done |
-| M4 | Physics (L3, L7, ch 04–06) | ⏳ ch 04, 05 written; 06 in progress (subagent) |
-| M5 | Choreography (L4, ch 07–11) | ⏳ L4 + figures built; ch 07–11 being written by subagents |
-| M6 | Interaction + Canvas (ch 12–19) | ⏳ figures + programs built (Drag, Scroll, Medium, programs2.ts); chapters not started |
-| M7 | Craft + Journal (L8, L9, ch 20–22, calibration graph) | ⏳ L8, L9, calibration built; fix-feeling drill + ch 20–22 todo |
-| M8 | Special Topics (L10, ch 23–25) | — |
+| M4 | Physics (L3, L7, ch 04–06) | ✅ done (commit 481fae4) |
+| M5 | Choreography (L4, ch 07–11) | ✅ done |
+| M6 | Interaction + Canvas (ch 12–19) | ⏳ kit built; ch 12–19 being written by subagents |
+| M7 | Craft + Journal (L8, L9, ch 20–22, calibration graph) | ⏳ L8, L9, calibration, fix-feeling, Pipeline figure built; ch 20–22 todo |
+| M8 | Special Topics (L10, ch 23–25) | ⏳ L10 Data Stage, transition-lies, Count + Architecture figures built; ch 23–25 todo |
 
 ## How to run
 
@@ -149,8 +149,15 @@ heavy-light labels without numbers, shoot.mjs long URLs.
   loop-hz, smoothing-trap, integrators, collisions, particles, trails, boids, noise-vs-random, idle.
 - L8 `SpecimenJournal` (vocabulary: per-word median duration / easing kind / ζ), L9 `ExportDesk` (5 dialects +
   W3C-style token JSON + spec sentence, paste any easing).
-- Drills now: what-it-says, guess-duration, match-curve, which-heavier, tune-to-match, blind-ab (topic filter),
-  spot-principle. Todo: fix-feeling, transition-lies.
+- All 9 drills built: what-it-says, guess-duration, match-curve, which-heavier, tune-to-match, blind-ab (topic
+  filter), spot-principle, fix-feeling, transition-lies.
+- L10 `DataStage` (+ `lib/datastage.ts`: sample data, 5 states, keying data|index, staging together|staged,
+  per-mark geometry over time; `DataChart` SVG/Canvas; tracked datum in red), `<Pipeline>`, `<Count>`,
+  `<Architecture>` (plays this app's real primitives/orchestration/patterns/policy).
+- SandboxStage draws measured position + velocity graphs of user code (spec: "ghosts and graphs").
+- Motion inspector verified (Alt-hover on a button lists property · ms · token · curve).
+- Bug fixed: CanvasFigure still mode looped forever (effect tracked transport.time) → untrack + offline() no longer
+  writes reactive state.
 
 ## Next (M4)
 
