@@ -1,0 +1,55 @@
+---
+/**
+ * A title on one line, written on as the index title is: a blue-pencil line draws each letter's
+ * outline, one after another, then ink fills it and the pencil lifts (motion.css .ink-g, started when
+ * its .ink-h heading comes into view, patterns.ts). Reduced motion: it is simply there.
+ *
+ * It never breaks: the title is Geist SemiBold's own outlines (lib/outline.ts) set as one drawing, as
+ * wide as the title at the heading's size, or as wide as the column when the title is longer, scaled
+ * down to fit.
+ *
+ * A number (a chapter's) comes with it in outline figures, and --baseline says where the title's
+ * baseline is, from its box's bottom edge, so the page can set the number level with the title.
+ */
+import { outline } from "~/lib/outline";
+import OutlineNumber from "./OutlineNumber.astro";
+
+interface Props {
+  text: string;
+  /** Letter-spacing in em, as the heading's type style. */
+  tracking?: number;
+  /** Set beside the title in outline figures, e.g. a chapter number. */
+  number?: string;
+}
+const { text, tracking = -0.035, number } = Astro.props;
+const o = outline(text, tracking, { weight: 600 });
+// Each letter starts a fraction of the way through the stagger (--k, 0 → 1), as InkWords spaces them.
+const n = o.words.reduce((sum, w) => sum + w.letters.length, 0);
+const step = n > 1 ? Math.min(1 / (n - 1), 0.08) : 0;
+let x = 0;
+let k = 0;
+const words = o.words.map((w) => {
+  const at = x;
+  x += w.width + o.space;
+  return { at, letters: w.letters.map((d) => ({ d, k: (k++ * step).toFixed(3) })) };
+});
+const width = x - o.space;
+const PAD = 40; // for the pencil line and glyphs that overhang their box; pulled back out with a margin, so the first letter sits on the text's edge
+const h = o.bottom - o.top + 2 * PAD;
+---
+<span class="line-title" style={`--baseline:${(((o.bottom + PAD) / h) * 100).toFixed(2)}%`}>
+  {number && <OutlineNumber class="lt-num" text={number} />}
+  <span class="visually-hidden">{text}</span>
+  <svg viewBox={`${-PAD} ${o.top - PAD} ${width + 2 * PAD} ${h}`} style={`width:min(${((width + 2 * PAD) / o.em).toFixed(3)}em, 100% + ${((2 * PAD) / o.em).toFixed(3)}em);margin-left:${(-PAD / o.em).toFixed(3)}em`} aria-hidden="true">
+    {words.map((w) => (
+      <g transform={`translate(${w.at} 0)`}>
+        {w.letters.map((l) => <path class="ink-g" d={l.d} pathLength="1" style={`--k:${l.k}`} />)}
+      </g>
+    ))}
+  </svg>
+</span>
+
+<style>
+  .line-title { display: block; position: relative; }
+  .line-title svg { display: block; height: auto; overflow: visible; }
+</style>

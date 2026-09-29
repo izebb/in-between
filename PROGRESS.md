@@ -54,7 +54,9 @@ node scripts/shoot.mjs --pages /,/system --out ./screenshots --themes light,dark
     contract). `inspector.ts` = hold Alt over anything that moves. `boot.ts` runs per page.
   - `src/styles/` — `index.css` declares layer order: reset, tokens, base, type, layout, components, code, figures, lab, motion, utilities.
   - `src/lib/curriculum.ts` — outline: parts, 25 chapters (slug, summary, specimen, instruments, drill), 10 instruments.
-  - `src/lib/specimens.ts` — index hover specimens (canvas; still = onion skin, hover = plays).
+  - `src/lib/vignettes.ts` — the index's chapter pictures: one small screen per chapter where a piece of UI acts out
+    the idea; house rules (one stage, one kit, red = subject, blue = notation, t = 0 is the rest pose) in its header.
+    `src/lib/specimens.ts` — pencil colours (`readPencils`) and the older onion-skin specimens.
   - `src/lib/store.ts` — IndexedDB (idb-keyval): chapters read, drill sessions, journal.
   - `src/content/chapters/*.mdx` — chapter bodies (frontmatter: `number`, `lede`). Route: `/chapters/<slug>`.
   - `src/components/mdx/` — `Figure` (plate + caption + Still toggle), `Margin`, `Beat`; exported map in `index.ts`

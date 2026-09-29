@@ -16,6 +16,8 @@ export interface Outline {
   top: number;
   bottom: number;
   words: OutlineWord[];
+  /** The gap between two words (a space, tracked), for setting them on one line. */
+  space: number;
 }
 
 const EM = 1000;
@@ -73,5 +75,6 @@ export function outline(text: string, tracking = -0.025, { weight = 500, tabular
     });
     return { width: Math.round(x - track), letters };
   });
-  return { em: EM, top: Math.floor(top), bottom: Math.ceil(bottom), words };
+  const space = Math.round(f.charToGlyph(" ").advanceWidth * scale + track);
+  return { em: EM, top: Math.floor(top), bottom: Math.ceil(bottom), words, space };
 }

@@ -5,11 +5,12 @@ import { chapters, parts, pad2, instruments } from "~/lib/curriculum";
 import TitleScrub from "~/components/ui/TitleScrub.svelte";
 import OutlineNumber from "~/components/ui/OutlineNumber.astro";
 import BenchItem from "~/components/ui/BenchItem.astro";
+import Epigraph from "~/components/ui/Epigraph.astro";
 
 const written = new Set((await getCollection("chapters")).map((c) => c.id));
 const byPart = parts.map((p) => ({ part: p, items: chapters.filter((c) => c.part === p.numeral) }));
 ---
-<Base title="Inbetween">
+<Base title="in-between">
   <div class="page index">
     <section class="hero" data-reveal-section>
       <TitleScrub client:load />
@@ -28,14 +29,8 @@ const byPart = parts.map((p) => ({ part: p, items: chapters.filter((c) => c.part
             <a href="/chapters/15-easing-by-hand">easing</a>
           </p>
         </div>
-        <!-- An epigraph, set as a book sets one: small, in the reading face, ranged right, attributed.
-             Its lines rise out of their masks once it comes into view (patterns.ts revealLines). -->
-        <figure class="epigraph" data-reveal-lines data-reveal-after="#dict-see">
-          <blockquote>
-            <p data-lines>“Animation is not the art of drawings that move, but the art of movements that are drawn.”</p>
-          </blockquote>
-          <figcaption><span class="dash">—</span> <span class="smallcaps">Norman McLaren</span></figcaption>
-        </figure>
+        <!-- The epigraph: what animators have said about the craft, one at a time (Epigraph.astro). -->
+        <Epigraph />
       </div>
     </section>
     <section class="toc" aria-labelledby="contents-h">
@@ -89,68 +84,97 @@ const byPart = parts.map((p) => ({ part: p, items: chapters.filter((c) => c.part
 
 <script>
   import { createLoop, type Loop } from "@inbetween/core";
-  import { specimens, readPencils } from "~/lib/specimens";
-  import { vignettes, readPalette, VW, VH } from "~/lib/vignettes";
+  import { vignettes, paint, readPalette, VW, VH } from "~/lib/vignettes";
   import { prefersReducedMotion } from "~/motion/policy";
+  import { duration } from "~/motion/tokens";
 
   /**
-   * Each chapter row's picture: an illustrated vignette (lib/vignettes.ts) where one exists, else the
-   * older spacing-chart specimen. At rest it shows its designed pose; on hover it plays its loop.
+   * Each chapter row's picture (lib/vignettes.ts): a small screen that rests on its telling still
+   * and, while the row is hovered or focused, plays its loop, which leaves from that still and comes
+   * back to it. Leaving mid-loop dissolves the frame it was on back into the still, rather than cut.
    */
   function setup() {
     const canvases = [...document.querySelectorAll<HTMLCanvasElement>("canvas[data-specimen]")];
     if (!canvases.length) return;
     const dpr = Math.min(2, devicePixelRatio || 1);
-    let pencils = readPencils();
     let palette = readPalette();
 
-    const draw = (cv: HTMLCanvasElement, t: number | null) => {
-      const key = cv.dataset.specimen!;
+    const draw = (cv: HTMLCanvasElement, t: number) => {
       const ctx = cv.getContext("2d");
       if (!ctx) return;
-      const vig = vignettes[key];
-      const w = vig ? VW : 128, h = vig ? VH : 36;
-      if (cv.width !== w * dpr) { cv.width = w * dpr; cv.height = h * dpr; cv.style.width = `${w}px`; cv.style.height = `${h}px`; }
+      if (cv.width !== VW * dpr) { cv.width = VW * dpr; cv.height = VH * dpr; cv.style.width = `${VW}px`; cv.style.height = `${VH}px`; }
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ctx.clearRect(0, 0, w, h);
-      if (vig) vig.draw({ ctx, w, h, c: palette }, t);
-      else specimens[key]?.({ ctx, w, h, c: pencils }, t === null ? null : t);
+      ctx.clearRect(0, 0, VW, VH);
+      paint(ctx, cv.dataset.specimen!, t, palette);
     };
-    const drawAllStill = () => { pencils = readPencils(); palette = readPalette(); canvases.forEach((c) => draw(c, null)); };
+    const drawAllStill = () => { palette = readPalette(); canvases.forEach((c) => draw(c, 0)); };
     drawAllStill();
+    document.fonts.ready.then(drawAllStill); // one scene labels its rows in the mono
     if (import.meta.env.DEV) (window as unknown as { __ibDraw: typeof draw }).__ibDraw = draw; // for frame-by-frame checks
 
-    let loop: Loop | null = null;
-    const stop = (cv: HTMLCanvasElement) => { loop?.stop(); loop = null; draw(cv, null); };
+    let playing: { cv: HTMLCanvasElement; loop: Loop } | null = null;
+    const dissolving = new Map<HTMLCanvasElement, Loop>();
+    const play = (cv: HTMLCanvasElement) => {
+      if (prefersReducedMotion() || playing?.cv === cv) return;
+      if (playing) rest(playing.cv);
+      dissolving.get(cv)?.stop();
+      dissolving.delete(cv);
+      const period = vignettes[cv.dataset.specimen!]?.period ?? 3;
+      playing = { cv, loop: createLoop(({ time }) => draw(cv, (time % period) / period)) };
+    };
+    const rest = (cv: HTMLCanvasElement) => {
+      if (playing?.cv !== cv) return;
+      playing.loop.stop();
+      playing = null;
+      const frame = document.createElement("canvas");
+      frame.width = cv.width;
+      frame.height = cv.height;
+      frame.getContext("2d")!.drawImage(cv, 0, 0);
+      dissolving.set(cv, createLoop(({ time }) => {
+        const k = Math.min(1, (time * 1000) / duration.quick);
+        draw(cv, 0);
+        const ctx = cv.getContext("2d")!;
+        ctx.save();
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.globalAlpha = 1 - k;
+        ctx.drawImage(frame, 0, 0);
+        ctx.restore();
+        if (k < 1) return;
+        dissolving.delete(cv);
+        return false;
+      }));
+    };
     document.querySelectorAll<HTMLElement>("[data-specimen-row]").forEach((row) => {
       const cv = row.querySelector<HTMLCanvasElement>("canvas")!;
-      const period = vignettes[cv.dataset.specimen!]?.period ?? 1.2;
-      const start = () => {
-        if (prefersReducedMotion()) return;
-        loop?.stop();
-        loop = createLoop(({ time }) => draw(cv, (time % period) / period));
-      };
-      row.addEventListener("pointerenter", start);
-      row.addEventListener("focus", start);
-      row.addEventListener("pointerleave", () => stop(cv));
-      row.addEventListener("blur", () => stop(cv));
+      row.addEventListener("pointerenter", () => play(cv));
+      row.addEventListener("focus", () => play(cv));
+      row.addEventListener("pointerleave", () => rest(cv));
+      row.addEventListener("blur", () => rest(cv));
     });
     addEventListener("ib:prefs", drawAllStill);
     matchMedia("(prefers-color-scheme: dark)").addEventListener("change", drawAllStill);
   }
+
   document.addEventListener("astro:page-load", setup);
 </script>
 
 <style>
   .index { padding-bottom: 2rem; }
-  .hero { padding-block: clamp(2.5rem, 8vw, 6rem) clamp(2rem, 5vw, 3.5rem); }
-  .hero-grid { display: grid; grid-template-columns: minmax(0, 36rem) minmax(0, 20rem); justify-content: space-between; gap: 2rem 4rem; margin-top: 2rem; align-items: end; }
+  /* The hero is one grid: the title, and the definition right under it, on the left; the epigraph's
+     card on the right, spanning both and sitting on the definition's baseline, so it rises beside the
+     title. (.hero-grid only groups them in the markup.) */
+  .hero { padding-block: clamp(2.5rem, 8vw, 6rem) clamp(4rem, 12vw, 9rem); display: grid; grid-template-columns: minmax(0, 36rem) minmax(0, 18rem); justify-content: space-between; gap: 2rem 4rem; align-items: start; }
+  .hero-grid { display: contents; }
+  /* The title keeps its own width (its ruler is as long as the word), not the column's. */
+  .hero :global(.title-scrub) { justify-self: start; }
+  .dict { grid-column: 1; }
+  .hero :global(.epigraph) { grid-column: 2; grid-row: 1 / span 2; align-self: end; }
   /* The intro, as a dictionary entry: a label, numbered senses in the reading mono hanging from their
      numbers, and a see-also line aligned with the senses. */
   .dict { --hang: 1.75rem; color: var(--ink); }
   .dict-head { color: var(--graphite); }
   .dict-senses { list-style: none; margin: 0.75rem 0 0; padding: 0; display: grid; gap: 0.35rem; }
-  .dict-senses li { font-size: 1.125rem; line-height: 1.55; padding-left: var(--hang); text-indent: calc(-1 * var(--hang)); }
+  .dict-senses li { font-size: 1rem; line-height: 1.55; padding-left: var(--hang); text-indent: calc(-1 * var(--hang)); }
   /* Less the word space after it (1ch in the mono), so the text starts at the hang, where wrapped
      lines and the see-also line start too. */
   .dict-n { display: inline-block; width: calc(var(--hang) - 1ch); text-indent: 0; color: var(--graphite); font-variant-numeric: tabular-nums; }
@@ -160,19 +184,10 @@ const byPart = parts.map((p) => ({ part: p, items: chapters.filter((c) => c.part
   .dict-see { margin-top: 1.1rem; padding-left: var(--hang); font-size: var(--text-sm); color: var(--graphite-strong); }
   .dict-see-label { color: var(--graphite); margin-right: 0.5rem; }
   .dict-see a { color: inherit; }
-  /* The epigraph, as a book sets one: a short block in the reading face, a size down, hanging quote,
-     attribution ranged right beneath it. */
-  .epigraph { margin: 0; justify-self: end; max-width: 25ch; }
-  .epigraph blockquote { margin: 0; }
-  .epigraph p { font-size: 0.875rem; line-height: 1.6; color: var(--graphite-strong); text-indent: -1ch; }
-  .epigraph figcaption { margin-top: 0.6rem; text-align: right; color: var(--graphite); font-size: 0.875rem; }
-  .epigraph .dash { margin-right: 0.15em; }
-  /* While its lines are masked for the reveal, only the first keeps the hanging quote. */
-  .epigraph :global(.rl-mask) { text-indent: 0; }
-  .epigraph :global(.rl-mask:first-child) { text-indent: -1ch; }
-
 
   .toc-head { display: flex; align-items: baseline; gap: 1rem; }
+  /* Room under the Contents divider before the first part starts. */
+  .toc > .toc-head { margin-bottom: 1.75rem; }
   /* The ruler has no text, so its baseline is its bottom edge: the label sits on the ruler's line. */
   .toc-head .tick-rule { flex: 1; min-width: 0; }
   .toc-title { color: var(--graphite-strong); line-height: 1; }
@@ -210,7 +225,9 @@ const byPart = parts.map((p) => ({ part: p, items: chapters.filter((c) => c.part
   .bench-head { margin-bottom: 2rem; }
 
   @media (max-width: 860px) {
-    .hero-grid { grid-template-columns: minmax(0, 1fr); }
+    .hero { grid-template-columns: minmax(0, 1fr); }
+    /* Stacked, the card follows the definition at the column's full width, flush left with it. */
+    .hero :global(.epigraph) { grid-column: 1; grid-row: auto; align-self: start; }
     .toc-part { grid-template-columns: minmax(0, 1fr); gap: 0.75rem; }
     .toc-part .rows, .part-head { --persp-dx: 0px; }
     .part-head { position: static; }

@@ -3,7 +3,8 @@ import Base from "~/layouts/Base.astro";
 import { getCollection, render } from "astro:content";
 import { chapterBySlug, chapters, pad2, partOf, instrumentById } from "~/lib/curriculum";
 import { mdxComponents } from "~/components/mdx";
-import InkTitle from "~/components/ui/InkTitle.astro";
+import LineTitle from "~/components/ui/LineTitle.astro";
+import LabButton from "~/components/ui/LabButton.astro";
 
 export async function getStaticPaths() {
   const entries = await getCollection("chapters");
@@ -19,17 +20,23 @@ const idx = chapters.findIndex((c) => c.slug === meta.slug);
 const prev = chapters.slice(0, idx).reverse().find((c) => written.has(c.slug));
 const next = chapters.slice(idx + 1).find((c) => written.has(c.slug));
 ---
-<Base title={`${pad2(meta.number)} ${meta.title}`} description={meta.summary}>
+<Base title={`${pad2(meta.number)} ${meta.title}`} description={meta.summary} crumb={{ number: pad2(meta.number), title: meta.title }}>
   <article class="page chapter" data-chapter={meta.number}>
+    <!-- The opener: the part on the tick ruler, and where this chapter falls; the title on one line,
+         written on as the index title is, its number in outline figures level with it (LineTitle); the
+         lede; a button into each lab instrument it uses (LabButton). -->
     <header class="chapter-head prose" data-reveal-section>
-      <span class="smallcaps part">{part.numeral === "—" ? "Capstone" : `Part ${part.numeral} · ${part.title}`}</span>
-      <InkTitle as="h1" text={meta.title} number={pad2(meta.number)} />
-      <p class="lede" data-reveal-lines data-lines data-reveal-delay="base">{entry.data.lede}</p>
-      <div class="meta">
-        {meta.instruments.map((id) => {
-          const i = instrumentById(id);
-          return <a class="chip" href={`/lab/${id}`}>{i.code} · {i.name}</a>;
-        })}
+      <div class="ch-main">
+        <div class="ch-top smallcaps">
+          <span>{part.numeral === "—" ? "Capstone" : `Part ${part.numeral} · ${part.title}`}</span>
+          <div class="tick-rule" aria-hidden="true" data-reveal-block="rule"></div>
+          <span class="ch-count">{pad2(meta.number)} / {chapters.length}</span>
+        </div>
+        <h1 class="ch-title ink-h" data-crumb-anchor><LineTitle text={meta.title} number={pad2(meta.number)} /></h1>
+        <p class="lede" data-reveal-lines data-lines data-reveal-delay="base">{entry.data.lede}</p>
+        <div class="ch-lab">
+          {meta.instruments.map((id) => <LabButton i={instrumentById(id)} />)}
+        </div>
       </div>
     </header>
     <div class="prose chapter-body" data-reveal-block data-persp>

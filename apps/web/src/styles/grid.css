@@ -88,8 +88,31 @@
     height: 100%;
     align-items: stretch;
   }
+  .mast-id { display: flex; align-items: center; gap: 0.9rem; min-width: 0; }
+  /* The chapter in the bar (Header.astro): a rule drawn up, then the number and the title rising out of
+     their masks, a beat apart, as the page's lines do. They go the other way quicker. */
+  .mast-crumb { display: flex; align-items: center; gap: 0.6rem; min-width: 0; }
+  .mc-rule { flex: none; width: 1px; height: 1.1rem; background: var(--graphite); transform: scaleY(0); transform-origin: 50% 100%; transition: transform var(--dur-quick) var(--ease-in); }
+  .mc-mask { display: block; overflow: clip; overflow-clip-margin: 0.2em; padding-block: 0.1em; }
+  .mc-mask-t { min-width: 0; }
+  .mc-n, .mc-t { display: block; translate: 0 115%; transition: translate var(--dur-quick) var(--ease-in); }
+  .mc-n { font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.05em; color: var(--graphite); font-variant-numeric: tabular-nums; }
+  .mc-t { font-family: var(--font-display); font-weight: 500; font-size: 0.95rem; letter-spacing: -0.01em; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  [data-crumb][data-on] .mc-rule { transform: scaleY(1); transition: transform var(--dur-base) var(--ease-out); }
+  [data-crumb][data-on] .mc-n { translate: 0 0; transition: translate var(--dur-scene) var(--ease-reveal) var(--dur-instant); }
+  [data-crumb][data-on] .mc-t { translate: 0 0; transition: translate var(--dur-scene) var(--ease-reveal) calc(var(--dur-instant) + var(--stagger-step) * 2); }
+  /* Reduced motion: it simply fades in and out */
+  @media (prefers-reduced-motion: reduce) {
+    :root:not([data-motion="full"]) :is(.mc-n, .mc-t, .mc-rule) { translate: none; transform: none; opacity: 0; transition: opacity var(--dur-quick) var(--ease-out); }
+    :root:not([data-motion="full"]) [data-crumb][data-on] :is(.mc-n, .mc-t, .mc-rule) { opacity: 1; }
+  }
+  :root[data-motion="reduce"] :is(.mc-n, .mc-t, .mc-rule) { translate: none; transform: none; opacity: 0; transition: opacity var(--dur-quick) var(--ease-out); }
+  :root[data-motion="reduce"] [data-crumb][data-on] :is(.mc-n, .mc-t, .mc-rule) { opacity: 1; }
+  /* A phone's bar has no room for it: the logo and the nav fill it */
+  @media (max-width: 640px) { .mast-crumb { display: none; } }
   .wordmark { align-self: center; }
   .wordmark {
+    white-space: nowrap;
     font-family: var(--font-display);
     font-weight: 500;
     font-size: 1.375rem;
@@ -98,6 +121,8 @@
     letter-spacing: -0.03em;
   }
   .wordmark em { color: var(--graphite-strong); }
+  /* The footer sets the name as the header does. */
+  .wordmark-foot { font-family: var(--font-display); font-weight: 500; letter-spacing: -0.02em; color: var(--ink); }
   /* Navigation reads like a label: small mono capitals, tracked open. */
   .site-nav {
     display: flex;
@@ -211,6 +236,7 @@
     gap: 1rem;
   }
   .site-footer a { color: inherit; }
+  .foot-credits { margin: -1.5rem 0 2.5rem; max-width: 72ch; font-size: var(--text-xs); line-height: 1.6; color: var(--graphite); }
 
   /* ---------- Lab posture: full bleed ---------- */
   .lab-page { width: 100%; padding-inline: var(--gutter); }

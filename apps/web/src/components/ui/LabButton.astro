@@ -1,0 +1,29 @@
+---
+/**
+ * A way into a lab instrument from a chapter: an outline button holding the instrument's pencil
+ * drawing (lib/instrumentIcons.ts) and its name. It behaves as the lab grid's boxes do (BenchItem):
+ * on hover the blue pencil draws its border round, from the top-left until it meets itself, and goes
+ * over the drawing a stroke at a time (components.css .pencil-hover, .bi-icon-ink).
+ */
+import { instrumentIcons } from "~/lib/instrumentIcons";
+import type { InstrumentMeta } from "~/lib/curriculum";
+
+interface Props {
+  i: InstrumentMeta;
+}
+const { i } = Astro.props;
+const strokes = instrumentIcons[i.id];
+---
+<a class="lab-btn pencil-hover" href={`/lab/${i.id}`}>
+  <svg class="ph-outline" aria-hidden="true"><rect x="0.5" y="0.5" width="100%" height="100%" pathLength="1" /></svg>
+  <svg class="bi-icon lab-btn-icon" viewBox="0 0 32 32" aria-hidden="true">
+    <path class="bi-icon-base" d={strokes.join("")} />
+    {strokes.map((d, k) => (
+      <path class="bi-icon-ink" d={d} pathLength="1" style={`--k:${k / Math.max(1, strokes.length - 1)}`} />
+    ))}
+  </svg>
+  <span class="lab-btn-text">
+    <span class="smallcaps ph-n lab-btn-code">{i.code}</span>
+    <span class="ph-title lab-btn-name">{i.name}</span>
+  </span>
+</a>

@@ -2,8 +2,8 @@
 /**
  * A lab instrument's box, on the home page and the lab index: its code in outline figures and a small
  * pencil drawing of the tool along the top, then its name, what it does, and what it trains. On hover
- * the pencil draws the box's outline (components.css .pencil-hover), inks the code, traces the drawing
- * in blue, and "Open" takes the tag's place.
+ * the pencil draws the box's outline (components.css .pencil-hover), inks the code, draws the tool over
+ * in blue a stroke at a time, and "Open" takes the tag's place, its arrow drawn after it.
  */
 import OutlineNumber from "./OutlineNumber.astro";
 import { instrumentIcons } from "~/lib/instrumentIcons";
@@ -15,22 +15,30 @@ interface Props {
   revealI?: number;
 }
 const { i, revealI } = Astro.props;
-const d = instrumentIcons[i.id];
+const strokes = instrumentIcons[i.id];
 const reveal = revealI !== undefined;
 ---
 <a class="bench-item pencil-hover" href={`/lab/${i.id}`} data-reveal-block={reveal ? "" : undefined} data-reveal-i={revealI}>
   <svg class="ph-outline" aria-hidden="true"><rect x="0.5" y="0.5" width="100%" height="100%" pathLength="1" /></svg>
   <span class="bi-head">
     <OutlineNumber class="bi-code ph-n" text={i.code} />
-    <svg class="bi-icon" viewBox="0 0 24 24" aria-hidden="true">
-      <path class="bi-icon-base" d={d} />
-      <path class="bi-icon-ink" d={d} pathLength="1" />
+    <svg class="bi-icon" viewBox="0 0 32 32" aria-hidden="true">
+      <path class="bi-icon-base" d={strokes.join("")} />
+      {strokes.map((d, k) => (
+        <path class="bi-icon-ink" d={d} pathLength="1" style={`--k:${k / Math.max(1, strokes.length - 1)}`} />
+      ))}
     </svg>
   </span>
   <span class="serif ph-title">{i.name}</span>
   <p data-reveal-lines={reveal ? "" : undefined} data-lines={reveal ? "" : undefined}>{i.does}</p>
   <span class="bi-foot">
     <span class="smallcaps bi-tag">{i.trains}</span>
-    <span class="smallcaps bi-open" aria-hidden="true">Open →</span>
+    <span class="smallcaps bi-open" aria-hidden="true">
+      Open
+      <svg class="bi-arrow" viewBox="0 0 22 12">
+        <path class="bi-arrow-shaft" d="M1 6H20" pathLength="1" />
+        <path class="bi-arrow-head" d="M15 1.5L20.5 6L15 10.5" pathLength="1" />
+      </svg>
+    </span>
   </span>
 </a>

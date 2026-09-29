@@ -2,7 +2,7 @@
   /**
    * The index title, inked like a title card: a blue-pencil line draws each letter's outline, left
    * to right; once the outlines are down, ink fills them one after another and the pencil lifts.
-   * The outlines are Geist Medium itself (scripts/build-title.mjs), so the last frame is the title.
+   * The outlines are Geist SemiBold itself (scripts/build-title.mjs), so the last frame is the title.
    *
    * It is also a tiny instrument: move the pointer across it (drag on touch, arrow keys on the
    * timeline) to scrub the frames; the playhead glides after the pointer. Let go and it plays on to
@@ -148,7 +148,7 @@
   role="presentation"
 >
   <h1 class="wordmark-xl">
-    <span class="visually-hidden">{title.text.replace(".", "")}</span>
+    <span class="visually-hidden">{title.text.replace(".", "-")}</span>
     <svg
       class="ink"
       viewBox={`${vb.x} ${vb.y} ${vb.w} ${vb.h}`}
@@ -161,7 +161,7 @@
           d={l.d}
           pathLength="1"
           class="glyph"
-          class:dot={l.ch === "."}
+          class:mark={l.ch === "."}
           style={`fill-opacity:${s.fill.toFixed(3)};stroke-opacity:${s.pencil.toFixed(3)};stroke-dashoffset:${(1 - s.draw).toFixed(4)}`}
         />
       {/each}
@@ -198,8 +198,8 @@
   .ink { display: block; overflow: visible; }
   /* One pencil line along the outline (dashed to its drawn length), and the ink inside it. */
   .glyph { fill: var(--ink); stroke: var(--blue-pencil); stroke-width: 14; stroke-linejoin: round; stroke-linecap: round; stroke-dasharray: 1 1; paint-order: stroke; }
-  /* The point in in.between is the inbetween itself: it inks in blue pencil. */
-  .glyph.dot { fill: var(--blue-pencil); }
+  /* The point in in.between is the in-between itself: it inks in blue pencil. */
+  .glyph.mark { fill: var(--blue-pencil); }
   /* Until the island takes over, hide the drawing so the first frame isn't a finished title that then vanishes. */
   @media (prefers-reduced-motion: no-preference) {
     :global(html.js:not([data-motion="reduce"])) .title-scrub:not(.ready) .ink { opacity: 0; }

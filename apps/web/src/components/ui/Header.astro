@@ -1,5 +1,11 @@
 ---
 import Prefs from "./Prefs.astro";
+
+interface Props {
+  /** On a chapter: its number and title, taken up by the bar once the page's title is under it. */
+  crumb?: { number: string; title: string };
+}
+const { crumb } = Astro.props;
 const path = Astro.url.pathname.replace(/\/$/, "") || "/";
 const links = [
   { href: "/", label: "Contents", match: (p: string) => p === "/" || p.startsWith("/chapters") },
@@ -9,7 +15,18 @@ const links = [
 ---
 <header class="site-header" transition:animate="none">
   <div class="masthead page">
-    <a class="wordmark" href="/">inbetween</a>
+    <div class="mast-id">
+      <a class="wordmark" href="/">in-between</a>
+      <!-- On a chapter, once its title has scrolled up under the bar: a rule, then the chapter's
+           number and title, each rising out of its own mask; scrolling back up, they drop away. -->
+      {crumb && (
+        <span class="mast-crumb" data-crumb aria-hidden="true">
+          <span class="mc-rule" />
+          <span class="mc-mask"><span class="mc-n">{crumb.number}</span></span>
+          <span class="mc-mask mc-mask-t"><span class="mc-t">{crumb.title}</span></span>
+        </span>
+      )}
+    </div>
     <nav class="site-nav" aria-label="Main">
       {links.map((l) => (
         <a href={l.href} aria-current={l.match(path) ? "page" : undefined}>
@@ -21,3 +38,17 @@ const links = [
     </nav>
   </div>
 </header>
+
+<script>
+  /** Show the chapter in the bar while the page's title ([data-crumb-anchor]) is above it. */
+  document.addEventListener("astro:page-load", () => {
+    const crumb = document.querySelector<HTMLElement>("[data-crumb]");
+    const anchor = document.querySelector<HTMLElement>("[data-crumb-anchor]");
+    if (!crumb || !anchor) return;
+    const bar = document.querySelector<HTMLElement>(".site-header")?.offsetHeight ?? 58;
+    new IntersectionObserver(
+      ([e]) => crumb.toggleAttribute("data-on", !e.isIntersecting && e.boundingClientRect.top < bar),
+      { rootMargin: `-${bar}px 0px 0px 0px` },
+    ).observe(anchor);
+  });
+</script>

@@ -4,6 +4,7 @@ import "@fontsource-variable/geist-mono";
 import "~/styles/index.css";
 import { ClientRouter } from "astro:transitions";
 import Header from "~/components/ui/Header.astro";
+import ChapterRuler from "~/components/ui/ChapterRuler.astro";
 import Footer from "~/components/ui/Footer.astro";
 import { pageCut } from "~/motion/patterns";
 
@@ -11,9 +12,11 @@ interface Props {
   title: string;
   description?: string;
   posture?: "read" | "lab";
+  /** On a chapter: its number and title, which the top bar takes up once the page's title scrolls under it. */
+  crumb?: { number: string; title: string };
 }
-const { title, description = "A field manual and laboratory for motion on the web.", posture = "read" } = Astro.props;
-const fullTitle = title === "Inbetween" ? title : `${title} · Inbetween`;
+const { title, description = "A field manual and laboratory for motion on the web.", posture = "read", crumb } = Astro.props;
+const fullTitle = title === "in-between" ? title : `${title} · in-between`;
 ---
 <!doctype html>
 <html lang="en">
@@ -50,7 +53,8 @@ const fullTitle = title === "Inbetween" ? title : `${title} · Inbetween`;
   <body class:list={[`posture-${posture}`]}>
     <a class="skip-link" href="#main">Skip to content</a>
     <div class="frame">
-      <Header />
+      <Header crumb={crumb} />
+      {crumb && <ChapterRuler current={Number(crumb.number)} />}
       <div class="scroller" data-scroller tabindex="-1" transition:name="page" transition:animate={pageCut}>
         <main id="main">
           <slot />

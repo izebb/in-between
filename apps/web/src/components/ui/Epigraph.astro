@@ -1,0 +1,275 @@
+---
+/**
+ * The home page's epigraph: a card in the page's colours reversed, the site's hatching fading in from
+ * its edges, holding what animators have said about the craft (lib/epigraphs.ts), one at a time, each
+ * author drawn in pencil beside their name.
+ *
+ * - Quote marks: outline figures, written over in pencil and inked on hover, as the chapter numbers are.
+ * - Entrance: the card fades in with the hero; the first quote's lines rise out of their masks after
+ *   the definition's (patterns.ts revealLines), then its author.
+ * - Rotation: each quote holds for a beat its pager counts down, then leaves quickly and the next rises
+ *   in the same way. Hovering, focusing or scrolling it away holds the count; the pager jumps to any
+ *   quote. Under reduced motion nothing turns over by itself.
+ * - Tilt: the card leans toward the pointer as it crosses the hero, its layers shifting by depth.
+ *
+ * All the quotes share one grid cell, so the card is as tall as the longest and never changes size.
+ */
+import { epigraphs } from "~/lib/epigraphs";
+
+// The opening quote marks: two blocks, each a stem with a hooked top, drawn as outlines.
+const quoteMarks = [0, 25].map((x) => `M${x + 3} 32V20C${x + 3} 10 ${x + 8} 4 ${x + 18} 2l1.5 3.2C${x + 13.5} 7 ${x + 11} 11 ${x + 10.6} 16H${x + 19}V32Z`);
+const n = epigraphs.length;
+---
+<div class="epigraph pencil-hover" data-epigraph data-reveal-block>
+  <span class="ep-sheen" aria-hidden="true"></span>
+  <div class="ep-top">
+    <svg class="ep-mark o-num" viewBox="0 0 48 34" aria-hidden="true">
+      {quoteMarks.map((d, k) => (
+        <g style={`--k:${k}`}>
+          <path class="o-hair" d={d} />
+          <path class="o-ink" d={d} pathLength="1" />
+        </g>
+      ))}
+    </svg>
+    {n > 1 && (
+      <div class="ep-pager" role="group" aria-label="Quotes">
+        {epigraphs.map((q, i) => (
+          <button type="button" class="ep-tick" data-ep-go={i} aria-label={`Quote ${i + 1} of ${n}, ${q.name}`} aria-current={i === 0 ? "true" : undefined}>
+            <span class="ep-fill" />
+          </button>
+        ))}
+      </div>
+    )}
+  </div>
+  <div class="ep-stack">
+    {epigraphs.map((q, i) => (
+      <figure
+        class="ep-item"
+        data-ep-item
+        data-active={i === 0 ? "" : undefined}
+        aria-hidden={i === 0 ? undefined : "true"}
+        data-reveal-lines={i === 0 ? "" : undefined}
+        data-reveal-after={i === 0 ? "#dict-see" : undefined}
+      >
+        <blockquote>
+          <p data-lines>{q.quote}</p>
+        </blockquote>
+        <figcaption>
+          <img class="ep-face" src={q.portrait} width="44" height="44" alt={`Pencil drawing of ${q.name}`} title={`Drawn after a photograph by ${q.photo.by} (${q.photo.license})`} loading={i === 0 ? "eager" : "lazy"} />
+          <span class="ep-who">
+            <span class="ep-name">{q.name}</span>
+            <span class="smallcaps ep-role">{q.role}</span>
+          </span>
+        </figcaption>
+      </figure>
+    ))}
+  </div>
+</div>
+
+<script>
+  import { createLoop, damp, type Loop } from "@inbetween/core";
+  import { revealLines } from "~/motion/patterns";
+  import { prefersReducedMotion } from "~/motion/policy";
+  import { duration, exitDuration, easingCss, distance } from "~/motion/tokens";
+
+  /**
+   * Tilt: the card leans toward the pointer as it crosses the hero, like a card turned in the hand:
+   * pressed down on the pointer's side, its layers shifting by depth (the hatching deepest, the quote
+   * marks and the portrait nearest), a sheen sliding with it and its shadow growing as it lifts. The
+   * pointer's place is smoothed (damp, as the title scrub follows the pointer), so the card follows and
+   * settles flat when the pointer leaves. The tilt itself is CSS, from --tx, --ty (−1 → 1) and --tilt
+   * (0 → 1). Mouse only; off under reduced motion.
+   */
+  function tilt(card: HTMLElement) {
+    const hero = card.closest<HTMLElement>(".hero");
+    if (!hero || !matchMedia("(hover: hover) and (pointer: fine)").matches) return;
+    const FOLLOW = 9; // per second
+    const clamp1 = (v: number) => Math.max(-1, Math.min(1, v));
+    let tx = 0, ty = 0, ton = 0, x = 0, y = 0, on = 0;
+    let loop: Loop | null = null;
+    const write = () => {
+      card.style.setProperty("--tx", x.toFixed(4));
+      card.style.setProperty("--ty", y.toFixed(4));
+      card.style.setProperty("--tilt", on.toFixed(4));
+    };
+    const run = () => {
+      loop ??= createLoop(({ dt }) => {
+        x = damp(x, tx, FOLLOW, dt);
+        y = damp(y, ty, FOLLOW, dt);
+        on = damp(on, ton, FOLLOW, dt);
+        write();
+        if (Math.abs(x - tx) + Math.abs(y - ty) + Math.abs(on - ton) > 1e-3) return;
+        x = tx;
+        y = ty;
+        on = ton;
+        write();
+        loop = null;
+        return false;
+      });
+    };
+    hero.addEventListener("pointermove", (e) => {
+      if (e.pointerType !== "mouse" || prefersReducedMotion()) return;
+      // −1 → 1 across the card, full at its edges; from further off it still turns toward the pointer,
+      // less the further away the pointer is, so the whole hero moves it and it moves most over it.
+      const r = card.getBoundingClientRect();
+      const away = Math.hypot(Math.max(r.left - e.clientX, 0, e.clientX - r.right), Math.max(r.top - e.clientY, 0, e.clientY - r.bottom));
+      const reach = 1 / (1 + away / 240);
+      tx = clamp1((e.clientX - (r.left + r.width / 2)) / (r.width / 2)) * reach;
+      ty = clamp1((e.clientY - (r.top + r.height / 2)) / (r.height / 2)) * reach;
+      ton = reach;
+      run();
+    });
+    hero.addEventListener("pointerleave", () => {
+      tx = ty = ton = 0;
+      run();
+    });
+  }
+
+  /**
+   * Rotation: the active tick's fill is a CSS animation as long as a quote's hold (--dwell); when it
+   * ends, the next quote comes in. Pausing is the animation pausing (hover, focus, off screen), so the
+   * count and what's on screen can't disagree. It starts once the first quote has risen in.
+   */
+  function rotate(card: HTMLElement) {
+    const items = [...card.querySelectorAll<HTMLElement>("[data-ep-item]")];
+    const ticks = [...card.querySelectorAll<HTMLButtonElement>("[data-ep-go]")];
+    if (items.length < 2) return;
+    let active = 0;
+    let busy = false;
+
+    const mark = () =>
+      ticks.forEach((t, i) => {
+        t.toggleAttribute("data-past", i < active);
+        if (i === active) t.setAttribute("aria-current", "true");
+        else t.removeAttribute("aria-current");
+      });
+
+    const go = async (next: number) => {
+      if (busy || next === active) return;
+      busy = true;
+      const from = items[active], to = items[next];
+      if (!prefersReducedMotion()) {
+        // Out quickly, dropping a little, as exits do
+        const out = [...from.querySelectorAll<HTMLElement>("blockquote, figcaption")].map((el) =>
+          el.animate([{ opacity: 1, transform: "none" }, { opacity: 0, transform: `translateY(${distance.rise}px)` }], { duration: exitDuration.base, easing: easingCss.in, fill: "forwards" }),
+        );
+        await Promise.all(out.map((a) => a.finished.catch(() => undefined)));
+        out.forEach((a) => a.cancel());
+      }
+      from.removeAttribute("data-active");
+      from.setAttribute("aria-hidden", "true");
+      to.setAttribute("data-active", "");
+      to.removeAttribute("aria-hidden");
+      active = next;
+      mark();
+      // In: its lines rise out of their masks, then its author
+      if (!prefersReducedMotion()) revealLines(to);
+      busy = false;
+    };
+
+    ticks.forEach((t, i) => t.addEventListener("click", () => go(i)));
+    card.addEventListener("animationend", (e) => {
+      if ((e.target as Element).classList.contains("ep-fill")) go((active + 1) % items.length);
+    });
+    // Off screen, the count holds
+    new IntersectionObserver(([e]) => card.classList.toggle("is-away", !e.isIntersecting)).observe(card);
+    // Start counting once the first quote is in
+    const start = () => {
+      const lead = Number(items[0].dataset.revealLead ?? 0) - performance.now();
+      setTimeout(() => card.classList.add("is-running"), Math.max(0, lead) + duration.scene);
+    };
+    if (items[0].classList.contains("is-in")) start();
+    else {
+      const mo = new MutationObserver(() => {
+        if (!items[0].classList.contains("is-in")) return;
+        mo.disconnect();
+        start();
+      });
+      mo.observe(items[0], { attributes: true, attributeFilter: ["class"] });
+    }
+  }
+
+  document.addEventListener("astro:page-load", () => {
+    const card = document.querySelector<HTMLElement>("[data-epigraph]");
+    if (!card) return;
+    tilt(card);
+    rotate(card);
+  });
+</script>
+
+<style>
+  /* The card: the page's colours reversed (dark on the light page, light on the dark), the site's
+     hatching thick at its edges and fading out behind the words. */
+  .epigraph {
+    --on: var(--paper);
+    --tx: 0;
+    --ty: 0;
+    --tilt: 0;
+    --dwell: calc(var(--dur-scene) * 15); /* how long each quote holds */
+    position: relative;
+    isolation: isolate;
+    margin: 0;
+    padding: 1.1rem 1.15rem 1rem;
+    border-radius: 6px;
+    background: var(--ink);
+    color: var(--on);
+    overflow: hidden;
+    /* Leaning toward the pointer (tilt): pressed down on its side, the shadow falling away from it. */
+    transform: perspective(900px) rotateX(calc(var(--ty) * -7deg)) rotateY(calc(var(--tx) * 9deg));
+    box-shadow: calc(var(--tx) * -10px) calc(4px + var(--tilt) * 10px) calc(8px + var(--tilt) * 24px) rgb(0 0 0 / calc(var(--tilt) * 0.22));
+  }
+  .epigraph::before {
+    content: "";
+    position: absolute;
+    inset: -10px; /* past the edges, so it can slide under the tilt without showing them */
+    z-index: -1;
+    pointer-events: none;
+    translate: calc(var(--tx) * -6px) calc(var(--ty) * -6px);
+    background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--on) 30%, transparent) 0 1px, transparent 1px 6px);
+    mask: radial-gradient(115% 90% at 40% 45%, transparent 30%, #000 72%);
+  }
+  /* A sheen where the light catches it. */
+  .ep-sheen {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: var(--tilt);
+    background: radial-gradient(circle at calc(50% + var(--tx) * 45%) calc(50% + var(--ty) * 45%), rgb(255 255 255 / 0.1), transparent 60%);
+  }
+
+  /* Along the top: the quote marks, and the pager across from them */
+  .ep-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.6rem; }
+  /* The quote marks, drawn as the chapter numbers are (components.css .o-hair, .o-ink): a hairline at
+     rest, written over in pencil and inked on hover. Nearest the eye, they move most with the tilt. */
+  .ep-mark { display: block; width: 2.25rem; height: 1.6rem; overflow: visible; color: color-mix(in srgb, var(--on) 75%, transparent); --o-hair: 1.3; translate: calc(var(--tx) * 5px) calc(var(--ty) * 5px); }
+
+  /* The pager: a segment per quote. Those passed are full, the current one fills over its hold, and
+     when it's full the next quote comes in. Any segment jumps to its quote. */
+  .ep-pager { display: flex; gap: 3px; margin-top: 0.2rem; }
+  .ep-tick { position: relative; width: 12px; height: 14px; padding: 0; border: 0; background: none; cursor: pointer; }
+  .ep-tick::before, .ep-fill { content: ""; position: absolute; left: 0; right: 0; top: 6px; height: 2px; border-radius: 1px; }
+  .ep-tick::before { background: color-mix(in srgb, var(--on) 22%, transparent); }
+  .ep-fill { background: color-mix(in srgb, var(--on) 85%, transparent); transform-origin: left; transform: scaleX(0); }
+  .ep-tick[data-past] .ep-fill { transform: scaleX(1); }
+  .ep-tick:focus-visible { outline: 1px solid var(--blue-pencil); outline-offset: 2px; border-radius: 2px; }
+  @keyframes ep-dwell { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+  @media (prefers-reduced-motion: no-preference) {
+    :root:not([data-motion="reduce"]) .epigraph.is-running .ep-tick[aria-current="true"] .ep-fill { animation: ep-dwell var(--dwell) linear forwards var(--ep-play, running); }
+    /* Held while it's being read, handled or scrolled away */
+    .epigraph:is(:hover, :focus-within, .is-away) { --ep-play: paused; }
+  }
+
+  /* The quotes, all in one cell: the card is as tall as the longest, and each author sits on its
+     bottom edge whatever the quote's length. Only the active one shows. */
+  .ep-stack { display: grid; }
+  .ep-item { grid-area: 1 / 1; margin: 0; display: flex; flex-direction: column; }
+  .ep-item:not([data-active]) { visibility: hidden; }
+  .ep-item blockquote { margin: 0 0 0.9rem; translate: calc(var(--tx) * 1.5px) calc(var(--ty) * 1.5px); }
+  .ep-item p { font-size: 0.8125rem; line-height: 1.6; text-wrap: pretty; }
+  .ep-item figcaption { display: flex; align-items: center; gap: 0.65rem; margin-top: auto; padding-top: 0.8rem; border-top: 1px solid color-mix(in srgb, var(--on) 14%, transparent); }
+  /* The author, drawn in pencil: graphite on paper in both themes, like a sketch pinned to the card. */
+  .ep-face { flex: none; width: 2.25rem; height: 2.25rem; border-radius: 50%; box-shadow: 0 0 0 1px color-mix(in srgb, var(--on) 22%, transparent); translate: calc(var(--tx) * 4px) calc(var(--ty) * 4px); }
+  .ep-who { display: grid; gap: 0.15rem; min-width: 0; }
+  .ep-name { font-family: var(--font-display); font-weight: 500; font-size: 0.8125rem; }
+  .ep-role { font-size: 0.625rem; color: color-mix(in srgb, var(--on) 62%, transparent); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+</style>
