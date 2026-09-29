@@ -33,6 +33,10 @@ export const PAIRS: ABPair[] = [
   { kind: "list", good: { easing: "--ease-out", duration: 240, stagger: 24, distance: 10 }, bad: { easing: "--ease-out", duration: 240, stagger: 0, distance: 10 }, word: "clearer", why: "A small stagger gives the list a reading order. All at once, it's one block appearing.", topics: ["stagger", "choreography", "hierarchy"] },
   { kind: "list", good: { easing: "--ease-out", duration: 280, stagger: 35, distance: 12 }, bad: { easing: "--ease-out", duration: 280, stagger: 110, distance: 12 }, word: "quicker", why: "Every row is a wait at 110ms apart; at 35ms the list has arrived before you've finished reading the first row.", topics: ["stagger", "timing"] },
   { kind: "list", good: { easing: "--ease-out", duration: 320, stagger: 30, distance: 10 }, bad: { easing: "--ease-out", duration: 320, stagger: 30, distance: 60 }, word: "calmer", why: "Same stagger, but each row travels 60px: the cascade becomes a waterfall. Short rises keep the order without the noise.", topics: ["stagger", "choreography", "taste"] },
+  // Care (chapter 21): what to show someone who asked for less motion. Reduce, don't remove.
+  { kind: "card", good: { easing: "--ease-out", duration: 200, distance: 0 }, bad: { easing: "spring(response .5 bounce .4)", distance: 120 }, word: "calmer", why: "For someone who asked for less motion, the fade still says something arrived. A bouncing slide across the card is exactly the travel they asked to be spared.", topics: ["care", "taste"] },
+  { kind: "modal", good: { easing: "--ease-out", duration: 200, distance: 0 }, bad: { none: true }, word: "clearer", why: "Reduce, don't remove: the fade keeps the message that a dialog arrived. The cut can be missed, and then the page just changed under you.", topics: ["care", "information"] },
+  { kind: "toast", good: { easing: "--ease-out", duration: 220, distance: 0 }, bad: { easing: "--ease-out", duration: 520, distance: 90 }, word: "calmer", why: "The reduced version fades where it will sit. The long rise pulls the eye across the screen for a routine note.", topics: ["care", "attention"] },
   { kind: "list", good: { easing: "--ease-out", duration: 260, stagger: 25, distance: 10 }, bad: { easing: "linear", duration: 260, stagger: 25, distance: 10 }, word: "arrives", why: "With linear timing each row stops dead; with ease-out each one settles, so the list lands row by row.", topics: ["stagger", "easing"] },
   { kind: "swap", good: { easing: "--ease-inout", duration: 520 }, bad: { none: true }, word: "connected", why: "The item travels to the other list, so you see which one moved. With a cut, you compare both lists to find it.", topics: ["permanence", "continuity", "information"] },
   { kind: "expand", good: { easing: "--ease-out", duration: 460 }, bad: { easing: "--ease-out", duration: 1400 }, word: "quicker", why: "The tile should grow into its detail, not crawl there: at 1.4s the connection is clear but you wait for it.", topics: ["permanence", "timing"] },
@@ -64,7 +68,8 @@ export const blindAB: DrillDef<BlindSpec, BlindAnswer> = {
   kind: "choice",
   make(rand, _level, opts) {
     const pool = opts?.topic ? PAIRS.filter((p) => p.topics.includes(opts.topic!)) : PAIRS;
-    const list = pool.length ? pool : PAIRS;
+    // A small topic is padded with taste pairs (at half the weight) so a round doesn't repeat itself.
+    const list = pool.length >= 4 ? pool : pool.length ? [...pool, ...pool, ...PAIRS.filter((p) => !pool.includes(p) && p.topics.includes("taste"))] : PAIRS;
     const pair = list[Math.floor(rand() * list.length)];
     const others = shuffle(rand, WORDS.filter((w) => w !== pair.word)).slice(0, 3);
     return { pair, goodSide: rand() < 0.5 ? 0 : 1, words: shuffle(rand, [pair.word, ...others]) };

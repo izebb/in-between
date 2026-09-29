@@ -38,6 +38,13 @@
   /* ---------- Pattern: the page cut (a cross-dissolve and a 4px rise) ---------- */
   @keyframes ib-cut-out { to { opacity: 0; } }
   @keyframes ib-cut-in { from { opacity: 0; translate: 0 var(--dist-rise); } }
+  /* Astro's view-transition CSS sets every animation to none under reduced motion. The policy is
+     reduce, don't remove: keep the dissolve (the rise is already 0px there). Layered !important
+     outranks Astro's unlayered !important. */
+  @media (prefers-reduced-motion: reduce) {
+    ::view-transition-old(page) { animation: ib-cut-out var(--dur-base-exit) var(--ease-in) both !important; }
+    ::view-transition-new(page) { animation: ib-cut-in var(--dur-base) var(--ease-out) calc(var(--dur-base-exit) * 0.5) both !important; }
+  }
 
   /* ---------- Pattern: changed-token flash (code panel) ---------- */
   @keyframes ib-flash {

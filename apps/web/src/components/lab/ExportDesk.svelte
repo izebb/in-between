@@ -125,7 +125,7 @@
         <label class="label" for="ex-easing">Any easing</label>
         <div class="row">
           <input id="ex-easing" class="mono" bind:value={easingInput} placeholder="cubic-bezier(.2,.8,.2,1) · spring(response .4 bounce .2) · linear(…)" />
-          <input class="mono dur" type="number" min="16" max="5000" step="10" bind:value={durationInput} aria-label="Duration in ms" />
+          <input class="mono dur" type="number" min="16" max="5000" step="1" bind:value={durationInput} aria-label="Duration in ms" />
           <button class="btn small" type="submit">Convert</button>
         </div>
         {#if easingError}<span class="err mono">{easingError}</span>{/if}

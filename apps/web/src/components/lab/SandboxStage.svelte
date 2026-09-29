@@ -257,7 +257,7 @@
   {#if error}
     <div class="error mono" role="alert">{error}</div>
   {:else if logs.length}
-    <div class="logs mono">{#each logs as l}<div>{l}</div>{/each}</div>
+    <div class="logs mono" class:top={graphs && measured}>{#each logs as l}<div>{l}</div>{/each}</div>
   {/if}
 </div>
 
@@ -269,6 +269,8 @@
   .error, .logs { position: absolute; left: 0.75rem; right: 0.75rem; bottom: 0.6rem; font-size: var(--text-xs); line-height: 1.4; }
   .error { color: var(--ink); background: var(--paper-raised); border: 1px solid var(--graphite); border-radius: 4px; padding: 0.35rem 0.5rem; }
   .logs { color: var(--graphite-strong); }
+  /* With the graphs in the bottom corner, the log sits under the badge instead. */
+  .logs.top { top: 2rem; bottom: auto; }
   .graphs { position: absolute; right: 0.75rem; bottom: 0.6rem; display: flex; gap: 1rem; padding: 0.5rem 0.6rem; background: color-mix(in srgb, var(--paper) 88%, transparent); border: 1px solid var(--rule); border-radius: 6px; }
   .g { display: flex; flex-direction: column; gap: 0.2rem; }
   .g .smallcaps { color: var(--graphite-strong); font-size: 10px; }

@@ -85,6 +85,7 @@
   onDestroy(() => loop?.stop());
 </script>
 
+<div class="tb-box">
 <div class="timebar" class:compact>
   <div class="controls">
     <button class="btn icon ghost" type="button" onclick={() => transport.restart()} title="Restart" aria-label="Restart">
@@ -146,8 +147,11 @@
     {#if showMs}<span class="ms">{Math.round(transport.time)}ms</span>{/if}
   </div>
 </div>
+</div>
 
 <style>
+  /* Sized by its own column, so a narrow embed stacks the scrubber the same way a phone does. */
+  .tb-box { container-type: inline-size; min-width: 0; }
   .timebar { display: flex; align-items: center; gap: 0.75rem; min-width: 0; }
   .controls { display: flex; align-items: center; gap: 0.2rem; flex: none; }
   .controls svg { width: 13px; height: 13px; }
@@ -177,9 +181,10 @@
   .head::before { content: ""; position: absolute; top: -3px; left: -3px; width: 8px; height: 8px; border-radius: 50%; background: var(--red-pencil); }
   .counter { display: flex; flex-direction: column; align-items: flex-end; font-size: var(--text-xs); color: var(--graphite-strong); line-height: 1.3; min-width: 4.5rem; font-variant-numeric: tabular-nums; }
   .counter b { color: var(--ink); font-weight: 500; }
+  .counter span { white-space: nowrap; }
   .compact .counter .ms { display: none; }
-  @media (max-width: 560px) {
-    .timebar { flex-wrap: wrap; }
+  @container (max-width: 520px) {
+    .timebar { flex-wrap: wrap; row-gap: 0.25rem; }
     .track { order: 3; flex-basis: 100%; }
     .counter { margin-left: auto; }
   }

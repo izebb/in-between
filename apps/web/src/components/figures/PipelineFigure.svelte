@@ -5,12 +5,14 @@
    * transform and opacity can skip both and go straight to the compositor.
    */
   import { onMount, onDestroy } from "svelte";
-  import { prefs } from "~/lib/prefs.svelte";
+  import { prefs, watchPlateStill } from "~/lib/prefs.svelte";
 
   type Prop = "left" | "width" | "background-color" | "box-shadow" | "transform" | "opacity";
   let prop = $state<Prop>("left");
   let demo: HTMLDivElement;
   let anim: Animation | null = null;
+  let root: HTMLDivElement;
+  let plateStill = $state(false);
 
   const STAGES = ["Style", "Layout", "Paint", "Composite"] as const;
   const RUNS: Record<Prop, (typeof STAGES)[number][]> = {
@@ -40,19 +42,24 @@
 
   function run() {
     anim?.cancel();
-    if (!demo || prefs.reduced) return;
+    // Still (the plate's toggle or reduced motion): the stages still say what runs; the demo holds.
+    if (!demo || prefs.reduced || plateStill) return;
     demo.style.setProperty("--track", `${demo.parentElement!.clientWidth}px`);
     anim = demo.animate(KEYS[prop], { duration: 1400, direction: "alternate", iterations: Infinity, easing: "ease-in-out" });
   }
   $effect(() => {
     void prop;
+    void plateStill;
     run();
   });
-  onMount(() => prefs.start());
+  onMount(() => {
+    prefs.start();
+    return watchPlateStill(root, (v) => (plateStill = v));
+  });
   onDestroy(() => anim?.cancel());
 </script>
 
-<div class="pipeline">
+<div class="pipeline" bind:this={root}>
   <div class="seg props" role="group" aria-label="Property to animate">
     {#each Object.keys(RUNS) as p (p)}
       <button type="button" aria-pressed={prop === p} onclick={() => (prop = p as Prop)}>{p}</button>

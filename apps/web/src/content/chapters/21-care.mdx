@@ -1,0 +1,266 @@
+---
+number: 21
+lede: "When someone asks for less motion, take away the movement and keep the message."
+---
+
+export const reduced = [
+  { target: "a", property: "y", from: 24, to: 0, duration: 280, easing: "--ease-out" },
+  { target: "a", property: "opacity", from: 0, to: 1, duration: 180, easing: "linear" },
+  { target: "b", property: "opacity", from: 0, to: 1, duration: 180, easing: "linear" },
+];
+
+Motion can make people ill. For someone whose sense of balance is damaged, a page that slides, zooms, or drifts as they scroll can bring on dizziness or nausea that lasts well after the tab is closed. And motion can get in anyone's way: it pulls the eye off the line they were reading, it runs down a battery, and sometimes it makes them wait.
+
+Care means motion costs nothing to the people it could hurt, distract, or slow down. Most of it fits in four words: reduce, don't remove.
+
+<Beat kind="see">What a figure keeps when it stops</Beat>
+
+Every figure in this course has a **Still** button beside its caption. Watch the figure below play, then press Still.
+
+<Figure n="21.1" caption="Arrive, leave, move across">
+  <SpacingChart rows={[
+    { label: "arrives", easing: "--ease-out", duration: 480 },
+    { label: "leaves", easing: "--ease-in", duration: 340 },
+    { label: "moves across", easing: "--ease-inout", duration: 480 }
+  ]} readout={false} />
+</Figure>
+
+The dots stop at the ends of their paths, and every frame they would have passed through stays on the page, in blue. You can still read each move. In the first row the ghosts crowd together at the end: it arrives and settles. In the second they crowd at the start: it gathers speed and leaves. The third is gentle at both ends. Nothing moves, and nothing you needed is missing.
+
+That is what this site shows anyone who has asked for less motion. Try it on the whole page: open **View** in the header (on a phone, the half-filled circle) and set **Motion** to **Reduced**. Every figure goes still at once and keeps its ghosts. Close the menu and open it again: it no longer drops into place, it only fades. Set Motion back to **System** when you're done.
+
+<Beat kind="feel">Which one still arrives?</Beat>
+
+The same card appears three times. Two of the three don't travel at all. Don't count. Just watch.
+
+<FeelAB
+  question="Which card still tells you it arrived, without moving across the screen?"
+  kind="card"
+  options={[
+    { motion: { easing: "--ease-out", duration: 420, distance: 40 }, caption: "rises 40px and fades in · 420ms · --ease-out" },
+    { motion: { easing: "--ease-out", duration: 420, distance: 0 }, caption: "fades in place, 0px · 420ms · --ease-out" },
+    { motion: { none: true }, caption: "a cut · 0ms" }
+  ]}
+  answer={1}
+  explain="B. A says it clearly, but it says it by sliding the card up the screen. C doesn't travel either, but it doesn't arrive: the card is gone, then simply there, in a single frame, like a flicker. B fades in where it will stay. Nothing travels, and the eye still sees something arrive. That is reduced motion: the travel goes, the message stays."
+/>
+
+<Beat kind="more">What motion can do to people</Beat>
+
+<Margin kind="def">
+  <p><b>Vestibular system.</b> The balance organs of the inner ear. They sense how the head turns, tilts and speeds up, and the brain checks what they report against what the eyes see.</p>
+</Margin>
+
+Your sense of balance listens to two witnesses. The inner ear feels how your head moves. The eyes see how the world moves. Most of the time they agree. When a large part of what you see moves while your body stays still, they disagree. You have felt this on a train, when the one beside yours pulls away and for a moment it seems to be you who is moving.
+
+For most people that's a curiosity. For people with a vestibular disorder, where the inner ear or the brain's handling of its signals is damaged, the same conflict can bring on dizziness, nausea, headaches, or a migraine. And not everyone who is bothered by motion has a diagnosis. Some people get motion-sick from screens. Some find movement too distracting to read around.
+
+What matters is how much of the view moves, and whether it moves with you:
+
+- **Large travel.** Panels crossing the screen, pages sliding sideways, long smooth scrolls.
+- **Motion out of step with you.** Parallax, where layers of the page scroll at different speeds. Scroll-jacking, where the page keeps moving after your hand has stopped. Backgrounds that drift while you sit still.
+- **Zooms and spins.** Something scaling up to fill the screen, or turning.
+- **Motion that never stops.** Loops, autoplaying carousels, animated backgrounds.
+
+<Margin kind="read">
+  <p>Val Head, <i>Designing Safer Web Animation for Motion Sensitivity</i>, in A List Apart: a practical guide to the kinds of web animation that can trigger symptoms.</p>
+</Margin>
+
+A change of colour, a fade, a button that dips when pressed, a check mark: these are far less likely to cause trouble. They change what is on the screen without moving the world.
+
+<Beat kind="more">Reduce, don't remove</Beat>
+
+Operating systems have a switch for this: **Reduce Motion** on iOS and macOS, turning off animation effects in Windows, and similar settings elsewhere. Browsers pass it on to the page as a media feature, `prefers-reduced-motion`, with two values: `no-preference` and `reduce`.
+
+Read the value again: *reduce*. The person asked for less movement, not less information. A card that has just arrived is still news. A setting that has just turned on is still a fact. Remove the motion and you remove the news with it, which is what version C did in the FEEL. So keep the message, and change how it's delivered:
+
+| Motion | Under reduced motion |
+|---|---|
+| A card rises into a list | It fades in where it lands |
+| A panel slides in from the edge | It fades in, in place |
+| A photo zooms from its thumbnail to full screen | The two cross-fade |
+| Layers scroll at different speeds (parallax) | They scroll together, as one page |
+| A badge bounces into place | It lands without the bounce, or fades in |
+| A carousel or illustration plays on its own | It holds still until someone presses play |
+| A button dips when pressed, a switch's knob slides | Keep them: small, local, and asked for |
+
+Opacity isn't movement. A fade changes what's on the screen without moving anything across your view, so it does most of the work here. The rule of thumb: **remove distance, keep change.**
+
+<Figure n="21.2" caption="One enter, full and reduced">
+  <Choreo tracks={reduced} layout="list" height={150} />
+</Figure>
+
+Here is that rule on an exposure sheet. Item a rises 24px over 280ms and fades in over 180ms. Item b is its reduced version: the same fade, and no `y` track at all. Press Still and the sheet still tells the whole story: one row lost its travel and kept everything else.
+
+<Margin kind="wild">
+  <p>On iPhone, <b>Reduce Motion</b> (Settings → Accessibility → Motion) doesn't switch transitions off. It swaps many of them for cross-fades: opening an app fades it in instead of zooming it out of its icon. On a Mac, the same setting makes switching between desktops fade instead of slide.</p>
+</Margin>
+
+Don't make the opposite mistake either. A common quick fix sets every animation and transition on the page to almost no time at all when the query matches. It's far better than nothing, but it removes: every fade becomes a cut, and every change becomes version C.
+
+This site takes the other road. In CSS, its rises and drops are written with three distance tokens: `--dist-rise` is 4px, `--dist-nudge` 8px, and `--dist-travel` 24px. Under reduced motion all three become `0px`, so each of those rises turns into a pure fade and not one rule had to change. In JavaScript, one function does the same job: before a motion plays, it strips the transforms and keeps the opacity. The figures stop playing and keep their ghosts. The FEEL specimens wait for you to press Play. And View lets anyone choose for this site alone, remembered in their browser: System follows the operating system, Full and Reduced override it.
+
+<Beat kind="more">Attention, focus, battery</Beat>
+
+The eye can't ignore movement. Chapter 01 used that as a pointer, and it's also a cost. The edge of your vision is especially quick to catch motion, so something moving off to the side pulls your eyes away from what you were doing, and keeps pulling for as long as it moves.
+
+- **Move what the person is looking at, or what they need to see now.** A reply arriving can ask for a glance. A logo that shimmers while someone fills in a form is only interrupting.
+- **Protect focus.** While someone reads, types, or drags, nothing elsewhere on the page should move to get their attention.
+- **Don't autoplay loops beside text.** Carousels, animated backgrounds, looping illustrations. WCAG asks that anything that moves on its own for more than five seconds, next to other content, can be paused, stopped, or hidden, unless the motion is essential (success criterion 2.2.2, *Pause, Stop, Hide*, level A).
+- **Stop what nobody can see.** Most browsers pause `requestAnimationFrame` in a background tab, but a canvas that has scrolled out of view in the tab you're reading still gets every frame. Check `document.hidden` for the tab and an IntersectionObserver for the element, and stop the loop when either says no one is looking. The figures in this course play only while they're on screen.
+- **Mind the battery.** Every frame is work for the processor and the graphics chip. A loop that never ends never lets them rest, and on a phone that means battery.
+
+<Beat kind="more">Never block</Beat>
+
+<Margin kind="note">
+  <p>WCAG 2.3.3, <i>Animation from Interactions</i> (level AAA): motion triggered by an interaction can be turned off, unless it's essential. Honouring <code>prefers-reduced-motion</code> is one way to meet it.</p>
+</Margin>
+
+An animation is a courtesy. It must never become a gate. Four rules keep it from turning into one:
+
+1. **Input doesn't wait.** A tap in the middle of a transition counts. Don't disable a button while its panel animates, and don't drop clicks behind an "is animating" flag. The person has already decided; the animation is only reporting it.
+2. **Everything can be interrupted.** A second tap turns the motion around from where it is, or sends it somewhere new. Chapter 05 showed why springs are good at this, and chapter 12 did it under a finger.
+3. **State changes first.** Update the page, the focus, and attributes like `aria-expanded` at once, then animate the pixels. When a dialog opens, keyboard focus goes into it immediately, not when its fade ends.
+4. **Content never waits for motion.** Text left at `opacity: 0` until a scroll animation plays is text some people never see: when the script fails, when the observer never fires, when the page is printed. Hide it only once you know the motion will run. When it won't, show it straight away.
+
+This site keeps rule 4 for its figures. The draw-in that reveals each figure hides its parts only when JavaScript is running, so without a script the figures are simply there. Under reduced motion, every figure is revealed the moment the page loads.
+
+<Beat kind="tune">Make it smaller</Beat>
+
+Reducing motion is usually a dial, not a switch. This move arrives on a bouncy spring. The instrument never plays on its own, so press Play when you want to see it move; the ghosts are there either way. Then take out what the arrival doesn't need, one change at a time.
+
+- Look at the end of the chart first. The ghosts run past the end key and swing back: the last stretch of the trip is travelled more than once.
+- In **Curve**, pick `spring.snappy`. It has no bounce. The same arrival, travelled once, and over sooner.
+- Pick `--ease-out` and bring **Duration** down to 180ms. Fewer ghosts, and the spacing still says *arrive and settle*. It's also the longest this site's motion primitives run under reduced motion.
+- The last step doesn't fit on this chart: distance 0. Every ghost would land on one spot, and all that's left to say *arrived* is the fade.
+
+<Lab id="spacing-chart" easing="spring(response .5 bounce .4)" distance={360} code={false} />
+
+<Beat kind="write">The notation</Beat>
+
+In CSS it's one media query, written one of two ways. Take motion away under `reduce`, or add big motion only under `no-preference`. The second is the safer choice for large moves: a browser that doesn't know the query doesn't match it, so nobody gets the zoom by accident.
+
+In JavaScript, ask `matchMedia` at the moment a motion starts; its `matches` is always current. Listen for `change` only for motion that is already running, like a loop, because the setting can change while it plays. If your site has its own switch, as this one does, check that first and fall back to the system setting.
+
+<div class="snippets">
+<Snippet title="21 · Care: every slide becomes a fade" lab="curve-bench" easing="cubic-bezier(.2,.8,.2,1)" duration={280} distance={24} property="y">
+
+```css
+/* One distance token. Under reduced motion it drops to 0,
+   so every rise written with it becomes a pure fade. */
+:root {
+  --dist-travel: 24px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dist-travel: 0px;
+  }
+}
+
+.toast {
+  transition: opacity   280ms cubic-bezier(.2, .8, .2, 1),
+              translate 280ms cubic-bezier(.2, .8, .2, 1);
+}
+
+/* Where a new toast starts from. */
+@starting-style {
+  .toast {
+    opacity: 0;
+    translate: 0 var(--dist-travel);
+  }
+}
+```
+
+</Snippet>
+
+<Snippet title="21 · Care: big motion is opt-in" lab="curve-bench" easing="cubic-bezier(.2,.8,.2,1)" duration={480} property="scale" from={0.6} to={1}>
+
+```css
+/* Everyone gets the fade. */
+.lightbox {
+  animation: fade-in 180ms linear both;
+}
+
+/* The zoom and the smooth scroll run only when nobody asked
+   for less. A browser that doesn't know the query skips them. */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  .lightbox {
+    animation: fade-in 180ms linear both,
+               zoom-in 480ms cubic-bezier(.2, .8, .2, 1) both;
+  }
+}
+
+@keyframes fade-in { from { opacity: 0; } }
+@keyframes zoom-in { from { scale: 0.6; } }
+```
+
+</Snippet>
+
+<Snippet title="21 · Care: a fade instead of a slide" lab="curve-bench" easing="cubic-bezier(.2,.8,.2,1)" duration={280} distance={24}>
+
+```js
+const reduce = matchMedia('(prefers-reduced-motion: reduce)');
+
+const slide = [
+  { opacity: 0, transform: 'translateX(24px)' },
+  { opacity: 1, transform: 'none' },
+];
+const fade = [{ opacity: 0 }, { opacity: 1 }];
+
+// Ask when the motion starts: .matches is always current.
+function enter(panel) {
+  return panel.animate(reduce.matches ? fade : slide, {
+    duration: 280,
+    easing: 'cubic-bezier(.2, .8, .2, 1)',
+  });
+}
+```
+
+</Snippet>
+
+<Snippet title="21 · Care: a loop that stops when no one is looking" lab="canvas-sandbox" program="idle">
+
+```js
+// draw(time) paints one frame of an idle scene on the canvas.
+const reduce = matchMedia('(prefers-reduced-motion: reduce)');
+let onScreen = false;
+let frame = 0;
+
+function tick(now) {
+  draw(now);
+  frame = requestAnimationFrame(tick);
+}
+
+function update() {
+  const run = onScreen && !document.hidden && !reduce.matches;
+  if (run && !frame) frame = requestAnimationFrame(tick);
+  if (!run && frame) {
+    cancelAnimationFrame(frame);
+    frame = 0;
+  }
+}
+
+draw(performance.now()); // a still frame first: stopped never means blank
+new IntersectionObserver((entries) => {
+  onScreen = entries.at(-1).isIntersecting;
+  update();
+}).observe(canvas);
+document.addEventListener('visibilitychange', update);
+reduce.addEventListener('change', update);
+```
+
+</Snippet>
+</div>
+
+The loop draws one still frame before anything else, so under reduced motion it rests on a picture, not a blank canvas. Chapter 18's wobble uses the same switch.
+
+<Beat kind="drill">Would you live with it?</Beat>
+
+Two versions of the same change. Pick the better one, then say why in one word. Some pairs ask whether a change should move at all. Others ask how far it should go, and for how long. Both are this chapter's question.
+
+<Drill kind="blind-ab" trials={5} chapter={21} topic="care" />

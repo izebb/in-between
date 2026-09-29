@@ -69,13 +69,18 @@
     return () => io.disconnect();
   });
 
+  // Still versions say what kind of change each option is: a cut, a fade in place, or a move.
+  // A fade is drawn as opacity over time, so it can't be mistaken for travel.
   const stills = $derived(
-    options.map((o) => ({
-      move: toMove({ easing: o.motion.none ? "steps(1, jump-start)" : timingOf(o).easing, duration: o.motion.none ? 16 : timingOf(o).duration, to: 240 }),
-      label: "",
-    })),
+    options.map((o) => {
+      const t = timingOf(o);
+      if (o.motion.none) return { move: toMove({ easing: "steps(1, jump-start)", duration: 16, to: 240 }), label: "cut" };
+      if (o.motion.distance === 0) return { move: toMove({ easing: t.easing, duration: t.duration, property: "opacity", from: 0, to: 1 }), label: "fades in place" };
+      return { move: toMove({ easing: t.easing, duration: t.duration, to: 240 }), label: "moves" };
+    }),
   );
-  const toggleMotion = $derived<MockMotion>(motionOn ? options[0].motion : { ...(options[1]?.motion ?? {}), none: true });
+  /** Toggle compares the first option with the second: a cut unless the second option says otherwise. */
+  const toggleMotion = $derived<MockMotion>(motionOn ? options[0].motion : (options[1]?.motion ?? { none: true }));
 </script>
 
 <div class="feel" bind:this={root}>
@@ -120,7 +125,7 @@
           <button type="button" aria-pressed={motionOn} onclick={() => { motionOn = true; toggledOnce = true; setTimeout(() => mocks[0]?.play(), 30); }}>{options[0].label ?? "With motion"}</button>
           <button type="button" aria-pressed={!motionOn} onclick={() => { motionOn = false; toggledOnce = true; setTimeout(() => mocks[0]?.play(), 30); }}>{options[1]?.label ?? "Without"}</button>
         </div>
-        {#if toggledOnce}<span class="numbers mono" data-motion="fade">{motionOn ? numbers(options[0]) : "0ms: the state just changes"}</span>{/if}
+        {#if toggledOnce}<span class="numbers mono" data-motion="fade">{motionOn ? numbers(options[0]) : options[1]?.motion && !options[1].motion.none ? numbers(options[1]) : "0ms: the state just changes"}</span>{/if}
       </div>
     </div>
     {#if toggledOnce && explain}<p class="explain" data-motion="rise">{explain}</p>{/if}

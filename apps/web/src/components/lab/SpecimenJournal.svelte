@@ -78,8 +78,10 @@
       <p>Each word, and what you meant by it in numbers. Click a word to see its specimens.</p>
     </div>
     {#if loaded && vocabulary.length === 0}
-      <p class="empty">No words yet. Every instrument has <b>Save to Journal</b>: tune something until it feels right, save it, and name the feeling.
-        <button class="btn small" type="button" onclick={seed}>Add four examples</button></p>
+      <div class="empty">
+        <p>No words yet. Every instrument has <b>Save to Journal</b>: tune something until it feels right, save it, and name the feeling.</p>
+        <button class="btn small" type="button" onclick={seed}>Add four examples</button>
+      </div>
     {:else}
       <ul class="words" role="list">
         {#each vocabulary as v (v.word)}
@@ -94,6 +96,7 @@
     {/if}
   </section>
 
+  {#if !loaded || vocabulary.length > 0}
   <section class="list" aria-labelledby="spec-h">
     <div class="head">
       <h2 id="spec-h">Specimens {filter ? `· “${filter}”` : ""}</h2>
@@ -123,13 +126,14 @@
       {/each}
     </div>
   </section>
+  {/if}
 </div>
 
 <style>
   .journal { display: flex; flex-direction: column; gap: 2.5rem; }
   .head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0.5rem 1rem; margin-bottom: 1rem; }
   .head p { color: var(--graphite-strong); font-size: var(--text-sm); }
-  .empty { color: var(--graphite-strong); display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; }
+  .empty { color: var(--graphite-strong); display: flex; flex-direction: column; align-items: flex-start; gap: 0.75rem; max-width: 60ch; }
   .words { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.5rem; }
   .word { display: flex; flex-direction: column; align-items: flex-start; gap: 0.1rem; padding: 0.55rem 0.8rem; border: 1px solid var(--rule); border-radius: 8px; color: var(--ink); transition: border-color var(--dur-quick) var(--ease-out); }
   .word:hover { border-color: var(--graphite); }

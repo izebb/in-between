@@ -1,0 +1,265 @@
+---
+number: 22
+lede: "Good motion is sized to how often it is seen, and sometimes the right size is none."
+---
+
+Most of the earlier chapters were about measuring motion. This one is about choosing it. Two animations can both be well made, with an honest curve and a sensible duration, and one of them can still be wrong: wrong for the product, wrong for the moment, or wrong the fiftieth time it plays.
+
+Taste sounds like a gift. Most of it is a few questions you can learn to ask. How often will this be seen? What should the product feel like? Does this need to move at all? And when something feels off: what exactly is wrong, and which one thing would fix it?
+
+<Beat kind="see">Seen all day, seen once</Beat>
+
+Four moments from one product. From left to right, each is seen less often than the one before. Hover or tap each one to replay it.
+
+<Figure n="22.1" caption="Four moments, from seen all day to seen once">
+  <Specimens items={[
+    { kind: "toggle", label: "All day · a switch", note: "Flipped all day. It barely moves: the new state is the message.", motion: { easing: "--ease-inout", duration: 90 } },
+    { kind: "menu", label: "Often · a menu", note: "Quick and small. Open before you think about it.", motion: { easing: "--ease-out", duration: 180 } },
+    { kind: "modal", label: "Now and then · a dialog", note: "Enough time to show where it came from.", motion: { easing: "--ease-out", duration: 280 } },
+    { kind: "expand", label: "Once · a first run", note: "Seen once or twice, so it can take the stage.", motion: { easing: "--ease-inout", duration: 480 } }
+  ]} height={130} />
+</Figure>
+
+Each one moves more than the one before it. The switch is over almost before it starts. The menu is quick and small. The dialog takes a moment to rise out of the page. The first-run panel grows out of its tile and fills the frame, because it gets that stage once. The rarer the moment, the more motion it can afford.
+
+<Beat kind="feel">Which one on the fortieth time?</Beat>
+
+Imagine using this every day.
+
+<FeelAB
+  question="You switch between these tabs forty times a day. Which one do you want?"
+  kind="tabs"
+  options={[
+    { motion: { easing: "spring(response .45 bounce .4)" } },
+    { motion: { easing: "--ease-inout", duration: 180 } }
+  ]}
+  answer={1}
+  explain="A is fun the first time. It reaches the new tab about as fast as B, then swings past and back, and doesn't come to rest until most of a second has passed. You watch that swing on every switch. By the fortieth time it's something you look past. B is there before you look for it. The charm wears off; the motion keeps running. It's not a bad spring: in figure 22.2 the same one lands a badge, which you see far less often."
+/>
+
+<Beat kind="more">The frequency rule</Beat>
+
+**The more often something is seen, the less it should move.** Motion costs a little attention and a little time, and the cost is paid every time it plays. Seen once, a lovely animation is a gift. Seen two hundred times a day, it is a tax.
+
+So before choosing a curve, ask how often the thing will be seen, and let the answer set a budget:
+
+| How often | For example | At most | Distance |
+|---|---|---|---|
+| Constantly | typing, hovering, pressing | 90ms | none |
+| Frequently | menus, tabs, popovers | 180ms | 8px |
+| Occasionally | panels, dialogs | 280ms | 24px |
+| Rarely | onboarding, a first run, a celebration | 480ms | 24px |
+
+The numbers are this site's own tokens: `--dur-instant` up to `--dur-scene` for time, `--dist-nudge` and `--dist-travel` for distance. The durations are ceilings, not targets. And distance matters as much as time: something seen constantly shouldn't travel at all. A hover can change a colour; it shouldn't move the page.
+
+This site keeps the table in its own code. `frequencyBudget` in its motion policy maps `constant`, `frequent`, `occasional` and `rare` to the most duration and distance each may use. Figure 22.1 follows it: the switch runs at `90ms`, the menu at `180ms`, the dialog at `280ms`, and only the first run gets `480ms`.
+
+A spring counts by how long it moves, not only by when it arrives. The spring in A above reaches the new tab in about `200ms`, close to when B has finished, then overshoots by about 10% and needs `800ms` in all to settle. That tail is what you would see on every switch.
+
+<Margin kind="wild">
+  <p>In Asana, completing a task can send a unicorn, a narwhal or another creature flying across the screen. Asana says plainly that celebrations don't appear every time you complete a task, and a display setting turns them off.</p>
+</Margin>
+
+The rare end of the table is where delight belongs. A first run, a finished setup, a milestone: seen once or twice, they can afford a longer move, a bigger distance, even a bounce. A celebration on every completed task would stop being one. Keeping it rare is part of the design.
+
+<Beat kind="more">Personality</Beat>
+
+Every product moves with a character, whether anyone chose it or not. Here is one moment, a count landing on a bell, built three ways.
+
+<Figure n="22.2" caption="One badge, three personalities">
+  <Specimens items={[
+    { kind: "badge", label: "Calm", note: "--ease-out · 280ms. Arrives quickly, then takes its time to settle.", motion: { easing: "--ease-out", duration: 280 } },
+    { kind: "badge", label: "Playful", note: "spring · response 0.45, bounce 0.4. Pops past full size and back.", motion: { easing: "spring(response .45 bounce .4)" } },
+    { kind: "badge", label: "Precise", note: "--ease-inout · 180ms. Short, symmetrical, and stops exactly.", motion: { easing: "--ease-inout", duration: 180 } }
+  ]} columns={3} height={130} />
+</Figure>
+
+- **Calm** says *nothing here is urgent*. It covers most of the way at once, settles slowly, and never overshoots. For enters, it rises a small distance, around `8px`.
+- **Playful** says *this is meant to be enjoyed*. The spring grows about 10% past full size and settles back, over `800ms`. It spends energy, and energy is the message.
+- **Precise** says *you are in control; this is a tool*. Short, symmetrical, no overshoot. It stops exactly where it was told to.
+
+Which belongs in a banking app? In a game? In a code editor? There's no right answer in the abstract, only for a particular product. A bounce in a game says *fun*. The same bounce on the screen that confirms a payment says the money is bouncing.
+
+So pick one personality per product and use it everywhere. Write it down as a few tokens (a duration, a curve, a distance) and let every component take its motion from them. When one screen is calm and the next is playful, the product feels like it was built by several people who never met.
+
+Personality and frequency work together. Personality sets the character; frequency sets the budget. A playful product still keeps its tabs quick, as you felt above. It spends its bounce on the badge, the like, the finished task: confirmations, where chapter 05 found a bounce honest.
+
+<Beat kind="more">When not to animate</Beat>
+
+A cut is a decision too, and often the calm one. Leave it still:
+
+- **When it would make someone wait.** If the next action has to wait for a motion to finish, the motion is in the way. Keep controls working while things move, or don't move them (chapter 21).
+- **When there is nothing to follow.** Motion says *keep your eye on this*. When content is simply replaced, like the next page of search results, there is nothing to keep your eye on. Show it.
+- **When their own action already shows it.** A typed letter appears where you type it. A dragged card is already under your finger. Motion on top of a direct action repeats what the hand just did, and lags behind it.
+- **When it happens constantly.** Scrolling, typing, hovering. This is the frequency rule taken to its end.
+- **When it would be the tenth thing moving.** Motion points. When everything points, nothing does. This site's motion policy sets a budget of six UI animations at once; figures are exempt, because they are the content.
+
+<Beat kind="more">Case study: this site</Beat>
+
+<Margin kind="note">
+  <p>Hold <b>Alt</b> (⌥) over anything on this site that moves to see its duration and curve, named by token.</p>
+</Margin>
+
+This site chose calm. It is meant to read like a quiet book whose figures happen to be alive: numbered plates, wide margins, a page that stays still so that whatever moves means something. Its motion language is small: four durations, three curves, two springs.
+
+| Token | Value | Meant for |
+|---|---|---|
+| `--dur-instant` | `90ms` | press states, toggles |
+| `--dur-quick` | `180ms` | hovers, small reveals |
+| `--dur-base` | `280ms` | panels, cards |
+| `--dur-scene` | `480ms` | page and chapter transitions |
+| `--ease-out` | `cubic-bezier(.2, .8, .2, 1)` | enters |
+| `--ease-in` | `cubic-bezier(.4, 0, 1, 1)` | exits, at 0.7× the enter's time |
+| `--ease-inout` | `cubic-bezier(.65, 0, .35, 1)` | on-screen moves |
+| `spring.snappy` | response `0.3`, bounce `0` | direct manipulation |
+| `spring.soft` | response `0.5`, bounce `0.15` | playful confirmations |
+
+Add three distances (`4px`, `8px`, `24px`) and one stagger step (`30ms`), and that is all. Now look at how they are spent, from the most frequent moment to the rarest:
+
+- **Hovering a link** strengthens its underline to full ink over `--dur-quick`. Nothing moves. You hover constantly, so hovering gets colour, not motion.
+- **Pressing a button** drops it `1px` over `--dur-instant`. Just enough to feel the press.
+- **Changing chapters** is a cut, not a slide. The table reserves `--dur-scene` for it, but the cut that shipped is shorter, which is what the frequency rule asks for: you turn pages often. The old page fades out over `196ms` (`--dur-base-exit`); halfway through, the new one fades in over `280ms` (`--dur-base`) while rising `4px`, the smallest distance the site has.
+- **A figure reveal** is the one place the chrome spends `--dur-scene`. The first time a figure scrolls into view, its axes draw over `480ms`, then its ghosts appear, then the red key lands on `spring.soft`. Each figure does it once, when you first reach it.
+
+And the bounce? Of the two springs, only `spring.soft` bounces, at `0.15`, and in the chrome it is spent on that one moment: the red key landing. Nothing else in the chrome bounces. That restraint is the personality.
+
+<Beat kind="more">The critique protocol</Beat>
+
+When a motion feels wrong, you usually know it in a word before you know why. That word is where the fix starts.
+
+1. **Name the feeling** in one word: *floaty*.
+2. **Find its cause**: what in the motion makes it feel that way? *Too long for its distance.*
+3. **Name the parameter** that holds the cause: *duration*.
+4. **Change one thing**, then look again.
+
+One thing, because if you change the curve and the duration together and it gets better, you don't know which one fixed it, and you've learned nothing for next time. If it still feels wrong, name the new feeling and go round again.
+
+Most feeling-words point at the same few causes:
+
+| Feeling | Usual cause | Parameter | Change |
+|---|---|---|---|
+| sluggish | too long for how often it's seen | duration | shorter, into its frequency band |
+| floaty | too long for its distance | duration | shorter |
+| abrupt | too few frames to show a path | duration | longer |
+| hits a wall | still speeding up when it arrives | easing | ease-out |
+| mechanical | constant speed | easing | any ease |
+| nervous | a bounce with nothing to cause it | easing | damp it to bounce `0` |
+| shouting | travels too far | distance | a shorter trip |
+| slow to arrive | the stagger adds up | stagger | `20–40ms` between items |
+| lingering | the exit takes too long | exit duration | about 0.7× the enter |
+
+Three of them, each fixed by changing one thing. The left column is broken; the right changes one parameter and nothing else.
+
+<Figure n="22.3" caption="Three feelings, each fixed by one change">
+  <Specimens items={[
+    { kind: "toast", label: "Floaty", note: "1100ms to rise a short way.", motion: { easing: "ease-in-out", duration: 1100, distance: 16 } },
+    { kind: "toast", label: "Duration → 300ms", note: "Same curve, same distance.", motion: { easing: "ease-in-out", duration: 300, distance: 16 } },
+    { kind: "swap", label: "Mechanical", note: "Linear: the same speed all the way.", motion: { easing: "linear", duration: 520 } },
+    { kind: "swap", label: "Easing → --ease-inout", note: "Same 520ms. It starts, travels, and lands.", motion: { easing: "--ease-inout", duration: 520 } },
+    { kind: "card", label: "Shouting", note: "A routine card travelling 160px.", motion: { easing: "--ease-out", duration: 300, distance: 160 } },
+    { kind: "card", label: "Distance → 16px", note: "Same time, same curve, a short rise.", motion: { easing: "--ease-out", duration: 300, distance: 16 } }
+  ]} columns={2} height={130} />
+</Figure>
+
+Notice that the words are about the whole motion, but each fix is one number. *Floaty* was never the curve. *Shouting* was never the speed. The protocol turns a vague "something's off" into a parameter you can change.
+
+<Beat kind="tune">Name it, change one thing, save it</Beat>
+
+This bench is set to a move with two faults. Play it and name the louder one in a word. Change only the parameter behind it: the duration slider, or the curve. Play it again, name what's left, and change one more thing. When it feels right, press **Save to Journal** and give it the word you would now use for it.
+
+<Lab id="curve-bench" easing="linear" duration={1000} code={false} />
+
+The journal below keeps every specimen you save, from any instrument. Each word gathers numbers: how many times you used it, the median duration of those specimens, the kind of curve, and for springs the damping ratio. After a dozen saves you will know what *you* mean by *snappy*, in milliseconds. That is a vocabulary you can hand to someone else.
+
+<Lab id="specimen-journal" />
+
+<Beat kind="write">The notation</Beat>
+
+A personality is a set of tokens that every component reads. Components use the roles (`--move-dur`, `--move-ease`, `--move-dist`), never raw values, so switching the personality changes the whole product at once. The playful curve is the spring from figure 22.2, sampled into `linear()` and run for its settle time, as in chapter 05.
+
+<div class="snippets">
+<Snippet title="22 · Taste: a personality as tokens" lab="spring-bench" response={0.45} bounce={0.4} property="scale" to={1}>
+
+```css
+/* One personality per product. Components read the roles, never raw values. */
+:root {                               /* calm */
+  --move-dur: 280ms;
+  --move-ease: cubic-bezier(.2, .8, .2, 1);
+  --move-dist: 8px;
+}
+
+:root[data-personality="playful"] {   /* spring: response .45, bounce .4 */
+  --move-dur: 800ms;                  /* its settle time */
+  --move-ease: linear(0, 0.006 1%, 0.031 2.33%, 0.071 3.67%, 0.123 5%,
+    0.253 7.67%, 0.649 15%, 0.758 17.33%, 0.852 19.67%, 0.93 22%,
+    0.99 24.33%, 1.035 26.67%, 1.069 29.33%, 1.092 33%, 1.092 37.33%,
+    1.016 54.33%, 0.994 64.33%, 1);
+  --move-dist: 24px;
+}
+
+:root[data-personality="precise"] {
+  --move-dur: 180ms;
+  --move-ease: cubic-bezier(.65, 0, .35, 1);
+  --move-dist: 8px;
+}
+
+.badge {
+  transition: scale var(--move-dur) var(--move-ease);
+  @starting-style { scale: 0; }
+}
+
+.toast {
+  transition: translate var(--move-dur) var(--move-ease),
+              opacity 180ms linear;
+  @starting-style { translate: 0 var(--move-dist); opacity: 0; }
+}
+```
+
+</Snippet>
+
+<Snippet title="22 · Taste: duration by frequency" lab="curve-bench" easing="--ease-out" duration={280} distance={24} property="y">
+
+```js
+// The more often it's seen, the less it may move.
+const DURATION = { instant: 90, quick: 180, base: 280, scene: 480 };
+const DISTANCE = { none: 0, nudge: 8, travel: 24 };
+
+const BUDGET = {
+  constant:   { duration: 'instant', distance: 'none' },   // hovering, pressing
+  frequent:   { duration: 'quick',   distance: 'nudge' },  // menus, tabs
+  occasional: { duration: 'base',    distance: 'travel' }, // panels, dialogs
+  rare:       { duration: 'scene',   distance: 'travel' }, // onboarding, first run
+};
+
+function enter(el, seen) {
+  const b = BUDGET[seen];
+  // Reduced motion: keep the fade, drop the move.
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const y = reduce ? 0 : DISTANCE[b.distance];
+  return el.animate(
+    [
+      { opacity: 0, transform: `translateY(${y}px)` },
+      { opacity: 1, transform: 'none' },
+    ],
+    {
+      duration: DURATION[b.duration],
+      easing: 'cubic-bezier(.2, .8, .2, 1)',
+      fill: 'both',
+    },
+  );
+}
+
+enter(menu, 'frequent');     // 180ms, 8px
+enter(dialog, 'occasional'); // 280ms, 24px
+```
+
+</Snippet>
+</div>
+
+The helper asks one question before anything moves: how often is this seen? The answer picks the duration and the distance. The personality picks the curve. Keep the two separate and the product stays consistent as it grows.
+
+<Beat kind="drill">Fix the feeling</Beat>
+
+A motion plays with a feeling-word attached. Name the parameter that causes it, and fix it in one change. Say the cause to yourself before you touch anything.
+
+<Drill kind="fix-feeling" trials={5} chapter={22} />

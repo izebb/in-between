@@ -22,7 +22,8 @@
   let { moves, time, fps = 60, selected = $bindable(0), editable = true, span, onchange, onselect, onscrub }: Props = $props();
 
   let w = $state(600);
-  const LABEL = 88;
+  // The label column grows to fit the longest "target · property" (about 6.4px a character), up to a limit.
+  const LABEL = $derived(Math.min(170, Math.max(88, Math.max(0, ...moves.map((m) => `${m.target} · ${m.property}`.length)) * 6.4 + 12)));
   const ROW = 30;
   const HEAD = 22;
   const resolved = $derived(moves.map((m) => resolveMove(m)));

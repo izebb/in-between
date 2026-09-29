@@ -1,0 +1,407 @@
+---
+number: 20
+lede: "Smooth motion is a deadline met on every frame. Move what the browser can move without redrawing it."
+---
+
+export const crossing = (drops = []) => {
+  // A 700ms trip at 60Hz: 42 frames, eased in and out. Each [a, b] in drops
+  // holds frame a's picture until frame b; the frames between are never drawn.
+  const n = 42;
+  const at = (i) => +((1 - Math.cos((Math.PI * i) / n)) / 2).toFixed(4);
+  const pct = (i) => `${+((i / n) * 100).toFixed(2)}%`;
+  const stops = [];
+  for (let i = 0; i <= n; i++) {
+    if (drops.some(([a, b]) => i > a && i < b)) continue;
+    const hold = drops.find(([, b]) => b === i);
+    if (hold) stops.push(`${at(hold[0])} ${pct(i)}`);
+    stops.push(`${at(i)} ${pct(i)}`);
+  }
+  return `linear(${stops.join(", ")})`;
+};
+
+export const smooth = crossing();
+export const janky = crossing([[12, 16], [26, 29]]);
+
+export const budget = `// Each frame, this program works for WORK ms,
+// then draws. Drag WORK up. Each bar is the time
+// from one frame to the next. The blue lines are
+// the budgets.
+const WORK = 4;
+
+// A stand-in for real work: it just waits.
+// (The lab replaces performance.now() with its
+// own clock, so this reads the wall clock.)
+// Capped, so the page stays usable.
+function busy(ms) {
+  const end = new Date().getTime() + Math.min(ms, 100);
+  while (new Date().getTime() < end) {}
+}
+
+function setup(w, h) {
+  return { x: 0, bars: [] };
+}
+
+function update(s, dt) {
+  busy(WORK);
+  s.x += 200 * dt;          // px per second: on time
+  s.bars.push(dt * 1000);   // ms since the last frame
+  if (s.bars.length > 90) s.bars.shift();
+}
+
+function draw(ctx, s, w, h) {
+  ctx.clearRect(0, 0, w, h);
+  const P = pencils, x0 = 40, x1 = w - 110;
+
+  // The dot. When frames are missed, it jumps.
+  segment(ctx, x0, 50, w - 40, 50, P.rule);
+  circle(ctx, x0 + (s.x % (w - 80)), 50, 10, P.red);
+
+  // One bar per frame, newest on the right.
+  const base = h - 30;
+  const px = Math.min(4, (base - 80) / 50); // per ms
+  const bw = (x1 - x0) / 90;
+  ctx.fillStyle = P.graphite;
+  s.bars.forEach((ms, i) => {
+    const x = x1 - (s.bars.length - i) * bw;
+    ctx.fillRect(x, base - ms * px, bw - 1, ms * px);
+  });
+
+  // The budgets: one refresh at 60Hz, and at 120Hz.
+  for (const hz of [60, 120]) {
+    const ms = 1000 / hz, y = base - ms * px;
+    segment(ctx, x0, y, x1, y, P.blue);
+    label(ctx, hz + "Hz " + ms.toFixed(1) + "ms", x1 + 8, y + 3, P.blue);
+  }
+  label(ctx, "work: " + WORK + "ms a frame", x0, base + 18);
+}
+`;
+
+export const moveCss = `/* Not this: left is geometry, so every frame
+   re-runs layout and paint.
+.box        { transition: left 600ms cubic-bezier(.65, 0, .35, 1); }
+.is-on .box { left: 360px; }
+*/
+
+/* This: the same move as a transform. The box is
+   painted once; the compositor can slide it. */
+.box {
+  transition: transform 600ms cubic-bezier(.65, 0, .35, 1);
+}
+
+.is-on .box {
+  transform: translateX(320px);
+}
+`;
+
+export const willChangeJs = `// A moment ahead (on hover or pointerdown, say):
+// ask for a layer, so it's ready for the first frame.
+function prepare(el) {
+  el.style.willChange = 'transform';
+}
+
+// The move. Set the end state for real, then animate
+// from the start, so nothing is left filling after.
+function slide(el, x) {
+  el.style.transform = \`translateX(\${x}px)\`;
+  const move = el.animate(
+    [{ transform: 'translateX(0)' }, { transform: \`translateX(\${x}px)\` }],
+    { duration: 600, easing: 'cubic-bezier(.65, 0, .35, 1)' },
+  );
+  // Landed, or cancelled: give the layer back.
+  const release = () => { el.style.willChange = 'auto'; };
+  move.finished.then(release, release);
+  return move;
+}
+
+// In an app: prepare on pointerdown, slide on click.
+const box = document.querySelector('.box');
+prepare(box);
+slide(box, 320);
+`;
+
+export const monitorJs = `// Warn about frames that came much later than
+// the display's beat: a refresh was missed.
+function watchFrames({ threshold = 1.5, warmup = 60 } = {}) {
+  const first = [];
+  let expected = 0;   // ms per refresh, measured below
+  let last;
+  let id;
+
+  function frame(now) {
+    if (last !== undefined) {
+      const interval = now - last;
+      if (!expected) {
+        first.push(interval);
+        if (first.length === warmup) {
+          first.sort((a, b) => a - b);
+          expected = first[warmup >> 1];   // the median
+        }
+      } else if (interval > expected * threshold) {
+        const missed = Math.round(interval / expected) - 1;
+        console.warn(\`long frame: \${interval.toFixed(1)}ms, ~\${missed} missed\`);
+      }
+    }
+    last = now;
+    id = requestAnimationFrame(frame);
+  }
+
+  // rAF pauses in background tabs: don't count the gap.
+  const reset = () => { last = undefined; };
+  document.addEventListener('visibilitychange', reset);
+  id = requestAnimationFrame(frame);
+
+  return function stop() {
+    cancelAnimationFrame(id);
+    document.removeEventListener('visibilitychange', reset);
+  };
+}
+
+const stop = watchFrames();   // later: stop()
+`;
+
+export const monitorLab = `${monitorJs}
+// Try it: a steady move, and one long task in the middle.
+// (The lab runs its own clock, so the long task waits on
+// the wall clock.)
+document.querySelector('.box').animate(
+  [{ transform: 'translateX(0)' }, { transform: 'translateX(320px)' }],
+  { duration: 2000, fill: 'both' },
+);
+setTimeout(() => {
+  const end = new Date().getTime() + 40;
+  while (new Date().getTime() < end) {}
+}, 1500);
+`;
+
+A screen refreshes on a steady beat. Before each beat, the browser has to have the next picture ready: every element in its place, every pixel painted. When the picture is ready in time, you see motion. When it isn't, the screen shows the old picture again, and the motion hitches.
+
+How much work a picture takes depends mostly on what you animate. Move a box by its `left` and the browser works out the layout again and repaints, on every frame. Move it by `transform` and the browser can slide a picture it has already painted. The motion looks the same. The work behind it doesn't.
+
+<Beat kind="see">Four steps to a frame</Beat>
+
+To make a frame, a browser runs up to four steps, in order. Pick a property. The box animates it, and the row shows which steps the browser has to run again, on every frame, to draw it.
+
+<Figure n="20.1" caption="What each property costs, every frame">
+  <Pipeline />
+</Figure>
+
+<Margin kind="read">
+  <p>Paul Lewis, <i>Rendering performance</i> and <i>Stick to compositor-only properties and manage layer count</i>, on web.dev. The pixel pipeline, drawn as JavaScript → Style → Layout → Paint → Composite.</p>
+</Margin>
+
+- **Style.** Match the CSS rules to each element and work out every property's final value.
+- **Layout.** Work out where each box goes and how big it is. A box that grows pushes its neighbours, so layout often reaches far past the element that changed.
+- **Paint.** Draw the pixels: backgrounds, text, borders, shadows. The results are kept in layers, like the cels an animator stacks over a background.
+- **Composite.** Stack the layers in order, each at its own position and opacity, to make the frame. This step usually runs on the GPU.
+
+Every change is restyled, then runs from the first step it affects to the last. `left` and `width` change geometry, so they cost layout, paint and composite, every frame. A colour or a shadow changes pixels but not geometry: paint and composite. `transform` and `opacity` change neither. The layer is already painted; it only has to be moved or faded.
+
+<Beat kind="feel">Which one is smooth?</Beat>
+
+<FeelAB
+  question="The same dot makes the same trip twice. Which trip is smooth?"
+  kind="dot"
+  options={[
+    { motion: { easing: janky, duration: 700 }, caption: "700ms at 60Hz · 5 of 42 frames never drawn" },
+    { motion: { easing: smooth, duration: 700 }, caption: "700ms at 60Hz · all 42 frames drawn" }
+  ]}
+  answer={1}
+  explain="B has a new picture for every refresh. A is the same move on the same curve, and it lands at the same moment. But twice it holds one picture for several refreshes, then jumps to where it should be by now. Those frames were never drawn. On a real page that happens when a frame's work doesn't fit before the next refresh. The hitch is called jank, and the eye catches it at once, even when the path and the timing are right."
+/>
+
+<Beat kind="more">The budget</Beat>
+
+A 60Hz screen refreshes every 16.7ms. That is the budget for one frame: your JavaScript, then style, layout, paint and composite, all of it, before the next refresh. The browser needs part of that budget for its own work, so your share is smaller than the whole.
+
+| Display | A new frame every |
+|---|---|
+| 60Hz | 16.7ms |
+| 90Hz | 11.1ms |
+| 120Hz | 8.3ms |
+| 144Hz | 6.9ms |
+
+Many phones, tablets and laptops now refresh at 120Hz. A browser on one of them can draw 120 frames a second, and then each frame gets half the time. Work that fit easily at 60Hz can miss at 120Hz. So don't assume a rate. It depends on the screen, and a browser may draw less often than its screen refreshes, or not at all in a background tab.
+
+When a frame misses, it doesn't arrive a little late. The screen shows the old picture again, and the new one waits for a later refresh. A time-based animation then jumps to where it should be by now. That's A in the FEEL above: 5 of its 42 frames were never drawn.
+
+Raise the dots in each mode until the motion stutters. The readout is measured on your machine, as it runs.
+
+<Figure n="20.2" caption="The same dots, moved three ways, measured">
+  <Medium />
+</Figure>
+
+`left/top` usually gives up first: every dot's new position goes through layout and paint, every frame. `transform` skips layout, so it lasts longer. Canvas lasts longest. It's one element with nothing to lay out, and your code draws every dot into a single bitmap. If nothing stutters, your machine is quick: in Chrome's DevTools, the Performance panel can slow the CPU down 4× or 6×. Try again with that on.
+
+In all three modes, JavaScript sets every dot's position on every frame, so even `transform` costs main-thread time here. It gets cheaper still when the browser runs the animation itself.
+
+<Beat kind="more">Hand it to the compositor</Beat>
+
+<Margin kind="def">
+  <p><b>Main thread.</b> Where a page's JavaScript runs, and where the browser does style, layout and most of its painting. It does one thing at a time: while a script runs, everything else waits.</p>
+</Margin>
+
+The main thread does nearly everything: your scripts, event handlers, style, layout, paint. While it's busy with one of them, the others wait, and that includes the next frame.
+
+The compositor works on a thread of its own. It takes layers that are already painted and puts them together. Hand it a `transform` or `opacity` animation and it can run the whole thing alone: on each frame it moves or fades the layer, without asking the main thread for anything. If a script then blocks the main thread, the animation keeps going.
+
+<Margin kind="wild">
+  <p>Scrolling runs on the compositor too, which is why a page usually keeps scrolling while its JavaScript is busy. A touch or wheel listener that isn't <code>passive</code> can take that away: the compositor has to wait to learn whether the page will cancel the scroll.</p>
+</Margin>
+
+There are two conditions. **The property:** `transform` and `opacity` are the pair every engine can hand over. **Who drives it:** a CSS transition, a CSS animation, or `element.animate()`. A `requestAnimationFrame` loop that sets `transform` itself runs on the main thread, every frame. It skips layout, but when the main thread stalls, it stalls too.
+
+So, as a habit:
+
+- Move with `translate()`, not `left` or `top`.
+- Resize with `scale()` where you can, not `width` or `height`. When the layout really does change, FLIP from chapter 10 turns the change into a `transform`.
+- Fade with `opacity`.
+- For a deep shadow, paint it once on a pseudo-element and fade that element's `opacity`, instead of animating `box-shadow`.
+
+<Beat kind="more">Layers, and will-change</Beat>
+
+A layer isn't free. It's a bitmap held in memory, about four bytes for every device pixel it covers. A layer the size of a phone screen, on a 3× display, comes to roughly ten megabytes. The browser makes layers when it needs them and drops them when it's done.
+
+`will-change: transform` asks for one early. It tells the browser that the element's transform is about to change, so it can get ready, usually by painting the element into its own layer before the move starts rather than on its first frame. Browsers already do this for a running `transform` or `opacity` animation. `will-change` is for being ready a moment sooner, and for elements whose transform JavaScript sets on every frame, like a card dragged under the pointer.
+
+Two rules follow.
+
+- **Ask late, let go.** Set it just before the move, on hover or pointerdown, and remove it when the move ends.
+- **Ask for little.** `* { will-change: transform }` puts everything on a layer. Too many layers cost memory and compositing time, and can make a page slower, not faster.
+
+It also changes layout the way a transform does. The element starts a new stacking context, and its `position: fixed` children are placed against it instead of the viewport. Treat `will-change` as the fix for a problem you've measured, not a default.
+
+<Beat kind="more">Measuring jank</Beat>
+
+<Margin kind="def">
+  <p><b>Long task.</b> Anything that keeps the main thread busy for more than 50ms. Chrome's Performance panel marks each one with a red triangle in its corner.</p>
+</Margin>
+
+Don't guess which frames miss. Record them. In Chrome's DevTools:
+
+- **Performance panel.** Press record, do the thing that stutters, then stop. The Frames track shows each frame and flags the dropped ones. Under it, the Main track shows what the main thread did in each frame: scripts, then style, layout and paint, each with its time. Find a frame that missed, then read what ran during it. Turn on CPU throttling to see the page as a slower device would.
+- **Rendering tab.** Open the Command Menu and run *Show Rendering*. **Paint flashing** tints each area green as it repaints: a box moved with `left` flashes on every frame, while one moved by a `transform` animation flashes once, as its layer is painted, then stays clear. **Layer borders** outlines every layer. **Frame Rendering Stats** puts a live frame-rate meter over the page.
+- **Animations panel.** Replays CSS and Web Animations at 25% or 10% speed, with their timing laid out, so you can check that the motion is the one you wrote.
+
+Then test on a real, inexpensive phone. A fast laptop hides problems that a cheap phone shows at once. For motion you ship, the monitor in *The notation* below does the same job from inside the page: it times every frame and reports the ones that came late.
+
+<Beat kind="tune">Spend the budget</Beat>
+
+Each frame, this program works for `WORK` milliseconds, then draws. Each bar is the time from one frame to the next, newest on the right. The blue lines are the budgets at 60Hz and 120Hz. Leave **Refresh rate** on *Display*, so the bars are your screen's real frames.
+
+- Drag `WORK` up, slowly. For a while the bars stay at your screen's beat. Then they climb past the line: every frame is late, and every picture stays up for more than one refresh.
+- Note where that starts. It's before `WORK` reaches the line, because a frame holds more than your work: the browser needs part of the budget for itself.
+- Watch the red dot once the bars are past the line. It moves by `dt`, so it stays on time, but it gets fewer pictures to do it in. On time, and still janky.
+
+<Lab id="canvas-sandbox" source={budget} title="A frame's budget" />
+
+<Beat kind="write">The notation</Beat>
+
+Three habits. Move with `transform`, not `left`. Ask for a layer just before a move, and give it back after. And measure frames instead of guessing.
+
+<div class="snippets">
+<Snippet title="20 · Performance: move with transform, not left" lab="frame-stepper" dialect="css" source={moveCss}>
+
+```css
+/* Not this: left is geometry, so every frame
+   re-runs layout and paint.
+.box        { transition: left 600ms cubic-bezier(.65, 0, .35, 1); }
+.is-on .box { left: 360px; }
+*/
+
+/* This: the same move as a transform. The box is
+   painted once; the compositor can slide it. */
+.box {
+  transition: transform 600ms cubic-bezier(.65, 0, .35, 1);
+}
+
+.is-on .box {
+  transform: translateX(320px);
+}
+```
+
+</Snippet>
+
+<Snippet title="20 · Performance: will-change for the move, then gone" lab="frame-stepper" dialect="js" source={willChangeJs}>
+
+```js
+// A moment ahead (on hover or pointerdown, say):
+// ask for a layer, so it's ready for the first frame.
+function prepare(el) {
+  el.style.willChange = 'transform';
+}
+
+// The move. Set the end state for real, then animate
+// from the start, so nothing is left filling after.
+function slide(el, x) {
+  el.style.transform = `translateX(${x}px)`;
+  const move = el.animate(
+    [{ transform: 'translateX(0)' }, { transform: `translateX(${x}px)` }],
+    { duration: 600, easing: 'cubic-bezier(.65, 0, .35, 1)' },
+  );
+  // Landed, or cancelled: give the layer back.
+  const release = () => { el.style.willChange = 'auto'; };
+  move.finished.then(release, release);
+  return move;
+}
+
+// In an app: prepare on pointerdown, slide on click.
+const box = document.querySelector('.box');
+prepare(box);
+slide(box, 320);
+```
+
+</Snippet>
+
+<Snippet title="20 · Performance: a long-frame monitor" lab="frame-stepper" dialect="js" source={monitorLab} extra={{ pass: 2000 }}>
+
+```js
+// Warn about frames that came much later than
+// the display's beat: a refresh was missed.
+function watchFrames({ threshold = 1.5, warmup = 60 } = {}) {
+  const first = [];
+  let expected = 0;   // ms per refresh, measured below
+  let last;
+  let id;
+
+  function frame(now) {
+    if (last !== undefined) {
+      const interval = now - last;
+      if (!expected) {
+        first.push(interval);
+        if (first.length === warmup) {
+          first.sort((a, b) => a - b);
+          expected = first[warmup >> 1];   // the median
+        }
+      } else if (interval > expected * threshold) {
+        const missed = Math.round(interval / expected) - 1;
+        console.warn(`long frame: ${interval.toFixed(1)}ms, ~${missed} missed`);
+      }
+    }
+    last = now;
+    id = requestAnimationFrame(frame);
+  }
+
+  // rAF pauses in background tabs: don't count the gap.
+  const reset = () => { last = undefined; };
+  document.addEventListener('visibilitychange', reset);
+  id = requestAnimationFrame(frame);
+
+  return function stop() {
+    cancelAnimationFrame(id);
+    document.removeEventListener('visibilitychange', reset);
+  };
+}
+
+const stop = watchFrames();   // later: stop()
+```
+
+</Snippet>
+</div>
+
+The monitor learns the display's beat from its first frames instead of assuming 60Hz, so it's right at 120Hz too. It watches the main thread only. A compositor animation can stay smooth while the monitor logs long frames; that's the compositor doing its job. In the Lab, the monitor runs beside a steady move with one long task in the middle, and its warning appears at the foot of the stage.
+
+<Beat kind="drill">Blind A/B</Beat>
+
+A mixed round. Two versions of one interaction: pick the better one, then name why in one word. Some pairs differ in their curve or their timing. Some differ only in whether every frame was drawn.
+
+<Drill kind="blind-ab" trials={5} chapter={20} />
