@@ -21,6 +21,8 @@
   const say = (s: string) => (log = [s, ...log].slice(0, 4));
 
   function prim(name: string, p: Primitive) {
+    // Each press shows the primitive from its own start: clear what the last press left behind.
+    card.getAnimations().forEach((a) => a.cancel());
     play(card, p);
     say(`${name}: ${p.timing.duration}ms · ${String(p.timing.easing).startsWith("linear(") ? "spring (linear())" : p.timing.easing} · on interrupt: ${p.interrupt}`);
   }

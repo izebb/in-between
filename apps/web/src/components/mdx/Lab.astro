@@ -34,5 +34,7 @@ const preset = labPreset(id, short) as any;
 </div>
 <style>
   .lab-embed { margin-block: 2.5rem !important; }
+  /* Inside a figure plate, the plate already frames it. */
+  :global(.plate) .lab-embed { margin-block: 0 !important; }
   .lab-embed :global(.instrument) { min-height: 440px; }
 </style>

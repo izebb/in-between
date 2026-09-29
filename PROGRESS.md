@@ -12,16 +12,19 @@ Source of truth: `CURRICULUM.md`. Task brief: `PROMPT.md`. This file is enough t
 | M3 | Part I live (ch 01–03 + 2 drills) | ✅ done |
 | M4 | Physics (L3, L7, ch 04–06) | ✅ done (commit 481fae4) |
 | M5 | Choreography (L4, ch 07–11) | ✅ done |
-| M6 | Interaction + Canvas (ch 12–19) | ⏳ kit built; ch 12–19 being written by subagents |
-| M7 | Craft + Journal (L8, L9, ch 20–22, calibration graph) | ⏳ L8, L9, calibration, fix-feeling, Pipeline figure built; ch 20–22 todo |
-| M8 | Special Topics (L10, ch 23–25) | ⏳ L10 Data Stage, transition-lies, Count + Architecture figures built; ch 23–25 todo |
+| M6 | Interaction + Canvas (ch 12–19) | ✅ done (commit d0b0f28) |
+| M7 | Craft + Journal (L8, L9, ch 20–22, calibration graph) | ✅ done (commit 4ae84f0) |
+| M8 | Special Topics (L10, ch 23–25) | ✅ done |
+
+All 25 chapters, 10 instruments (L1–L10) and 9 drills are built; `pnpm build` passes (38 pages). Screenshots of
+the index, a chapter, the lab and the Eye Trainer (light/dark, 1280/375) are in `docs/images/`.
 
 ## How to run
 
 ```sh
 pnpm install
 pnpm dev          # http://localhost:4321  (compiles tokens + copies vendor bundles first)
-pnpm build        # packages typecheck, then astro check + astro build → apps/web/dist
+pnpm build        # motion lint, packages typecheck, then astro check + astro build → apps/web/dist
 pnpm lint:motion  # policy: no ad-hoc durations/curves outside the token sources
 node scripts/shoot.mjs --pages /,/system --out ./screenshots --themes light,dark --widths 1280,375 [--full]
 ```
@@ -98,6 +101,10 @@ node scripts/shoot.mjs --pages /,/system --out ./screenshots --themes light,dark
 - Reduced motion policy = "reduce, don't remove": distance tokens drop to 0 (rises become fades), draw-ins/springs stop;
   figures render their onion skin still. User override via View popover (`data-motion="reduce|full"` on `<html>`).
 - Page cut uses Astro `<ClientRouter />` + `transition:animate={pageCut}` on `<main>`; header uses `transition:animate="none"`.
+  `<main>` is named `page`; Astro's CSS sets every view-transition animation to `none` under reduced motion, so
+  `motion.css` restores the dissolve there with a layered `!important` (reduce, don't remove).
+- Phones: inline code may wrap anywhere; prose tables scroll inside themselves; `TimeBar` stacks by its own width
+  (container query), so narrow Lab embeds and phones share one layout.
 - Colours in code: numbers are blue pencil (the knobs, "what could be"); a changed token flashes red. Shiki uses the
   `css-variables` theme mapped to the pencil palette, so both themes work at zero JS.
 - Dev toolbar disabled (it overlapped content).
@@ -120,27 +127,51 @@ node scripts/shoot.mjs --pages /,/system --out ./screenshots --themes light,dark
 - "Spot the Principle" / "What does it say" clips are synthetic UI specimens (Mock), not recordings of real apps.
 - The Frame Stepper steps same-origin pages only (browsers forbid touching another origin's clock); cross-origin URLs
   load view-only with a notice.
+- `play()` (motion/primitives.ts) reads the element's computed style *before* cancelling the running animation, and
+  only continues from it when the previous motion hasn't been cancelled (found while writing ch 24).
+- Data Stage marks render keyed by transition pair (`Mark.key`): with index keying the datum id flips mid-move.
+- `pnpm build` runs the motion lint first, so a raw duration or curve in an app style fails the build.
 
-## Known issues / todo
+## Deviations from CURRICULUM.md
 
-- Chapters show "in preparation" on the index until their MDX exists.
+- **No automated tests or visual snapshots** (user instruction). Verification was by eye in Chromium, plus throwaway
+  scripts in the git-ignored `scripts/dev/`.
+- **Synthetic clips for "real UI" drills.** What It Says, Spot the Principle and Blind A/B play specimens built from
+  real WAAPI on mock UI (and canvas clips), not recordings of shipping apps: no licensing, and every clip is exact.
+- **Frame Stepper URLs are same-origin only.** Browsers don't allow another origin's clock to be patched.
+- **Variant instrument layouts.** L8 Journal and L9 Export Desk have their own page layouts rather than the
+  params | stage | time | code shell: neither edits a single scene. L10 Data Stage uses the shell, but its code
+  column is generated and read-only. The two-way code panel is on L1–L4; L5 and L7 are code-first editors (the
+  code drives the stage; numbers can be dragged).
+- **Extra tokens** beyond §1.6 (listed under Decisions), all in `tokens.json`.
+- **The page cut spends `--dur-base`, not `--dur-scene`**, following the frequency rule (you turn pages often);
+  chapter 22 says so.
 
-## Verification helpers (not committed tests)
+## Known issues / gaps
 
-`scripts/dev/` is git-ignored scratch: `cp.mjs` drives the code panel (knob→code flash, type→knob, drag→knob,
-tab switch, stage hover→lines). Last run: all pass.
+- Blind A/B, Spot the Principle and What It Says use synthetic UI specimens (`Mock`, canvas clips), not recordings of real apps.
+- The Frame Stepper steps same-origin pages only; other origins load view-only with a notice.
+- The sandbox's virtual clock caps a frame's `dt` at 50ms, so code there can't observe a longer frame.
+- `<FeelAB>` hosts UI mocks only (no canvas programs); canvas FEELs are two `<Canvas>` figures with a prose reveal.
+- `<Canvas>` programs passed as raw `source` get no knobs (only registered programs have params).
+- L9 Export Desk converts one move at a time; it has no whole-token-set import.
+- L1 Spacing Chart scales every distance to fill its track, so distance changes are read in the numbers, not the drawing.
+- Physics chapter: `integrators` has no RK4 row (RK4 is taught in prose and a table).
+- Full-page screenshots (`shoot.mjs --full`) can catch sandbox iframes and IndexedDB-backed panels before they draw;
+  element screenshots after scrolling them into view show them correctly.
 
-`drill.mjs` plays drills in ch 02/03 and checks the Eye Trainer stored the session. Last run: pass.
+## Verification helpers (not tests)
 
-## Workflow for chapters (from M4 on)
+`scripts/dev/` is git-ignored scratch: `overflow.mjs` (lists elements wider than a 375px viewport), `figs.mjs`
+(screenshots every `<figure>` on a page), `embed.mjs` (the first Lab embed), `cp.mjs` (drives the code panel),
+`drill.mjs` (plays drills and checks IndexedDB). Used by eye, not asserted.
 
-Chapters are written by parallel subagents (general-purpose) following `docs/CHAPTER_KIT.md`, one file each, no
-commits; I review each MDX (facts, code correctness, DoD) and screenshots, fix kit gaps they report, then commit.
-Written so far: 01–05 (+06–11 in flight). Kit gaps already fixed from reports: SpacingTrack overshoot range + label
-thinning, VelocityGraph title placement, TimeBar `showMs`, SpringGraph `readout`/label flip, Canvas `readout`,
-heavy-light labels without numbers, shoot.mjs long URLs.
+## Workflow for chapters
 
-## Built beyond M4 (awaiting their chapters)
+Chapters were written by parallel subagents following `docs/CHAPTER_KIT.md`, one file each, no commits; each report
+was reviewed (facts, code, DoD, screenshots) and the kit gaps they found were fixed before the milestone commit.
+
+## Built for M5–M8
 - L4 `ExposureSheet` (+ `XSheet`, `ChoreoStage`, `ChoreoFigure` → `<Choreo>`), `<Principles>` (lib/principles.ts, 12
   canvas clips) + `spot-principle` drill, `<Flip>`, `<ViewTransition>` (real same-document VT), `<Spatial>`, `<Discrete>`
   (@starting-style + allow-discrete), Mock `origin`.
@@ -159,10 +190,3 @@ heavy-light labels without numbers, shoot.mjs long URLs.
 - Bug fixed: CanvasFigure still mode looped forever (effect tracked transport.time) → untrack + offline() no longer
   writes reactive state.
 
-## Next (M4)
-
-1. L3 Spring Bench (k/c/m ↔ response/bounce, live graph, settle time, CSS linear() export) + `SpringPlot` figure.
-2. L7 Canvas Sandbox (code-first, update(dt)/draw(ctx) scaffold, dt/fps readouts, pause/step, hot reload keeps state)
-   + `CanvasFigure` with a program registry (bouncing ball, flick/decay, …).
-3. Drills: which-heavier, tune-to-match, blind-ab.
-4. Write `docs/CHAPTER_KIT.md` (authoring guide for subagents), then chapters 04–06.

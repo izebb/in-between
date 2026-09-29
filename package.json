@@ -5,12 +5,15 @@
   "packageManager": "pnpm@11.1.2",
   "scripts": {
     "dev": "pnpm --filter @inbetween/web dev",
-    "build": "pnpm -r --filter './packages/*' build && pnpm --filter @inbetween/web build",
+    "build": "node scripts/check-motion-tokens.mjs && pnpm -r --filter './packages/*' build && pnpm --filter @inbetween/web build",
     "preview": "pnpm --filter @inbetween/web preview",
     "tokens": "pnpm --filter @inbetween/web tokens",
     "lint:motion": "node scripts/check-motion-tokens.mjs"
   },
   "devDependencies": {
     "playwright-core": "1.63.0"
+  },
+  "engines": {
+    "node": ">=22.18"
   }
 }

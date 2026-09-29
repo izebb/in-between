@@ -61,6 +61,8 @@ export interface Mark {
   h: number;
   value: number;
   opacity: number;
+  /** Stable key for rendering: during a transition it names the pair, because with index keying the id flips mid-move. */
+  key?: string;
 }
 
 export interface Layout {
@@ -174,7 +176,7 @@ export function transition(from: Layout, to: Layout, f: Frame, o: TransitionOpti
   return {
     total,
     at(t: number) {
-      return pairs.map((p) => {
+      return pairs.map((p, k) => {
         let start: number;
         let dur = o.duration;
         if (o.staging === "staged") {
@@ -188,7 +190,7 @@ export function transition(from: Layout, to: Layout, f: Frame, o: TransitionOpti
         } else start = p.rank * o.stagger;
         const local = Math.min(1, Math.max(0, (t - start) / dur));
         const eased = p.kind === "move" ? ease(local) : local < 1 ? ease(local) : 1;
-        return lerpMark(p.a, p.b, eased);
+        return { ...lerpMark(p.a, p.b, eased), key: `p${k}` };
       });
     },
   };

@@ -95,16 +95,19 @@ const running = new WeakMap<Element, Animation>();
 export function play(el: Element, p: Primitive, opts: { delay?: number } = {}): Animation | null {
   const prim = prefersReducedMotion() ? reduce(p) : p;
   const prev = running.get(el);
-  if (prev && prev.playState === "running") {
-    if (prim.interrupt === "finish") prev.finish();
-    else prev.cancel(); // reverse/retarget: WAAPI composes from the current computed style below
-  }
-  if (!prim.keyframes.length) return null;
-  // Start from where the element is now, so interruptions never jump.
+  const live = !!prev && prev.playState === "running";
+  // A previous motion that ran (or is running) still holds the element; a cancelled one ("idle") doesn't.
+  const continuing = !!prev && prev.playState !== "idle";
+  if (live && prim.interrupt === "finish") prev!.finish();
+  // Start from where the element is now, so interruptions never jump. Read it *before* cancelling:
+  // once the running animation is cancelled, the computed style is the resting style.
   const current = getComputedStyle(el);
+  const from = { opacity: current.opacity, transform: current.transform };
+  if (live && prim.interrupt !== "finish") prev!.cancel(); // reverse / retarget continue from `from`
+  if (!prim.keyframes.length) return null;
   const first = { ...prim.keyframes[0] } as Record<string, string | number>;
-  if (prev && "opacity" in first) first.opacity = current.opacity;
-  if (prev && "transform" in first && current.transform !== "none") first.transform = current.transform;
+  if (continuing && "opacity" in first) first.opacity = from.opacity;
+  if (continuing && "transform" in first) first.transform = from.transform;
   const anim = el.animate([first as Keyframe, ...prim.keyframes.slice(1)], { ...prim.timing, delay: opts.delay ?? 0 });
   running.set(el, anim);
   return anim;

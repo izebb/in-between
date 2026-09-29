@@ -1,0 +1,499 @@
+---
+number: 23
+lede: "Here motion explains the data. Each mark is one datum, and it moves only as far as the data did."
+---
+
+export const reveal = [
+  { target: "axis", property: "opacity", from: 0, to: 1, duration: 280, easing: "--ease-out" },
+  { target: "bars", property: "scale", from: 0, to: 1, duration: 480, delay: 200, easing: "--ease-inout" },
+  { target: "values", property: "opacity", from: 0, to: 1, duration: 180, delay: 760, easing: "linear" },
+  { target: "note", property: "opacity", from: 0, to: 1, duration: 280, delay: 1100, easing: "--ease-out" },
+];
+
+export const easeOut = { type: "cubic", x1: 0.2, y1: 0.8, x2: 0.2, y2: 1 };
+export const easeInOut = { type: "cubic", x1: 0.65, y1: 0, x2: 0.35, y2: 1 };
+export const even = { type: "linear" };
+
+export const revealLab = {
+  layout: "list",
+  stagger: 0,
+  staggerProp: "scale",
+  scene: {
+    title: "A staged reveal: axis, bars, values, note",
+    moves: [
+      { target: "axis", property: "opacity", from: 0, to: 1, duration: 280, delay: 0, easing: easeOut },
+      { target: "bars", property: "scale", from: 0, to: 1, duration: 480, delay: 200, easing: easeInOut },
+      { target: "values", property: "opacity", from: 0, to: 1, duration: 180, delay: 760, easing: even },
+      { target: "note", property: "opacity", from: 0, to: 1, duration: 280, delay: 1100, easing: easeOut },
+    ],
+  },
+};
+
+A chart that changes is really two charts: before and after. Cut from one to the other and the reader has to compare them from memory, bar by bar, to find out what happened. Animate the change and the eye does the comparing. It follows each bar to its new place and sees how far it went. Here motion isn't decoration. It's the explanation.
+
+That only works if the motion tells the truth. A bar that slides has to be the same datum it was before. A bar that grows has to stop at its value. The labels have to wait until there's something still enough to read. Every chart in this chapter uses one small dataset, and it is invented: twelve kinds of tree, each with a made-up score for 2023 and 2024, in three groups called North, South and West. No real claim hangs on it.
+
+<Beat kind="see">A year passes</Beat>
+
+The chart shows the twelve trees sorted by their 2023 score. Then a year passes: the scores change to 2024's, and the chart sorts itself again. The red bar is Hazel. Watch it. Replay the move from the time bar under the chart as often as you like, and slow it down if it's too quick to follow.
+
+<Figure n="23.1" caption="Sorted by score, then a year later" static>
+  <Lab id="data-stage" extra={{ from: "by-value", to: "2024", keying: "data", staging: "together", stagger: 0 }} />
+</Figure>
+
+Hazel's bar grew and slid all the way to the front, past three others. You didn't have to compare two charts to see that. You watched it happen. Follow any other bar and it tells its own story: one climbs from the back half into the leaders, another slips back. Only when everything had stopped did the values appear on top.
+
+Now try **Go to**. *North only* drops every tree outside one group, and Hazel's bar leaves with them. *By group* brings them all back, gathered by group. Whatever the chart does, each bar stays one tree from start to end.
+
+<Beat kind="feel">Which chart kept it?</Beat>
+
+Here is the same change again: the same trees, the same two years, the same chart at the start and at the end. Only the code that moves between them is different. Follow the red bar here, at 0.25× if it helps, then scroll back and follow it in figure 23.1.
+
+<Lab id="data-stage" extra={{ from: "by-value", to: "2024", keying: "index", staging: "together", stagger: 0 }} />
+
+**Which chart kept Hazel? And which one told you what happened that year?**
+
+<Beat kind="more">One datum, one mark</Beat>
+
+<Margin kind="def">
+  <p><b>Object constancy.</b> A mark that stands for a datum keeps standing for it through every change: the same element, moved and reshaped, never swapped for another.</p>
+</Margin>
+
+Figure 23.1 kept it. Hazel scored 60 in 2023, fourth of twelve, and 88 in 2024, first. Its bar travelled from the fourth slot to the first and grew on the way. Elm climbed from ninth to fourth, and Birch fell from third to seventh. Six trees went up that year and six went down, and the motion showed you which.
+
+The chart under the question drew the same first and last frames, with a false middle. No bar moved sideways. Each slot just changed height, from whatever stood there in 2023 to whatever stands there in 2024, and halfway through, the red jumped from the fourth bar to the first while every name under the bars changed at once. Eleven of the twelve bars grew a little. As motion, that says: a quiet year, almost everyone up a bit. The data says something else entirely.
+
+Both charts end right. Only one has an honest middle, and the middle is what the motion is for.
+
+<Margin kind="wild">
+  <p>Gapminder's bubble chart (gapminder.org/tools) plays decades of country data as motion. Each country stays one bubble, in its region's colour, as the years go by, so you can follow a single country through its history. Hans Rosling made it famous in his 2006 TED talk, <i>The best stats you've ever seen</i>.</p>
+</Margin>
+
+The difference is one decision: how each bar on screen is matched to a datum in the new state. Figure 23.1 matches by *key*: for each tree, find the bar that was that tree's, and move it. The other chart matches by *position*: the fourth bar becomes whatever is fourth now. Position is what naive code does by default. Loop over the new rows and reuse element *i*; write `key={index}` in React, or an `{#each}` block without a key in Svelte; call `selection.data(rows)` in D3 without a key function. The last frame is always right, so the bug only shows in the motion.
+
+In a chart of years, the rule reads: the bar for 2024 is the bar for 2024, in every state. Sort the chart and that bar moves to its rank. It's never replaced by whichever bar lands in its old slot.
+
+<Margin kind="read">
+  <p>Mike Bostock's essay <i>Object Constancy</i> (2012) makes this case for D3, with a bar chart whose bars are joined to their data by a key.</p>
+</Margin>
+
+When two states don't hold the same data, each datum is in one of three cases, and each case needs its own motion:
+
+| The datum is… | Called | Its mark | In the Data Stage |
+|---|---|---|---|
+| in both states | update | moves and reshapes, old geometry to new | slides, grows or shrinks |
+| only in the new state | enter | a new mark, from a place that means *new* | rises from the baseline, fading in |
+| only in the old state | exit | goes to a place that means *gone* | sinks to the baseline, fading out |
+
+Enter and exit through zero. A bar that rises from the baseline says "new, counted from nothing". One that sinks says "no longer counted". A bar that flies in from the side says it came from somewhere, and in a chart there's nowhere for it to have come from.
+
+<Beat kind="more">Interpolate the data, not the pixels</Beat>
+
+Every frame of a transition is a chart. Someone might pause on it, screenshot it, or glance up at the wrong moment. So make every frame a true chart: mix each datum's *value* between its old state and its new one, then draw the mix with the chart's own scales. The scales do the drawing, and the motion is only data changing.
+
+For a bar on an axis that starts at zero, it makes no difference. With a shared curve, the height halfway from 60 to 88 is the height of 74, so mixing pixels and mixing values draw the same frames. They part ways as soon as the scale isn't a straight line:
+
+- **Area.** A bubble's value is its area, so its radius is the square root of the value. Tween the radius evenly from zero and the area grows with the square of time: slowly, then fast, an ease-in the data never had. Tween the value, and take the square root every frame (`scaleSqrt` in d3-scale).
+- **Paths.** A line chart is one `<path>`, a string of commands and points. `interpolateString` from d3-interpolate mixes two such strings by pairing up the numbers in them. That only works when both paths have the same commands in the same order. Different point counts scramble the line, and on some smoothed curves, such as `curveMonotoneX`, mixing the control points doesn't give the curve through the mixed data. Mix the values instead, and ask `line()` from d3-shape for a new path every frame.
+- **Colour.** If a colour encodes a value, mix the value and look its colour up in the scale. Mixing the two colours directly can pass through colours that aren't in the scale at all.
+
+<Margin kind="note">
+  <p>d3-scale, d3-shape and d3-interpolate are plain functions: numbers in, numbers or path strings out. None of them touches the page. The Data Stage in this chapter uses d3-scale and d3-interpolate for its maths and Svelte for its elements.</p>
+</Margin>
+
+So a transition is three small pieces of maths. Scales turn values into geometry (`scaleLinear`, `scaleBand`). Interpolators mix two values (`interpolateNumber`). Shape generators turn a list of points into a path (`line`, `area`). D3 also has a DOM layer, selections and transitions, and you don't need it: whatever already owns your elements can own them here, and D3 does the arithmetic.
+
+<Beat kind="more">Timing is the argument</Beat>
+
+A chart that appears all at once hands the reader everything at the same moment, and the reader has to decide where to look. Stage it, and you decide. The order that works is the order in which a careful reader reads a chart anyway:
+
+1. **Axes.** What is measured, and the ruler it's measured with.
+2. **Marks.** The data, rising from zero, all on one clock.
+3. **Annotation.** The values, the labels, a highlight on the mark that matters.
+4. **The insight.** One sentence that says what the chart shows. It comes last, when the evidence is already on screen.
+
+<Figure n="23.2" caption="A staged reveal: axis, bars, values, note">
+  <Choreo tracks={reveal} />
+</Figure>
+
+Each row on the stage stands for one layer of a chart. Read the sheet under them. The axis starts first, and the bars start before it has finished: the ruler only has to be mostly there. The bars rise together, as one track, not twelve. The values wait until the bars have landed. Then comes a gap where nothing moves, before the note. That gap is where the reader looks at the chart, so the note that follows confirms what they have just seen, instead of telling them what to see before they've seen it. The whole reveal takes under a second and a half, and it happens once per chart.
+
+This site stages its own plots the same way. As a curve plot scrolls into view ([figure 3.2](/chapters/03-spacing#fig-3-2) is one), its axes draw first, then the blue ghosts fade in, then the red key lands.
+
+<Margin kind="read">
+  <p>Jeffrey Heer and George Robertson's paper <i>Animated Transitions in Statistical Data Graphics</i> (2007) sets out design guidelines for chart transitions. Two of them: stage complex transitions, and make transitions as long as needed, but no longer.</p>
+</Margin>
+
+The same order works for a change. Figure 23.1 moved everything at once, which is fine while every bar stays. When bars leave and arrive as well, stage it like a scene change: clear what's leaving, then move what stays, then bring on what's new. Each step then has one kind of motion, and the eye can follow each in turn. The Data Stage calls this *Exit · move · enter*, and you'll try it in the Tune beat below.
+
+<Beat kind="more">Labels land on the settle</Beat>
+
+The eye can't read a moving number. While a bar travels, the eye is busy tracking it, and a label riding along is a blur competing for the same attention. Reading starts when the motion stops, so that's where the words go.
+
+- **Values wait for the settle.** In figure 23.1 the numbers appear only after every bar has stopped, with a quick fade. When the next change begins, they go first. A label must never point at a place its bar has already left.
+- **Names can travel.** A name under a bar is how you follow it, so it moves with its bar. It identifies the mark; nobody needs to read it mid-flight.
+- **Annotation comes after the values.** A note on the bar that matters, "Hazel overtook everyone", lands a beat after the numbers, when the eye has found the bar by itself.
+- **Hold still long enough to read.** A label that appears and moves again half a second later was never read. If the chart has more to show, wait for the reader (a step, a click, a scroll) rather than a timer.
+
+In code this is one wait: gather a transition's animations, wait for every one of their `finished` promises, then fade the labels in. The keyed-bars snippet at the end of the chapter does exactly that.
+
+<Beat kind="more">Numbers that change</Beat>
+
+Numbers in an infographic change too: a total, a share, the score of the tree you picked. There are three ways to change one. Press **New value** a few times.
+
+<Figure n="23.3" caption="One number, three ways to change it">
+  <Count from={1184} values={[1171, 9806, 4580, 1184]} />
+</Figure>
+
+Now untick **Tabular numerals** and press it again. In most fonts the digits have different widths: a 1 is narrow, an 8 is wide. So a counting number keeps changing width, and anything beside it shuffles on every frame. *Tabular* figures give every digit the same width. In CSS it's `font-variant-numeric: tabular-nums`, if the font has them. Use them wherever a number changes in place: counters, timers, prices, table columns, axis ticks.
+
+Which of the three to use:
+
+- **Instant** is honest and the quickest to read. Its weakness is that a change can go unnoticed if the eye was looking somewhere else.
+- **Counting** shows the direction of a change and roughly its size. It's honest when the number really passed through the numbers in between: a running total, a timer, a download. It's theatre when it didn't. A count from one filter's total to another's shows numbers that never existed, and a count up from zero every time the page loads makes the reader wait for a number that was known all along. While it runs, it can't be read.
+- **Rolling digits** move only the places that changed. When 1,184 becomes 1,171, only the last two digits roll, so the eye sees at once which part of the number changed. It suits a number that updates often, like a live count.
+
+Never let a count overshoot. A count that passes its target and comes back shows a number that isn't in the data, the same lie as a bouncing bar.
+
+<Beat kind="more">Motion must not lie</Beat>
+
+In a chart, motion is read as data. A bar's length is its value, so every frame's lengths had better be values too. Four common ways to break that:
+
+- **Overshoot.** Put a bouncy spring or a "back" curve on a bar and it grows past its value, then comes back. For a moment the chart shows a number that isn't in the data: Hazel's bar passes 88, then settles back. In [chapter 05](/chapters/05-springs) a bounce said a thing had momentum. Data has no momentum. Use curves that stay between the start and the end, like ease-in-out, or a spring with no bounce.
+- **Out of step.** If every bar shares one clock and one curve, every frame is the true chart, scaled, and the ratios between bars never change. Give each bar its own delay or its own duration and the frames in between rank them wrong: a short bar that started early stands taller than a long one that hasn't started yet. Worst is growing every bar at the same *speed*, so that bigger values take longer: until the shortest bar stops, every bar is the same height. Keep a stagger between bars to a frame or two ([chapter 08](/chapters/08-stagger-and-hierarchy)), or leave it out.
+- **A moving ruler.** A bar's length is its value only if the axis starts at zero and stays put. Truncate the axis and small differences look huge. Change it during a move and every bar grows or shrinks, though no value did. The Data Stage fixes its axis at the largest value in either year, so a bar changes length only when its value does. If the axis has to change, move its ticks on the same clock as the bars, so the reader sees the ruler change, not the data.
+- **Depth.** Perspective makes near things look bigger. Tilt a pie chart into 3D and the slices at the front look larger than their share. Spin it and every slice grows and shrinks as it comes round. Keep data flat and face-on.
+
+<Beat kind="more">Chapters of a chart</Beat>
+
+A longer story can be told in steps. The chart stays pinned in view with `position: sticky`, and short paragraphs scroll past beside it. Each paragraph is a step, and when it reaches the middle of the screen, the chart moves to that step's state: sorted, then a year later, then one group. The reader sets the pace by reading. This is scrollytelling.
+
+[Chapter 13](/chapters/13-scroll-as-time) split scroll-linked motion into *triggered* and *scrubbed*. In a chart, the difference matters more:
+
+- **Trigger the changes.** When a step arrives, play its transition on the clock, at a speed that reads well. A chart scrubbed halfway between two states shows values nobody measured, and half a sort is a heap of overlapping bars. If the reader stops there, the chart in front of them is false.
+- **Scrub only a position in the data.** A line that draws itself along its time axis as you read can follow the scroll, because every frame shows part of the true line, up to a point in time. It's a progress bar made of data: a line-drawing animation on a scroll timeline instead of the clock.
+- **Tie each step to a state, not to an animation.** Scroll back up a step and the chart goes back to that step's state. Flick past three steps and it goes straight to the last one, from wherever its bars are, not through all three in a queue.
+- **Give each change room.** Space the steps so a transition has finished well before the next paragraph arrives, and don't pin the chart for longer than its story. The reader holds the scroll. Don't take it back.
+
+<Margin kind="read">
+  <p>Scrollama, a small open-source scrollytelling library, is built on <code>IntersectionObserver</code> rather than scroll events, like the step snippet at the end of this chapter.</p>
+</Margin>
+
+Under reduced motion each step still changes the chart; it simply cuts to the new state. Every state is a complete chart, so the story survives without the moves.
+
+<Beat kind="more">Canvas or SVG</Beat>
+
+An SVG chart is made of elements: each bar is a `<rect>` in the page. A canvas chart is one picture: every frame, you clear it and paint every bar again. That one difference decides the rest.
+
+| | SVG | Canvas |
+|---|---|---|
+| A mark is | an element in the page | pixels in a picture |
+| Many marks | each costs memory, style and layout work; a thousand or so moving marks start to drop frames | cheap to repaint: thousands of marks per frame |
+| Hit-testing | free: every mark gets its own events and hover | yours: work out which mark is under the pointer |
+| Crispness | vector, sharp at any zoom | a bitmap: scale it by `devicePixelRatio` or it blurs on sharp screens |
+| Text and access | real text; each mark can carry a label for screen readers | pixels only: add a table or a description |
+
+Try it in the Data Stage below: set **Draw with** to *Canvas*. The chart looks the same. Now click a bar: nothing happens. The canvas doesn't know it has bars. In SVG the browser works out which bar you clicked; on a canvas, you do. For bars, invert the band scale and ask which band the pointer is in. For scattered points, keep them in a quadtree: `find()` in d3-quadtree returns the point nearest to a position.
+
+A rough rule: SVG for hundreds of marks, Canvas for thousands that move. Many charts use both, with the marks on a canvas for speed and the axes and labels in SVG or HTML on top, where text stays crisp and readable. The maths doesn't change. The generators in d3-shape even draw straight onto a canvas: give one `.context(ctx)` and it calls the canvas's path methods, `moveTo`, `lineTo` and the rest, instead of returning a string.
+
+<Beat kind="tune">Stage a filter</Beat>
+
+This Data Stage stages its changes: exits first, then moves, then enters. It starts on the 2024 scores and filters them down to one group.
+
+- Press **By group**, then **North only**, then **2024**. Watch each change happen in three parts: leaving, moving, arriving.
+- Switch **Staging** to *Together* and do it again. The leaving bars now cross the moving ones, and the eye has to sort out which is which.
+- Set **Interpolate** to *Pixels (by index)*, go to **A–Z**, then **Sorted**, and follow the red bar. Set it back to *Data* when you've seen enough.
+- Set **Easing** to *bouncy spring* and go from **Sorted** to **2024**. Watch Hazel's bar pass its value and come back.
+- Drag **Stagger** all the way up. The change becomes a parade, and the frames in between rank the bars wrong.
+- Set **Draw with** to *Canvas* and try to click a bar.
+
+<Lab id="data-stage" extra={{ from: "2024", to: "north", keying: "data", staging: "staged", stagger: 0 }} />
+
+<Beat kind="write">The notation</Beat>
+
+A chart transition is three pieces of maths (scales, interpolators, shape generators) and one rule: find each mark by its datum. First the reveal and the changing numbers in CSS. Then three JavaScript forms: bars keyed by id and moved with the Web Animations API, a line whose values are interpolated frame by frame, and the step that drives a scrollytelling chart.
+
+<div class="snippets">
+<Snippet title="23 · Animated Infographics: a staged reveal" lab="exposure-sheet" extra={revealLab}>
+
+```css
+/* In reading order: the ruler, the data, the numbers, the point. */
+.chart {
+  --bars: 200ms;    /* the axis is mostly drawn */
+  --values: 760ms;  /* the bars have landed (200 + 480), plus a beat */
+  --note: 1100ms;   /* a pause to read the values */
+}
+
+@keyframes draw   { from { stroke-dashoffset: 1; } }
+@keyframes rise   { from { transform: scaleY(0); } }
+@keyframes appear { from { opacity: 0; } }
+
+/* 1. The axis draws itself. Its <line> has pathLength="1". */
+.chart .axis {
+  stroke-dasharray: 1;
+  animation: draw 280ms cubic-bezier(.2, .8, .2, 1) both;
+}
+
+/* 2. Every bar rises from the baseline on one clock and one curve,
+      so every frame is the true chart, scaled. */
+.chart .bar {
+  transform-box: fill-box;
+  transform-origin: bottom;
+  animation: rise 480ms cubic-bezier(.65, 0, .35, 1) both;
+  animation-delay: var(--bars);
+}
+
+/* 3. The values, once nothing is moving. */
+.chart .value {
+  font-variant-numeric: tabular-nums;
+  animation: appear 180ms linear both;
+  animation-delay: var(--values);
+}
+
+/* 4. The point of the chart, last. */
+.chart .note {
+  animation: appear 280ms cubic-bezier(.2, .8, .2, 1) both;
+  animation-delay: var(--note);
+}
+
+/* Reduced motion: nothing moves; the fades still keep the order. */
+@media (prefers-reduced-motion: reduce) {
+  .chart .axis,
+  .chart .bar { animation: none; }
+}
+```
+
+</Snippet>
+
+<Snippet title="23 · Animated Infographics: numbers that change in place" lab="curve-bench" easing="cubic-bezier(.2,.8,.2,1)" duration={480} distance={40} property="y">
+
+```css
+/* Every digit the same width, so a changing number doesn't shuffle. */
+.stat,
+.chart .value,
+.chart .tick {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Rolling digits: each digit is a column of 0–9 behind a window
+   one digit tall. Set --d from JS and the column rolls to it:
+   <span class="digit" style="--d: 7" aria-hidden="true">
+     <span class="strip"><span>0</span><span>1</span>…<span>9</span></span>
+   </span>
+   Keep the real number in the page too, visually hidden, for
+   screen readers. */
+.digit {
+  display: inline-block;
+  height: 1em;
+  line-height: 1;
+  overflow: hidden;
+}
+
+.digit .strip {
+  display: flex;
+  flex-direction: column;
+  translate: 0 calc(var(--d) * -1em);
+  transition: translate 480ms cubic-bezier(.2, .8, .2, 1);
+}
+
+.digit .strip > span { height: 1em; }
+
+@media (prefers-reduced-motion: reduce) {
+  .digit .strip { transition: none; }
+}
+```
+
+</Snippet>
+
+<Snippet title="23 · Animated Infographics: bars keyed by datum" lab="data-stage" duration={600} easing="--ease-inout" extra={{ from: "2024", to: "north", keying: "data", staging: "staged", stagger: 0 }}>
+
+```js
+import { scaleBand, scaleLinear } from 'd3-scale';
+
+// .chart { position: relative }
+// .bar   { position: absolute; bottom: 0; transform-origin: bottom left }
+// .value { position: absolute; bottom: 100%; opacity: 0 }
+const chart = document.querySelector('.chart');
+const bars = new Map(); // datum id → its bar. The key is the datum, not the slot.
+
+// Reduced motion: every duration is 0, so each change is a cut.
+const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const EXIT = still ? 0 : 240;
+const MOVE = still ? 0 : 600;
+const ENTER = still ? 0 : 480;
+
+// rows: the new state, in order. max: the same in every state,
+// so a bar changes length only when its value does.
+async function update(rows, max) {
+  const { width, height } = chart.getBoundingClientRect();
+  const x = scaleBand().domain(rows.map((d) => d.id)).range([0, width]).padding(0.2);
+  const y = scaleLinear().domain([0, max]).range([0, height]);
+  const ids = new Set(rows.map((d) => d.id));
+
+  // The values go first: there's nothing to read while things move.
+  for (const bar of bars.values()) {
+    const label = bar.querySelector('.value');
+    label.getAnimations().forEach((a) => a.cancel());
+    label.style.opacity = 0;
+  }
+
+  // Exit: the datum is gone. Its bar sinks to the baseline, then leaves.
+  let exits = 0;
+  for (const [id, bar] of bars) {
+    if (ids.has(id)) continue;
+    bars.delete(id);
+    exits++;
+    bar.animate({ scale: '1 0', opacity: 0 }, {
+      duration: EXIT, easing: 'cubic-bezier(.4, 0, 1, 1)', fill: 'forwards',
+    }).finished.then(() => bar.remove());
+  }
+
+  // First: where each remaining bar is now, even halfway through a move.
+  const first = new Map([...bars].map(([id, bar]) => [id, bar.getBoundingClientRect()]));
+  const moveAt = exits ? EXIT : 0;
+  const enterAt = moveAt + (first.size ? MOVE : 0);
+
+  // Last: every bar where its datum belongs. A new datum gets a new bar.
+  for (const d of rows) {
+    let bar = bars.get(d.id);
+    if (!bar) {
+      bar = document.createElement('div');
+      bar.className = 'bar';
+      bar.innerHTML = '<span class="value"></span>';
+      chart.append(bar);
+      bars.set(d.id, bar);
+    }
+    bar.getAnimations().forEach((a) => a.cancel());
+    bar.style.left = `${x(d.id)}px`;
+    bar.style.width = `${x.bandwidth()}px`;
+    bar.style.height = `${y(d.value)}px`;
+    bar.querySelector('.value').textContent = d.value;
+  }
+
+  // Play: moves after the exits, enters after the moves.
+  const running = rows.map((d) => {
+    const bar = bars.get(d.id);
+    const was = first.get(d.id);
+    if (!was) {
+      return bar.animate({ scale: ['1 0', '1'], opacity: [0, 1] }, {
+        duration: ENTER, delay: enterAt,
+        easing: 'cubic-bezier(.2, .8, .2, 1)', fill: 'backwards',
+      });
+    }
+    const now = bar.getBoundingClientRect();
+    const dx = was.left - now.left;
+    const sx = was.width / now.width;
+    const sy = was.height / (now.height || 1);
+    return bar.animate({ transform: [`translateX(${dx}px) scale(${sx}, ${sy})`, 'none'] }, {
+      duration: MOVE, delay: moveAt,
+      easing: 'cubic-bezier(.65, 0, .35, 1)', fill: 'backwards',
+    });
+  });
+
+  // The labels land on the settle, never during travel.
+  try {
+    await Promise.all(running.map((anim) => anim.finished));
+  } catch {
+    return; // a newer update cancelled these, and it will show the labels
+  }
+  for (const bar of bars.values()) {
+    const label = bar.querySelector('.value');
+    label.style.opacity = 1;
+    label.animate({ opacity: [0, 1] }, { duration: 180 });
+  }
+}
+```
+
+</Snippet>
+
+<Snippet title="23 · Animated Infographics: interpolate the data" lab="data-stage" duration={600} easing="--ease-inout" extra={{ from: "by-value", to: "2024", keying: "data", staging: "together", stagger: 0 }}>
+
+```js
+import { scaleLinear, scalePoint } from 'd3-scale';
+import { line, curveMonotoneX } from 'd3-shape';
+import { interpolateNumber } from 'd3-interpolate';
+
+// A line of twelve invented monthly values, morphing to another year's.
+// D3 only does the maths: scales, in-between values, a path string.
+const path = document.querySelector('svg.trend path');
+const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const x = scalePoint().domain(months).range([0, 600]);
+const y = scaleLinear().domain([0, 100]).range([240, 0]);
+const draw = line()
+  .x((v, i) => x(months[i]))
+  .y((v) => y(v))
+  .curve(curveMonotoneX);
+
+// Ease-in-out that never leaves 0–1: no overshoot, no values
+// that aren't in the data.
+const ease = (t) => (t < 0.5 ? 4 * t ** 3 : 1 - (-2 * t + 2) ** 3 / 2);
+
+let shown = [42, 48, 55, 61, 66, 70, 73, 71, 64, 57, 49, 44]; // on screen now
+let raf = 0;
+path.setAttribute('d', draw(shown));
+
+function morph(next, duration = 600) {
+  cancelAnimationFrame(raf); // a new target mid-move starts from where it is
+  const mix = next.map((v, i) => interpolateNumber(shown[i], v));
+  let start;
+
+  raf = requestAnimationFrame(function frame(now) {
+    start ??= now;
+    const t = Math.min(1, (now - start) / duration);
+    shown = mix.map((f) => f(ease(t)));  // in-between values...
+    path.setAttribute('d', draw(shown)); // ...drawn by the same scales
+    if (t < 1) raf = requestAnimationFrame(frame);
+  });
+}
+
+morph([38, 45, 58, 66, 74, 79, 81, 77, 69, 60, 50, 41]);
+```
+
+</Snippet>
+
+<Snippet title="23 · Animated Infographics: a scrollytelling step" lab="data-stage" duration={600} easing="--ease-inout" extra={{ from: "by-value", to: "2024", keying: "data", staging: "staged", stagger: 30 }}>
+
+```js
+// A sticky chart beside a column of steps. Each step names a state:
+// <section class="story">
+//   <figure class="chart">…</figure>            (position: sticky)
+//   <p class="step" data-state="sorted">…</p>
+//   <p class="step" data-state="2024">…</p>
+//   <p class="step" data-state="north">…</p>
+// </section>
+// show(state) works out that state's rows and calls update(rows, max)
+// from the keyed-bars snippet, which starts from wherever the bars are.
+const steps = document.querySelectorAll('.story .step');
+let current = null;
+
+const io = new IntersectionObserver((entries) => {
+  for (const entry of entries) {
+    if (!entry.isIntersecting) continue;
+    const state = entry.target.dataset.state;
+    if (state === current) continue; // already showing it
+    current = state;
+    steps.forEach((s) => s.classList.toggle('is-active', s === entry.target));
+    show(state); // triggered, on the clock: never scrubbed halfway
+  }
+}, {
+  // A band across the middle of the view: a step is "on" while it's in it.
+  rootMargin: '-45% 0px -45% 0px',
+});
+
+steps.forEach((step) => io.observe(step));
+```
+
+</Snippet>
+</div>
+
+Three details carry the keyed bars. The `Map` from id to element is the object constancy: each datum finds its own bar, whatever slot it lands in. The moves measure every bar *before* touching anything, so a change that arrives mid-move starts from where the bars really are. And `fill: 'backwards'` holds each bar on its first frame while it waits for its turn; without it, a waiting bar would jump to its new place and then jump back to start the move.
+
+The line never tweens its `d` string. It tweens twelve numbers, and asks the same scales and the same `line()` for a new path every frame, so each frame is a real line chart of real in-between values.
+
+<Beat kind="drill">Which transition lies?</Beat>
+
+Two transitions of the same change, and one of them lies. It overshoots, swaps identities, or quietly moves the axis. Follow the red bar, and watch the tops of the bars and the numbers on the axis.
+
+<Drill kind="transition-lies" trials={5} chapter={23} />

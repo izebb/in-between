@@ -1,5 +1,4 @@
 import type { DrillDef } from "./types";
-import { shuffle } from "./types";
 import type { MockKind, MockMotion } from "~/components/figures/Mock.svelte";
 
 export const MEANINGS = ["causality", "continuity", "attention", "feedback", "state"] as const;

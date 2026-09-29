@@ -62,7 +62,7 @@
         <text class="label" x="4" y={y(t) + 3}>{t}</text>
       {/each}
       <line class="ax" x1={frame.padL} x2={frame.width - 8} y1={frame.height - frame.padB} y2={frame.height - frame.padB} />
-      {#each marks as m (m.id + (m.opacity < 1 ? "~" : ""))}
+      {#each marks as m (m.key ?? m.id)}
         <rect
           class="bar"
           class:tracked={m.id === tracked}
