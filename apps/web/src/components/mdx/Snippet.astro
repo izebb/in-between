@@ -1,0 +1,45 @@
+---
+/**
+ * A copyable snippet card. Put a fenced code block inside.
+ * <Snippet title="03 · Spacing: arrive and settle" lab="curve-bench" easing="cubic-bezier(.2,.8,.2,1)" duration={280}>
+ */
+import { labUrl } from "~/lib/labstate";
+import { labPreset, type LabShorthand } from "~/lib/labpresets";
+import type { InstrumentId } from "~/lib/curriculum";
+interface Props extends LabShorthand {
+  title: string;
+  lab?: InstrumentId;
+}
+const { title, lab, ...short } = Astro.props;
+const href = lab ? labUrl(lab, labPreset(lab, { ...short, title })) : null;
+---
+<figure class="snippet">
+  <figcaption class="snippet-head">
+    <span class="smallcaps">{title}</span>
+    <span class="snippet-actions">
+      <button class="btn ghost small snippet-copy" type="button">Copy</button>
+      {href && <a class="btn small" href={href}>Open in Lab</a>}
+    </span>
+  </figcaption>
+  <slot />
+</figure>
+
+<script>
+  function wire() {
+    document.querySelectorAll<HTMLButtonElement>(".snippet-copy:not([data-wired])").forEach((b) => {
+      b.dataset.wired = "";
+      b.addEventListener("click", async () => {
+        const pre = b.closest(".snippet")?.querySelector("pre");
+        if (!pre) return;
+        try {
+          await navigator.clipboard.writeText(pre.innerText);
+          b.textContent = "Copied";
+          setTimeout(() => (b.textContent = "Copy"), 1400);
+        } catch {
+          /* clipboard blocked */
+        }
+      });
+    });
+  }
+  document.addEventListener("astro:page-load", wire);
+</script>

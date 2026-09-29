@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { clone } from "~/lib/clone";
   /** L2 · Curve Bench: a cubic-bézier editor with position and velocity side by side, plus A/B. */
   import { onDestroy } from "svelte";
   import { resolveMove, type EasingSpec } from "@inbetween/core";
@@ -40,7 +41,7 @@
     ...preset,
     ...((!embedded && readUrlState<CurveState>()) || {}),
   };
-  let lab = $state<CurveState>(structuredClone(initial));
+  let lab = $state<CurveState>(clone(initial));
   let status = $state<"synced" | "edited" | "detached">("synced");
   let text = $state("");
   let running = $state(false);
@@ -71,7 +72,7 @@
 
   function choose(id: string) {
     const p = cubicPresets.find((x) => x.id === id);
-    if (p) lab.scene.moves[0].easing = structuredClone(p.spec);
+    if (p) lab.scene.moves[0].easing = clone(p.spec);
   }
 
   const rows = $derived([

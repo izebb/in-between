@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { clone } from "~/lib/clone";
   /** L1 · Spacing Chart: an object's positions per frame, as ghosts and as an animator's tick chart. */
   import { onDestroy } from "svelte";
   import { resolveMove, frameCount, fromResponse, type EasingSpec } from "@inbetween/core";
@@ -42,7 +43,7 @@
     ...((!embedded && readUrlState<SpacingState>()) || {}),
   };
 
-  let lab = $state<SpacingState>(structuredClone(initial));
+  let lab = $state<SpacingState>(clone(initial));
   let status = $state<"synced" | "edited" | "detached">("synced");
   let text = $state("");
   let running = $state(false);
@@ -79,7 +80,7 @@
       const p = springPresets.find((x) => `spring:${x.id}` === id);
       if (p) e = { type: "spring", ...fromResponse(p.response, p.bounce), velocity: 0 };
     } else if (id === "steps") e = { type: "steps", steps: 6, position: "jump-end" };
-    else e = structuredClone(cubicPresets.find((p) => p.id === id)?.spec ?? null) as EasingSpec | null;
+    else e = clone(cubicPresets.find((p) => p.id === id)?.spec ?? null) as EasingSpec | null;
     if (e) lab.scene.moves[0].easing = e;
   }
 

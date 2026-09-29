@@ -1,0 +1,6 @@
+---
+/** <Specimens items={[{ kind: "menu", label: "Causality", motion: { duration: 200 } }, …]} /> */
+import SpecimensSvelte from "../figures/Specimens.svelte";
+const props = Astro.props as any;
+---
+<SpecimensSvelte client:visible {...props} />

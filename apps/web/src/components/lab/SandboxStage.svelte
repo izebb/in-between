@@ -4,7 +4,7 @@
    * Every frame is measured and reported back; we draw its ghosts, and the
    * instrument draws its graphs. Any motion you write becomes measurable.
    */
-  import { onMount, onDestroy, untrack } from "svelte";
+  import { onMount, untrack } from "svelte";
   import { buildSrcdoc, type SandboxDialect } from "~/lib/sandbox/harness";
   import { SandboxTransport } from "~/lib/sandbox/transport.svelte";
   import { prefs } from "~/lib/prefs.svelte";
@@ -117,9 +117,11 @@
     addEventListener("message", onMessage);
     const ro = new ResizeObserver(() => (size = { w: box.clientWidth, h: box.clientHeight }));
     ro.observe(box);
-    return () => ro.disconnect();
+    return () => {
+      ro.disconnect();
+      removeEventListener("message", onMessage);
+    };
   });
-  onDestroy(() => removeEventListener("message", onMessage));
 
   /** Onion skin from measured frames: the sample nearest each frame on the grid. */
   const ghosts = $derived.by(() => {

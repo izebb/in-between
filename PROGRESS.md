@@ -9,8 +9,8 @@ Source of truth: `CURRICULUM.md`. Task brief: `PROMPT.md`. This file is enough t
 | M0 | Design system | ✅ done |
 | M1 | Motion core | ✅ done |
 | M2 | First instruments (L1, L2, L5, Code Panel) | ✅ done |
-| M3 | Part I live (ch 01–03 + 2 drills) | ⏳ next |
-| M4 | Physics (L3, L7, ch 04–06) | — |
+| M3 | Part I live (ch 01–03 + 2 drills) | ✅ done |
+| M4 | Physics (L3, L7, ch 04–06) | ⏳ next |
 | M5 | Choreography (L4, ch 07–11) | — |
 | M6 | Interaction + Canvas (ch 12–19) | — |
 | M7 | Craft + Journal (L8, L9, ch 20–22, calibration graph) | — |
@@ -71,6 +71,17 @@ node scripts/shoot.mjs --pages /,/system --out ./screenshots --themes light,dark
     (`Slider`, `NumberScrub`, `Seg`, `Field`), instruments `SpacingChart` (L1), `CurveBench` (L2), `FrameStepper` (L5).
   - `src/components/figures/` — `SpacingTrack`, `CurveGraph` (draggable handles), `VelocityGraph`.
   - `/lab/[id].astro` mounts instruments with `client:only` (URL state would mismatch SSR).
+  - **Chapter kit** (MDX, no imports needed; registered in `components/mdx/index.ts`):
+    `Figure` (plate), `Margin`, `Beat` (see/feel/tune/write/drill; `more` = plain h2), `SpacingChart` (rows or
+    `curve`+`frames`), `CurvePlot`, `FeelAB` (pick | toggle), `Specimens` (row of UI mocks), `Snippet` (Shiki card +
+    Copy + Open in Lab), `Lab` (embedded instrument, `code={false}` for chapters), `Drill` (short round).
+    Shorthand easing strings: `src/lib/spec.ts` (`--ease-out`, `spring(response .4 bounce .3)`, `spring.snappy`,
+    `steps(6)`, `linear(…)`). Lab shorthand → state: `src/lib/labpresets.ts`.
+  - `components/figures/Mock.svelte` — UI specimens (dot, card, modal, toast, menu, list, drawer, toggle, like, drop,
+    expand, swap, tabs, badge, progress) animated with real WAAPI from a `MockMotion`.
+  - Eye Trainer: `lib/drills/*` (DrillDef: make(rand, level) + score), `components/drills/*` (trial components,
+    `DrillRunner` round/short, `Calibration` log-log scatter + error trend, `EyeTrainer` page component).
+    Built so far: what-it-says (ch 01), guess-duration, match-curve. `/lab/eye-trainer` (+ `?drill=`).
 
 ## Decisions
 
@@ -99,6 +110,14 @@ node scripts/shoot.mjs --pages /,/system --out ./screenshots --themes light,dark
 - Code panel states: `synced` (doc == generated; knob changes diff+flash), `edited` (structure changed; knobs patch
   only bound tokens), `detached` (a binding was destroyed; code runs as written). Non-synced auto-switches the stage
   to the browser sandbox. Typing resyncs derived text after 900ms idle; dragging resyncs live.
+- MDX gotcha: indentation inside inline template-literal props gets stripped. Put code in `export const x = \`…\``
+  after the frontmatter and pass `source={x}`.
+- Svelte 5 runs `onDestroy` during SSR: never touch `window`/listeners there; clean up in `onMount`'s return.
+- Astro's css-variables Shiki theme uses `--astro-code-*` names (mapped in `styles/code.css`).
+- Astro wrappers that spread props into Svelte islands use `const props = Astro.props as any` (astro check).
+- FEEL comes before numbers: SEE figures in early chapters hide readouts (`readout={false}`) or use words as labels.
+- Drills never autoplay under reduced motion; they wait for Play (user-initiated motion is allowed).
+- "Spot the Principle" / "What does it say" clips are synthetic UI specimens (Mock), not recordings of real apps.
 - The Frame Stepper steps same-origin pages only (browsers forbid touching another origin's clock); cross-origin URLs
   load view-only with a notice.
 
@@ -111,11 +130,12 @@ node scripts/shoot.mjs --pages /,/system --out ./screenshots --themes light,dark
 `scripts/dev/` is git-ignored scratch: `cp.mjs` drives the code panel (knob→code flash, type→knob, drag→knob,
 tab switch, stage hover→lines). Last run: all pass.
 
-## Next (M3)
+`drill.mjs` plays drills in ch 02/03 and checks the Eye Trainer stored the session. Last run: pass.
 
-1. MDX figure kit: Astro wrappers for Svelte islands (`client:visible`), `SpacingChart` figure (wraps SpacingTrack +
-   playhead + onion on hover + still), `FeelAB` (judge before numbers), `Snippet` (Shiki + Copy + Open in Lab),
-   `Drill` (embedded Eye Trainer round), embedded instruments (`showCode={false}` option exists).
-2. Eye Trainer core: drill engine (60–90s rounds, score, streak), IndexedDB sessions, drills Guess the Duration and
-   Match the Curve; `/lab/eye-trainer` page.
-3. Chapters 01–03 MDX meeting §5.3 DoD.
+## Next (M4)
+
+1. L3 Spring Bench (k/c/m ↔ response/bounce, live graph, settle time, CSS linear() export) + `SpringPlot` figure.
+2. L7 Canvas Sandbox (code-first, update(dt)/draw(ctx) scaffold, dt/fps readouts, pause/step, hot reload keeps state)
+   + `CanvasFigure` with a program registry (bouncing ball, flick/decay, …).
+3. Drills: which-heavier, tune-to-match, blind-ab.
+4. Write `docs/CHAPTER_KIT.md` (authoring guide for subagents), then chapters 04–06.

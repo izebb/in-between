@@ -1,0 +1,26 @@
+---
+/**
+ * An instrument, pre-configured, inside a chapter.
+ * <Lab id="curve-bench" easing="ease-in" duration={400} code={false} />
+ */
+import SpacingChart from "../lab/SpacingChart.svelte";
+import CurveBench from "../lab/CurveBench.svelte";
+import FrameStepper from "../lab/FrameStepper.svelte";
+import { labPreset, type LabShorthand } from "~/lib/labpresets";
+import type { InstrumentId } from "~/lib/curriculum";
+interface Props extends LabShorthand {
+  id: InstrumentId;
+  code?: boolean;
+}
+const { id, code = true, ...short } = Astro.props;
+const preset = labPreset(id, short) as any;
+---
+<div class="lab-embed wide">
+  {id === "spacing-chart" && <SpacingChart client:visible embedded {preset} showCode={code} />}
+  {id === "curve-bench" && <CurveBench client:visible embedded {preset} showCode={code} />}
+  {id === "frame-stepper" && <FrameStepper client:visible embedded {preset} />}
+</div>
+<style>
+  .lab-embed { margin-block: 2.5rem !important; }
+  .lab-embed :global(.instrument) { min-height: 440px; }
+</style>

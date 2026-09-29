@@ -1,0 +1,14 @@
+---
+import Base from "~/layouts/Base.astro";
+import EyeTrainer from "~/components/drills/EyeTrainer.svelte";
+---
+<Base title="L6 Eye Trainer" description="Perception drills for motion: guess the duration, match the curve, and more. Scored, with a calibration graph." posture="lab">
+  <div class="page">
+    <header class="chapter-head">
+      <span class="smallcaps part">Lab · L6</span>
+      <h1><span>Eye Trainer</span></h1>
+      <p class="lede">Ear training for the eyes. Short rounds, scored, with streaks. These drills turn knowledge into instinct.</p>
+    </header>
+    <EyeTrainer client:only="svelte" />
+  </div>
+</Base>

@@ -1,0 +1,11 @@
+---
+/** The FEEL beat: judge before numbers. See figures/FeelAB.svelte for props. */
+import FeelABSvelte from "../figures/FeelAB.svelte";
+const props = Astro.props as any;
+---
+<div class="feel-plate wide">
+  <FeelABSvelte client:visible {...props} />
+</div>
+<style>
+  .feel-plate { border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); padding-block: 1.25rem 1.5rem; margin-block: 2rem !important; }
+</style>
