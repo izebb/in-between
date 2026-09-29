@@ -67,6 +67,7 @@ function segment(ctx, x1, y1, x2, y2, stroke, width = 1) {
   ctx.strokeStyle = stroke; ctx.lineWidth = width; ctx.stroke();
 }
 function label(ctx, text, x, y, color = pencils.graphite, align = "left") {
+  if (pencils.ghost) return; // onion-skin stills draw labels once, on the final frame
   ctx.font = "10px ui-monospace, 'JetBrains Mono', monospace";
   ctx.fillStyle = color; ctx.textAlign = align; ctx.fillText(text, x, y);
 }

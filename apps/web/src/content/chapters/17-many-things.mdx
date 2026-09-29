@@ -1,0 +1,283 @@
+---
+number: 17
+lede: "Past a handful of things, you stop drawing the motion and start writing the rules it comes from."
+---
+
+A keyframe describes one thing: where it starts, where it ends, and how it gets there. That works for a card, a menu, or a list of five rows. It doesn't work for a fountain of sparks or a flock of birds. Nobody draws each spark.
+
+So you describe *one* spark instead: where it is, how fast it's going, and how old it is. Then you write a rule that moves it forward by one frame, and run that rule on every spark, every frame. The loop from chapter 14 does the rest, and the result is motion that nobody could keyframe.
+
+<Beat kind="see">A fountain</Beat>
+
+Every dot here is born at the same point. It flies for a moment, fades, and is removed. None of them was animated. Press and drag in the figure to move the fountain.
+
+<Figure n="17.1" caption="A fountain: each dot born, flying, fading, gone">
+  <Canvas program="particles" controls={false} stepper={false} />
+</Figure>
+
+Follow one dot. It leaves the mouth of the fountain, rises, slows, turns over, and falls as it fades. Its neighbours do the same with small differences: a little steeper, a little faster. Those differences are what make it a fountain and not a hose.
+
+Now drag. The dots already in the air don't follow the fountain. Once a particle is born, it's on its own.
+
+<Beat kind="feel">Which one was choreographed?</Beat>
+
+Here are two groups of arrows. Both have the same seventy arrows, starting in the same places at the same speeds. Watch both for a while before you decide.
+
+<div class="fig-row wide">
+<Figure n="17.2" caption="A · seventy arrows">
+  <Canvas program="boids" controls={false} stepper={false} height={280} />
+</Figure>
+<Figure n="17.3" caption="B · the same seventy arrows">
+  <Canvas program="boids" params={{ alignment: 0, cohesion: 0 }} controls={false} stepper={false} height={280} />
+</Figure>
+</div>
+
+Most eyes pick A. Its arrows gather into groups that turn together and stream across the plate, as if someone had planned each path. B's arrows each hold their own line, and only swerve when two of them get too close.
+
+Nobody planned A either. In both, each arrow steers only by the neighbours inside its circle, like the blue one around the red arrow. B has one rule: don't get too close. A has two more: head the way your neighbours are heading, and move toward where they are. No arrow knows there is a flock. The flock is what all those small steers add up to.
+
+<Beat kind="more">Emit, live, die</Beat>
+
+<Margin kind="history">
+  <p>William Reeves described <i>particle systems</i> in a 1983 paper, as a way to model "fuzzy objects" such as fire and clouds. He had used one for the wall of fire in the Genesis sequence of <i>Star Trek II: The Wrath of Khan</i> (1982).</p>
+</Margin>
+
+A particle is a handful of numbers: where it is, how fast it's moving, and how old it is. Figure 17.1 keeps a list of them, and on every frame it does three things:
+
+1. **Emit.** Add new particles at the emitter, at a steady rate. Here that's 90 a second. At 60 frames a second, that works out to one and a half per frame, so the half is carried over to the next frame. Because the rate is written as births per second times `dt`, it holds at any frame rate.
+2. **Live.** Move each particle. Gravity adds to its velocity, and velocity adds to its position, as in chapter 16.
+3. **Die.** Remove every particle that is older than its life, which here is 1.4 seconds.
+
+After the first life-span, births and deaths balance. The number alive then settles at rate × life. At 90 a second, each living 1.4 seconds, that's 126, the count shown in the corner of the figure.
+
+Each particle gets its own direction and speed, picked at random within a range: upward, give or take about 35°, at 80 to 220px a second. The spread is the design. Narrow it and the fountain becomes a jet. Widen it and it becomes a burst. The figure's randomness is seeded, so every replay is the same, frame for frame.
+
+A particle's age also sets how it's drawn. Each dot in figure 17.1 starts red and solid, turns to ink, and gets fainter and smaller. By the end of its life it is invisible, and only then is it removed. This matters. A dot that vanishes at full strength *pops*, and a pop is an event: the eye jumps to it. A hundred pops a second is flicker. If each particle fades with age, its death is a non-event, which is what it should be. Births are hidden a different way: they happen at the mouth of the fountain, where it's already crowded.
+
+<Beat kind="more">Trails</Beat>
+
+The loop in chapter 14 clears the canvas every frame and draws everything again, like a flipbook. If you skip the clear, nothing is ever erased, and a moving dot leaves a solid line. Trails sit between the two. Erase only *part* of the last frame, and old marks fade a little every frame while the newest stay strong.
+
+<Figure n="17.4" caption="Trails from translucent clears">
+  <Canvas program="trails" ghostEvery={4} />
+</Figure>
+
+Every sixtieth of a second, the figure erases 12% of whatever is on the canvas; that's the *Clear opacity* knob. So each mark keeps 88% of its strength per frame at 60Hz: 28% after 10 frames, and 8% after 20. At 60Hz that's a tail about a third of a second long, and it reads as speed. Drag the knob down to 0.02 and each mark keeps 98% a frame. It now takes more than half a second just to fade to half strength, and the tail becomes a drawing of the path. At 1 the canvas clears completely, and there is no trail.
+
+**A short trail is blur. A long one is history.** A film camera's shutter stays open for part of every frame, so anything fast smears along its path. That smear is how one still frame shows speed and direction, and a few frames of tail do the same job on a canvas. A long tail says something else: where the thing has *been*. The eye starts to read the drawing instead of the dot. Choose the length for what you want people to read.
+
+The figure erases with `globalCompositeOperation = "destination-out"`, which makes a fill remove pixels instead of painting them. The canvas stays transparent, so the plate shows through. On a canvas with a solid background, a simpler version works too: paint the background colour over everything at low opacity.
+
+Trails come with three costs:
+
+- **They depend on the frame rate.** The fade happens once per frame. At 120Hz the canvas fades twice as often, so the same setting gives a tail half as long. Scale the fade by `dt`, the same fix as chapter 15's smoothing trap: erase `1 − (1 − f)^(60·dt)` each frame, where `f` is the share you'd erase at 60Hz. The figure above does exactly this.
+- **They never quite reach zero.** A canvas normally stores each colour channel in 8 bits. Near zero, a gentle fade rounds to no change at all, so a faint ghost of the path can stay for good. The gentler the fade, the stronger the ghost. Clear the canvas fully whenever the scene starts over.
+- **They fade everything.** The fill covers the whole canvas, so everything drawn on it gets a trail. To give one thing a trail and not another, draw them on two canvases, one on top of the other.
+
+If you need exact control, keep the last few positions of each thing and draw its tail yourself. A tail you draw can be any length at any frame rate, and it leaves nothing behind.
+
+<Beat kind="more">Three rules, no leader</Beat>
+
+<Margin kind="history">
+  <p>Craig Reynolds built boids in 1986 and presented them at SIGGRAPH 1987, in "Flocks, Herds, and Schools: A Distributed Behavioral Model". The paper calls the three rules collision avoidance, velocity matching and flock centering.</p>
+</Margin>
+
+The flock in figure 17.2 is Craig Reynolds' *boids*. Each arrow sees only the neighbours within 46px of it, the blue circle around the red one. On every frame, it steers by three rules:
+
+- **Separation.** Steer away from any neighbour closer than 18px, so you don't crowd.
+- **Alignment.** Steer toward the neighbours' average velocity, so you go where they go.
+- **Cohesion.** Steer toward the neighbours' average position, so you stay with them.
+
+Each rule is a small push on the arrow's velocity, scaled by its own weight, and speed is capped at 120px a second. That is the whole program. Nothing in it mentions a flock, a leader, or a path. Figure 17.3 runs the same program with the alignment and cohesion weights set to zero.
+
+<Margin kind="def">
+  <p><b>Emergence.</b> A pattern in the whole that no single part contains. No boid has a rule for "flock".</p>
+</Margin>
+
+Watch figure 17.2 from the start. For the first few seconds the arrows slow down, because each one is averaging its heading with neighbours that are going every which way. Then small groups agree, pick up speed, and meet other groups. It's choreography with no choreographer.
+
+Interfaces use the same idea at a small scale. A stagger is one rule applied to every row: start a beat after the one above. The rows never coordinate with each other, and the list still reads as one gesture. When many things move at once, give them a shared rule instead of timing each one by hand. The rule keeps them related, however many there are.
+
+<Beat kind="more">Many things in an interface</Beat>
+
+<Margin kind="wild">
+  <p>In Apple's Messages, press and hold the send button, choose <b>Screen</b>, and pick <b>Confetti</b> or <b>Fireworks</b>. For a few seconds the whole conversation fills with particles. Then it clears and leaves the message behind.</p>
+</Margin>
+
+Particles are the loudest motion a page can hold. A hundred moving things take most of the eye's attention, and they carry very little information: *something happened, and it was good.* So save them for rare, chosen moments, like a first payment, a finished course, or a long streak. A saved setting doesn't qualify. The more often something happens, the less it should move (chapter 22).
+
+Keep them brief, and keep them off the content. A celebration that hides the thing it celebrates has its priorities backwards. Let clicks pass through the particles. And say the news in words too, so the page still means the same thing when motion is reduced and the particles never run.
+
+<Beat kind="more">The budget</Beat>
+
+Seventy boids are cheap. Each one checks every other one, which is 70 × 69, or 4,830 distance checks a frame. With ten times the boids, you do about a hundred times the work, around 490,000 checks, because the cost grows with the square of the count. A common fix is a grid. Sort the boids into cells as wide as the neighbourhood, and check only the cells around each boid.
+
+Particles are cheaper, but they have their own traps:
+
+- **Don't make garbage every frame.** To drop the dead particles, figure 17.1 builds a new list every frame. That's fine for a hundred particles. With thousands, the garbage piles up, and collecting it can cost you frames. Keep a fixed pool instead, and swap dead particles out of the live range. The code below does this.
+- **Draw in batches.** Every `fill()` has a cost. Particles that share a colour and an opacity can go into one path, with one `fill()` for all of them. Fading with age gives every particle its own opacity, so sort them into a few opacity bands and draw one path per band.
+- **Past a few thousand,** move the work off the main thread with `OffscreenCanvas`, or onto the GPU. Chapter 19 weighs those options.
+
+<Beat kind="tune">One rule at a time</Beat>
+
+This is the flock from figure 17.2, with its knobs and its code. Change one rule at a time. After each change, give the flock a few seconds to find its new shape.
+
+- Set **Separation** to 0. Nothing keeps the arrows apart, and they pile up into knots.
+- Set **Alignment** to 0. No two agree on a heading, and each arrow goes its own way. It stops being a flock.
+- Set **Cohesion** to 0. The arrows still line up with their neighbours, but nothing draws the groups together, so they drift in loose streams. They also slow down: in this simple model, the pull toward the group is part of what keeps them moving.
+- Raise **Cohesion** to about 2. The groups pull into tight clumps.
+
+<Lab id="canvas-sandbox" program="boids" />
+
+In the code, find the two lines that add all three rules to the velocity. Everything you've seen comes from those two lines.
+
+<Beat kind="write">The notation</Beat>
+
+The canvas has no particle system built in. Here is a complete one: a pool, the three steps, and a fade with age. It's written against `dt`, so it runs the same at any refresh rate.
+
+<div class="snippets">
+<Snippet title="17 · Many Things: a particle system, emit, live, die" lab="canvas-sandbox" program="particles">
+
+```js
+// A fountain: emit, live, die. Particles come from a fixed pool and go
+// back to it when they die, so nothing is allocated frame to frame.
+const canvas = document.querySelector('canvas');
+const ctx = canvas.getContext('2d');
+const dpr = Math.min(2, window.devicePixelRatio || 1);
+const W = canvas.clientWidth, H = canvas.clientHeight;
+canvas.width = Math.round(W * dpr);
+canvas.height = Math.round(H * dpr);
+ctx.scale(dpr, dpr);                    // draw in CSS pixels (chapter 14)
+
+const RATE = 90;                        // births per second
+const LIFE = 1.4;                       // seconds
+const GRAVITY = 260;                    // px/s²
+const blank = () => ({ x: 0, y: 0, vx: 0, vy: 0, age: 0 });
+const pool = Array.from({ length: 256 }, blank); // at least RATE × LIFE
+let alive = 0;                          // pool[0] … pool[alive - 1] are live
+let carry = 0;                          // births owed, including fractions
+
+function emit(x, y) {
+  if (alive === pool.length) return;    // pool full: skip, don't allocate
+  const p = pool[alive++];
+  const angle = -Math.PI / 2 + (Math.random() - 0.5) * 1.2; // up, ±0.6 rad
+  const speed = 80 + Math.random() * 140;                   // 80–220 px/s
+  p.x = x;
+  p.y = y;
+  p.vx = Math.cos(angle) * speed;
+  p.vy = Math.sin(angle) * speed;
+  p.age = 0;
+}
+
+function update(dt) {
+  carry += RATE * dt;                   // emit: 1.5 a frame at 60Hz
+  while (carry >= 1) {
+    carry -= 1;
+    emit(W / 2, H * 0.7);
+  }
+  for (let i = 0; i < alive; ) {
+    const p = pool[i];
+    p.age += dt;
+    if (p.age >= LIFE) {                // die: swap with the last live one
+      pool[i] = pool[alive - 1];
+      pool[alive - 1] = p;
+      alive--;
+      continue;                         // pool[i] is another particle now
+    }
+    p.vy += GRAVITY * dt;               // live: velocity, then position
+    p.x += p.vx * dt;
+    p.y += p.vy * dt;
+    i++;
+  }
+}
+
+function draw() {
+  ctx.fillStyle = '#16161a';
+  for (let i = 0; i < alive; i++) {
+    const p = pool[i];
+    const k = p.age / LIFE;             // 0 at birth, 1 at death
+    ctx.globalAlpha = 1 - k;            // fade out: dying isn't an event
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 1 + 3 * (1 - k), 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+}
+
+let last = null;
+function frame(now) {
+  // Clamp dt: a tab coming back from the background brings a huge one.
+  const dt = last === null ? 0 : Math.min((now - last) / 1000, 0.05);
+  last = now;
+  update(dt);
+  ctx.clearRect(0, 0, W, H);
+  draw();
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+```
+
+</Snippet>
+
+<Snippet title="17 · Many Things: trails from a translucent clear" lab="canvas-sandbox" program="trails">
+
+```js
+// Trails: instead of clearing, erase part of the last frame.
+// fade60 is the share erased per frame at 60Hz. Scaling it by dt
+// keeps the tail the same length at 30, 60 or 120Hz.
+function fadeFrame(ctx, w, h, dt, fade60 = 0.12) {
+  ctx.save();
+  ctx.globalCompositeOperation = 'destination-out'; // erase, don't paint
+  ctx.globalAlpha = 1 - Math.pow(1 - fade60, dt * 60);
+  ctx.fillRect(0, 0, w, h);             // the colour doesn't matter, only alpha
+  ctx.restore();
+}
+
+// In the particle loop, fade where it used to clear:
+function frame(now) {
+  const dt = last === null ? 0 : Math.min((now - last) / 1000, 0.05);
+  last = now;
+  update(dt);
+  fadeFrame(ctx, W, H, dt);             // was: ctx.clearRect(0, 0, W, H)
+  draw();
+  requestAnimationFrame(frame);
+}
+
+// An 8-bit canvas can't fade all the way to zero. When the scene
+// starts over, clear it for real: ctx.clearRect(0, 0, W, H).
+```
+
+</Snippet>
+
+<Snippet title="17 · Many Things: a canvas over the page" lab="canvas-sandbox" program="particles">
+
+```css
+/* CSS isn't the tool for hundreds of independent things.
+   Its job is the one element they live in. */
+.celebration {
+  position: fixed;
+  inset: 0;
+  width: 100%;          /* without these, a canvas takes its size from */
+  height: 100%;         /* its pixel dimensions: 300 × 150 by default  */
+  pointer-events: none; /* clicks go through to the page underneath    */
+  z-index: 10;
+}
+
+/* Decoration only: the page must say everything without it. */
+@media (prefers-reduced-motion: reduce) {
+  .celebration {
+    display: none;
+  }
+}
+```
+
+</Snippet>
+</div>
+
+`display: none` hides the canvas but doesn't stop its loop, since `requestAnimationFrame` keeps firing for the page. So check `matchMedia('(prefers-reduced-motion: reduce)')` in the script too, and don't start the loop at all.
+
+<Beat kind="drill">Blind A/B: choreography</Beat>
+
+Each pair is the same list shown two ways, and you don't know which is which. Pick the better one, then name the reason in one word. Each list is a small crowd moving under a single rule, a delay per row. The question is whether it reads as one gesture.
+
+<Drill kind="blind-ab" trials={5} chapter={17} topic="choreography" />

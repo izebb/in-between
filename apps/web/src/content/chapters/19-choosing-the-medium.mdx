@@ -1,0 +1,378 @@
+---
+number: 19
+lede: "What moves, and how many of it, picks the medium. The motion itself is the same in every one."
+---
+
+export const stutter = (() => {
+  // The app's --ease-out, cubic-bezier(.2, .8, .2, 1): solve for x, read y.
+  const bez = (x1, y1, x2, y2) => {
+    const cx = 3 * x1, bx = 3 * (x2 - x1) - cx, ax = 1 - cx - bx;
+    const cy = 3 * y1, by = 3 * (y2 - y1) - cy, ay = 1 - cy - by;
+    return (x) => {
+      let t = x;
+      for (let i = 0; i < 12; i++) {
+        const d = (3 * ax * t + 2 * bx) * t + cx;
+        if (Math.abs(d) < 1e-6) break;
+        t -= (((ax * t + bx) * t + cx) * t - x) / d;
+      }
+      t = Math.min(1, Math.max(0, t));
+      return ((ay * t + by) * t + cy) * t;
+    };
+  };
+  const ease = bez(0.2, 0.8, 0.2, 1);
+  // 700ms is 42 frames at 60Hz. This page draws only some of them:
+  // each number is how many frames one drawing stays on screen.
+  const holds = [1, 1, 3, 1, 1, 4, 1, 2, 1, 5, 1, 1, 3, 1, 6, 2, 1, 4, 3];
+  const frames = holds.reduce((a, b) => a + b, 0);
+  const pct = (f) => `${+((f / frames) * 100).toFixed(2)}%`;
+  const stops = [];
+  let f = 0;
+  for (const h of holds) {
+    const v = +ease(f / frames).toFixed(4);
+    stops.push(`${v} ${pct(f)}`, `${v} ${pct(f + h)}`);
+    f += h;
+  }
+  stops.push("1 100%");
+  return { easing: `linear(${stops.join(", ")})`, drawn: holds.length, frames };
+})();
+
+export const manyDots = `// Many dots, one canvas. Everything is allocated once, in setup().
+// Each frame is arithmetic on typed arrays, one path and one fill:
+// no new objects, so nothing for the garbage collector to clean up.
+const N = 3000;
+
+function setup(w, h) {
+  rand = seeded(19);
+  const s = {
+    w, h,
+    x: new Float32Array(N), y: new Float32Array(N),
+    vx: new Float32Array(N), vy: new Float32Array(N),
+  };
+  for (let i = 0; i < N; i++) {
+    const a = random(0, TAU), speed = random(20, 90);
+    s.x[i] = random(0, w);
+    s.y[i] = random(0, h);
+    s.vx[i] = Math.cos(a) * speed;
+    s.vy[i] = Math.sin(a) * speed;
+  }
+  return s;
+}
+
+function update(s, dt) {
+  for (let i = 0; i < N; i++) {
+    s.x[i] += s.vx[i] * dt;
+    s.y[i] += s.vy[i] * dt;
+    // Off one edge, back in at the other.
+    if (s.x[i] < 0) s.x[i] += s.w; else if (s.x[i] > s.w) s.x[i] -= s.w;
+    if (s.y[i] < 0) s.y[i] += s.h; else if (s.y[i] > s.h) s.y[i] -= s.h;
+  }
+}
+
+function draw(ctx, s, w, h) {
+  ctx.clearRect(0, 0, w, h);
+  ctx.beginPath();                          // one path for every dot
+  for (let i = 0; i < N; i++) {
+    ctx.moveTo(s.x[i] + 2, s.y[i]);         // start each circle on its own edge
+    ctx.arc(s.x[i], s.y[i], 2, 0, TAU);
+  }
+  ctx.fillStyle = pencils.ink;
+  ctx.fill();                               // one fill for all of them
+}
+`;
+
+Every motion in this book has been written down somewhere. The menus and cards are elements, animated by the browser's own animation engine. The bouncing ball is painted on a canvas by code, one frame at a time. The browser offers several ways to make things move, and they are not interchangeable. Each is cheap for some jobs and costly for others.
+
+Two questions decide which one to use: what is moving, and how many of it.
+
+<Beat kind="see">A change, and a process</Beat>
+
+Four small pieces of interface. Hover one to play it again.
+
+<Figure n="19.1" caption="Four state changes: a start, an end, the frames between">
+  <Specimens items={[
+    { kind: "toggle", label: "Toggle", note: "Off, then on.", motion: { easing: "spring.snappy" } },
+    { kind: "menu", label: "Menu", note: "Closed, then open.", motion: { easing: "--ease-out", duration: 180 } },
+    { kind: "toast", label: "Toast", note: "Hidden, then shown.", motion: { easing: "--ease-out", duration: 280 } },
+    { kind: "tabs", label: "Tabs", note: "This tab, then that one.", motion: { easing: "--ease-inout", duration: 280 } }
+  ]} />
+</Figure>
+
+Each one is a single element moving between two states you can name: off and on, closed and open. Describe the two ends and the curve between them, and the browser draws every frame in between. You write no loop. That is the job CSS was made for.
+
+Now a flock.
+
+<Figure n="19.2" caption="A flock: no end state, only rules run every frame">
+  <Canvas program="boids" controls={false} stepper={false} />
+</Figure>
+
+Each bird steers by what its neighbours are doing, so where it goes next depends on where every other bird is now. There is no end state to write down. Code works out every bird, every frame, and paints the result. Nothing on this canvas is an element. The flock is pixels, redrawn from numbers.
+
+A state change is described once. A process is computed every frame. Most motion sits somewhere between the two, and where it sits, together with how many things are moving, picks the medium.
+
+<Beat kind="feel">Which one is falling behind?</Beat>
+
+Both dots make the same move. Don't count. Just look.
+
+<FeelAB
+  question="Which one is the page struggling to draw?"
+  kind="dot"
+  options={[
+    { motion: { easing: stutter.easing, duration: 700 }, caption: `700ms · --ease-out · ${stutter.frames - stutter.drawn} of its ${stutter.frames} frames dropped` },
+    { motion: { easing: "--ease-out", duration: 700 }, caption: "700ms · --ease-out · every frame drawn" }
+  ]}
+  answer={0}
+  explain="A stalls, then jumps to catch up. Both follow the same curve for the same time, but A shows only some of its frames. Here they were dropped on purpose, so everyone sees the same stutter. On a real page it happens when a frame asks for more work than the browser can finish before the screen wants the next one. Choosing a medium is largely choosing how much work each frame will be."
+/>
+
+<Beat kind="more">How many</Beat>
+
+<Margin kind="def">
+  <p><b>Dropped frame.</b> A frame the screen was ready to show but the page hadn't finished drawing. The screen shows the old one again, so the motion stalls, then jumps.</p>
+</Margin>
+
+Now make a real one. This figure moves the same dots three ways: as elements moved with `transform`, as elements moved with `left` and `top`, and as circles painted on a single canvas. Pick a mode and drag the count up until the motion stutters like A. Then switch modes at that count and watch again. Judge by eye first, then read the numbers.
+
+<Figure n="19.3" caption="The same dots in three media, measured on your machine">
+  <Medium initial={400} />
+</Figure>
+
+The readout is measured on your machine while you watch, so it will differ from anyone else's. *Frame* is the time from one frame to the next, averaged over the last 30. While the page keeps up, it sits at your display's frame length: 16.7ms at 60Hz, 8.3ms at 120Hz. When the page falls behind, frames are dropped and the number climbs.
+
+The three modes differ in how much work each frame asks for:
+
+- **DOM, `left` and `top`.** Every dot is an element. Each frame the browser works out every dot's style again, then its layout, because `left` and `top` are layout properties, then paints the result. More dots, more of all of it.
+- **DOM, `transform`.** Still one element and one style per dot, every frame. But a transform moves an element after layout is done, so the layout step is skipped. Chapter 20 opens up that pipeline.
+- **Canvas 2D.** One element. The dots are numbers in a loop, added to one path and filled once. The browser has a single element to update; the rest is your loop and the drawing, and each extra dot adds little.
+
+So `left` and `top` usually give out first, and the canvas last. Where each one gives out depends on your machine.
+
+That doesn't make the canvas the better medium. A canvas is a picture: it knows nothing about what it drew. There is no hover, no focus, no text to select, nothing for a screen reader, no layout. For a handful of things the DOM does all of that already, and on a canvas you would build it yourself. The canvas wins when there are more things than elements can carry.
+
+<Beat kind="more">Five media</Beat>
+
+Five media cover almost all motion on the web. *Cost* means two things here: what the medium costs the browser, and what it costs you.
+
+| Medium | Best for | Cost |
+|---|---|---|
+| CSS | UI state changes, hovers, enters and exits | cheapest, declarative |
+| WAAPI | timelines controlled from JavaScript, scrubbing | low |
+| SVG | line drawing, morphing shapes, crisp diagrams | medium, and it grows with the number of shapes |
+| Canvas 2D | many objects, particles, procedural and generative motion | you own everything |
+| WebGL / WebGPU | thousands of things, shaders, 3D | the highest complexity |
+
+**CSS** describes a change: from here to there, over this long, on this curve. The browser has the whole animation before it starts, so none of your code runs while it plays. Use transitions between two states and keyframes when there are more. It is the cheapest to write and the easiest to get right, and for a few elements changing state it is nearly always the answer.
+
+<Margin kind="note">
+  <p>CSS animations and transitions are Web Animations underneath. <code>document.getAnimations()</code> returns them as <code>Animation</code> objects, so a script can pause or scrub a motion that CSS started.</p>
+</Margin>
+
+**WAAPI**, the Web Animations API, is the same engine, reached from JavaScript. `element.animate()` returns an `Animation` you can pause, reverse, scrub, speed up, and wait for. Use it when code has to hold the motion: a slider scrubs it, a gesture interrupts it, a sequence needs to know when it ends. Libraries such as Motion and GSAP sit on top of these DOM media and add what the platform leaves out, like springs, timelines, and layout animation.
+
+**SVG** is vector drawing inside the DOM. Its shapes stay sharp at any zoom, and CSS and WAAPI animate them like any other element, so everything above still applies. It is the medium for line drawing (a stroke's dash offset, animated), shapes that change into other shapes, icons, and diagrams. But every shape is an element, so a thousand shapes cost what a thousand elements cost: the DOM curve from figure 19.3 again.
+
+**Canvas 2D** is one element holding a bitmap that your code paints. Every frame you clear it and draw again, so you own everything: the loop, the timing, hit-testing, text, sharpness on high-density screens. In return, thousands of simple things cost little each. Particles, flocks, generative drawings, anything computed frame by frame: the whole of Part VII.
+
+**WebGL** and **WebGPU** program the graphics card directly. You write shaders, small programs that run in parallel for every vertex or every pixel. That is how you move tens of thousands of things, run per-pixel effects, or draw in 3D. It is the most power and the most code, and it is usually reached through a library such as three.js.
+
+To choose, ask these in order and stop at the first yes:
+
+1. **Is it a few elements changing state?** CSS.
+2. **Does code need to hold it**, to pause, reverse, scrub, sequence, or follow a finger? WAAPI, or a library.
+3. **Is it a drawing**, like strokes, icons, or a diagram? SVG.
+4. **Is it hundreds or thousands of simple things, or motion computed every frame?** Canvas 2D.
+5. **Is it tens of thousands, per-pixel effects, or 3D?** WebGL or WebGPU.
+
+Each step down gives you more control and hands you more work. Go no further than the motion needs.
+
+<Margin kind="wild">
+  <p>Figma splits its window this way. The design canvas, with its thousands of shapes to pan and zoom, is drawn by Figma's own renderer on the GPU. The toolbars and panels around it are ordinary DOM.</p>
+</Margin>
+
+One page can mix them. A chart can draw its axes and labels in SVG, where they stay sharp and the text can be selected, and put ten thousand points on a canvas behind them.
+
+<Beat kind="more">When you own the loop</Beat>
+
+Choosing a canvas makes the frame budget yours. Three habits keep you inside it.
+
+**Batch.** Every drawing call has a cost of its own, apart from the pixels it fills. Put shapes that share a style into one path and fill it once. The canvas in figure 19.3 draws every dot this way: one `beginPath()`, one circle per dot, one `fill()`. A single fill has a single colour, so group shapes by colour: one path per colour, not one per shape.
+
+**Make no garbage per frame.** An object literal, an array from `map()` or `filter()`, a new closure: anything created inside the loop is garbage a frame later. The engine collects it when it chooses to, and part of that work pauses your code. Make enough garbage every frame and sooner or later a pause costs you a frame. So allocate once, before the loop. Keep positions and velocities in typed arrays such as `Float32Array`, update objects in place, and when a particle dies, keep its slot for the next one to be born.
+
+**Take the drawing off the main thread.** `canvas.transferControlToOffscreen()` hands a canvas over to a Web Worker. The worker gets its own 2D context and its own `requestAnimationFrame`, and does the drawing. The canvas stays in the page and shows what the worker drew. Now the drawing no longer shares a thread with the rest of your page: a heavy frame in the worker doesn't delay a click, and a busy main thread doesn't stop the drawing. The price is that a worker has no DOM, so pointer positions, sizes, and anything else it needs must be posted to it.
+
+<Beat kind="tune">One motion, five notations</Beat>
+
+The desk starts with this site's `--ease-out` over 280ms: a 240px move, written five ways. Read across the cards before you change anything. CSS and WAAPI say it in nearly the same words. Motion and GSAP count in seconds, not milliseconds. The canvas version has to bring its own clock and its own curve.
+
+Then change one thing. Type `spring.snappy` into *Any easing* and convert. CSS and WAAPI can only play the spring's shape, sampled into `linear()` over a fixed duration. Motion takes the spring's physics directly. GSAP needs a helper to sample it. On the canvas it becomes three lines of physics, run every frame.
+
+<Lab id="export-desk" easing="--ease-out" duration={280} />
+
+<Beat kind="write">The notation</Beat>
+
+The same small move twice: first as a state change in CSS, then as an animation your code holds. Then the canvas habits from above, in code.
+
+<div class="snippets">
+<Snippet title="19 · Choosing the Medium: a state change in CSS" lab="export-desk" easing="--ease-out" duration={280} distance={240}>
+
+```css
+/* Name both ends; the browser draws the frames between. */
+.box {
+  transform: translateX(0);
+  transition: transform 280ms cubic-bezier(.2, .8, .2, 1);
+}
+
+.box.is-on {
+  transform: translateX(240px);
+}
+```
+
+</Snippet>
+
+<Snippet title="19 · Choosing the Medium: the same move, held by code" lab="export-desk" easing="--ease-out" duration={280} distance={240}>
+
+```js
+// The same move, but now it's an object your code holds.
+const box = document.querySelector('.box');
+const slider = document.querySelector('input[type="range"]'); // min 0, max 280
+const button = document.querySelector('button');
+
+const move = box.animate(
+  [{ transform: 'translateX(0)' }, { transform: 'translateX(240px)' }],
+  { duration: 280, easing: 'cubic-bezier(.2, .8, .2, 1)', fill: 'both' },
+);
+
+// Scrub: stop its clock and set the time yourself, in ms.
+slider.addEventListener('input', () => {
+  move.pause();
+  move.currentTime = slider.valueAsNumber;
+});
+
+// Change your mind: play it backwards from wherever it is.
+button.addEventListener('click', () => move.reverse());
+```
+
+</Snippet>
+
+<Snippet title="19 · Choosing the Medium: many dots, one path, no garbage" lab="canvas-sandbox" source={manyDots}>
+
+```js
+// Many dots, one canvas. Everything is allocated once, in setup().
+// Each frame is arithmetic on typed arrays, one path and one fill:
+// no new objects, so nothing for the garbage collector to clean up.
+const N = 3000;
+
+function setup(w, h) {
+  rand = seeded(19);
+  const s = {
+    w, h,
+    x: new Float32Array(N), y: new Float32Array(N),
+    vx: new Float32Array(N), vy: new Float32Array(N),
+  };
+  for (let i = 0; i < N; i++) {
+    const a = random(0, TAU), speed = random(20, 90);
+    s.x[i] = random(0, w);
+    s.y[i] = random(0, h);
+    s.vx[i] = Math.cos(a) * speed;
+    s.vy[i] = Math.sin(a) * speed;
+  }
+  return s;
+}
+
+function update(s, dt) {
+  for (let i = 0; i < N; i++) {
+    s.x[i] += s.vx[i] * dt;
+    s.y[i] += s.vy[i] * dt;
+    // Off one edge, back in at the other.
+    if (s.x[i] < 0) s.x[i] += s.w; else if (s.x[i] > s.w) s.x[i] -= s.w;
+    if (s.y[i] < 0) s.y[i] += s.h; else if (s.y[i] > s.h) s.y[i] -= s.h;
+  }
+}
+
+function draw(ctx, s, w, h) {
+  ctx.clearRect(0, 0, w, h);
+  ctx.beginPath();                          // one path for every dot
+  for (let i = 0; i < N; i++) {
+    ctx.moveTo(s.x[i] + 2, s.y[i]);         // start each circle on its own edge
+    ctx.arc(s.x[i], s.y[i], 2, 0, TAU);
+  }
+  ctx.fillStyle = pencils.ink;
+  ctx.fill();                               // one fill for all of them
+}
+```
+
+</Snippet>
+
+<Snippet title="19 · Choosing the Medium: hand the canvas to a worker">
+
+```js
+// main.js: size the canvas, then give it away.
+const canvas = document.querySelector('canvas');
+const dpr = Math.min(2, devicePixelRatio);
+canvas.width = Math.round(canvas.clientWidth * dpr);
+canvas.height = Math.round(canvas.clientHeight * dpr);
+
+const offscreen = canvas.transferControlToOffscreen();
+const worker = new Worker('worker.js');
+
+// Listing it in the second argument transfers it: the worker owns it now.
+worker.postMessage({ canvas: offscreen, dpr }, [offscreen]);
+
+// A worker has no DOM, so input is posted to it.
+canvas.addEventListener('pointermove', (e) => {
+  worker.postMessage({ x: e.offsetX, y: e.offsetY });
+});
+```
+
+</Snippet>
+
+<Snippet title="19 · Choosing the Medium: the worker draws">
+
+```js
+// worker.js: draws on its own thread, with its own animation frames.
+let ctx, dpr;
+let last = 0;
+const pointer = { x: 0, y: 0 };   // made once, updated in place
+const dot = { x: 0, y: 0 };
+
+self.onmessage = (e) => {
+  if (e.data.canvas) {
+    ctx = e.data.canvas.getContext('2d');
+    dpr = e.data.dpr;
+    requestAnimationFrame(frame);
+  } else {
+    pointer.x = e.data.x;
+    pointer.y = e.data.y;
+  }
+};
+
+function frame(now) {
+  const dt = last ? (now - last) / 1000 : 0;
+  last = now;
+
+  // Ease toward the pointer, the same at any frame rate (chapter 15).
+  const k = 1 - Math.exp(-12 * dt);
+  dot.x += (pointer.x - dot.x) * k;
+  dot.y += (pointer.y - dot.y) * k;
+
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, ctx.canvas.width / dpr, ctx.canvas.height / dpr);
+  ctx.fillStyle = '#FF3B1F';
+  ctx.beginPath();
+  ctx.arc(dot.x, dot.y, 8, 0, Math.PI * 2);
+  ctx.fill();
+
+  requestAnimationFrame(frame);
+}
+```
+
+</Snippet>
+</div>
+
+The worker's loop is the same `requestAnimationFrame` loop as in chapter 14, because dedicated workers have `requestAnimationFrame` too. Only the input arrives differently, as messages.
+
+<Beat kind="drill">Judge the motion</Beat>
+
+The medium decides what a motion costs. It doesn't decide whether the motion is right. Two versions of the same move: pick the better one, then say why in one word.
+
+<Drill kind="blind-ab" trials={5} chapter={19} />

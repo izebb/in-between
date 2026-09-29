@@ -64,6 +64,7 @@
     };
   }
   function move(e: PointerEvent) {
+    if (scrubbing && !drag) return scrubAt(e);
     if (!drag) return;
     const dms = ((e.clientX - drag.x0) / pw) * total;
     const snap = (v: number) => Math.round(v / frameMs) * frameMs;
@@ -72,12 +73,19 @@
   }
   function up() {
     drag = null;
+    scrubbing = false;
   }
-  function scrub(e: PointerEvent) {
-    if (drag) return;
+  let scrubbing = false;
+  function scrubAt(e: PointerEvent) {
     const r = (e.currentTarget as Element).getBoundingClientRect();
     const ms = ((e.clientX - r.left - LABEL) / pw) * total;
     if (ms >= 0) onscrub?.(Math.min(total, ms));
+  }
+  function scrub(e: PointerEvent) {
+    if (drag) return;
+    scrubbing = true;
+    (e.currentTarget as Element).setPointerCapture?.(e.pointerId);
+    scrubAt(e);
   }
   function key(i: number) {
     return (e: KeyboardEvent) => {

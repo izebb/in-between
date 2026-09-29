@@ -5,10 +5,10 @@
    */
   import { onMount, onDestroy, tick } from "svelte";
   import { createLoop, type Loop } from "@inbetween/core";
-  import { prefs } from "~/lib/prefs.svelte";
+  import { prefs, watchPlateStill } from "~/lib/prefs.svelte";
   import { resize } from "~/lib/actions";
 
-  let { initial = 800, modes = ["transform", "left", "canvas"] }: { initial?: number; modes?: ("transform" | "left" | "canvas")[] } = $props();
+  let { initial = 800, modes = ["transform", "left", "canvas"], readout = true }: { initial?: number; modes?: ("transform" | "left" | "canvas")[]; readout?: boolean } = $props();
 
   let n = $state(initial);
   let mode = $state<"transform" | "left" | "canvas">(modes[0]);
@@ -20,6 +20,10 @@
   let frameMs = $state(0);
   let fps = $state(0);
   let visible = false;
+  let plateStill = $state(false);
+  /** Under reduced motion or Still, the test runs only when the reader asks for it. */
+  let requested = $state(false);
+  const held = $derived((prefs.reduced || plateStill) && !requested);
   let dots: HTMLElement[] = [];
   const cap = $derived(mode === "canvas" ? 20000 : 3000);
 
@@ -78,7 +82,7 @@
   function start() {
     loop?.stop();
     if (!visible) return;
-    if (prefs.reduced) {
+    if ((prefs.reduced || plateStill) && !requested) {
       frame(0);
       return;
     }
@@ -101,6 +105,8 @@
   $effect(() => {
     void n;
     void mode;
+    void requested;
+    void plateStill;
     build().then(start);
   });
 
@@ -112,7 +118,11 @@
       else loop?.stop();
     });
     io.observe(host.parentElement!);
-    return () => io.disconnect();
+    const off = watchPlateStill(host, (v) => (plateStill = v));
+    return () => {
+      io.disconnect();
+      off();
+    };
   });
   onDestroy(() => loop?.stop());
   const labels = { transform: "DOM · transform", left: "DOM · left/top", canvas: "Canvas 2D" };
@@ -134,9 +144,14 @@
     <canvas bind:this={canvas} class:hidden={mode !== "canvas"} style={`height:${H}px`}></canvas>
   </div>
   <div class="readout mono" aria-live="off">
-    <span>frame <b>{frameMs ? frameMs.toFixed(1) : "—"}</b>ms</span>
-    <span><b>{fps ? Math.round(fps) : "—"}</b> fps</span>
-    <span>budget {Math.round(1000 / 60 * 10) / 10}ms at 60Hz · 8.3ms at 120Hz</span>
+    {#if held}
+      <span>Still. The test moves the dots, so it runs only when you ask.</span>
+      <button class="btn small" type="button" onclick={() => (requested = true)}>Run the test</button>
+    {:else if readout}
+      <span>frame <b>{frameMs ? frameMs.toFixed(1) : "—"}</b>ms</span>
+      <span><b>{fps ? Math.round(fps) : "—"}</b> fps</span>
+      <span>budget {Math.round(1000 / 60 * 10) / 10}ms at 60Hz · 8.3ms at 120Hz</span>
+    {/if}
   </div>
 </div>
 
@@ -150,6 +165,6 @@
   .dom :global(.d) { position: absolute; left: 0; top: 0; width: 6px; height: 6px; margin: -3px 0 0 -3px; border-radius: 50%; background: var(--ink); }
   canvas { display: block; width: 100%; }
   .hidden { display: none; }
-  .readout { display: flex; flex-wrap: wrap; gap: 0.25rem 1.25rem; font-size: var(--text-xs); color: var(--graphite-strong); }
+  .readout { display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem 1.25rem; font-size: var(--text-xs); color: var(--graphite-strong); }
   .readout b { color: var(--ink); font-weight: 500; }
 </style>

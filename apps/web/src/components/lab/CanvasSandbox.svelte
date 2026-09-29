@@ -167,7 +167,7 @@ function draw(ctx, s, width, height) {
   .code-col { display: flex; flex-direction: column; height: 100%; min-height: 480px; max-height: 720px; }
   .code-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding: 0.7rem 0.75rem; border-bottom: 1px solid var(--rule); }
   .code-head .smallcaps { color: var(--graphite-strong); }
-  .code-body { flex: 1; position: relative; }
+  .code-body { flex: 1; position: relative; min-height: 320px; overflow: hidden; }
   .select { width: 100%; font-size: var(--text-sm); padding: 0.3rem 0.4rem; border: 1px solid var(--rule); border-radius: 5px; background: var(--paper); color: var(--ink); }
   .row { display: flex; gap: 0.3rem; }
   .readouts { display: flex; gap: 1rem; font-size: var(--text-xs); color: var(--graphite-strong); }

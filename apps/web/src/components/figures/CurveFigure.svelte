@@ -20,8 +20,10 @@
     height?: number;
     label?: string;
     compareLabel?: string;
+    xLabel?: string;
+    yLabel?: string;
   }
-  let { easing, compare, duration = 600, velocity = true, track = true, stepper = false, height = 220, label, compareLabel }: Props = $props();
+  let { easing, compare, duration = 600, velocity = true, track = true, stepper = false, height = 220, label, compareLabel, xLabel, yLabel }: Props = $props();
 
   const spec = $derived(parseSpec(easing));
   const specB = $derived(compare ? parseSpec(compare) : null);
@@ -40,7 +42,7 @@
 
 <div class="curve-figure" use:figurePlay={{ transport, onstill: (s) => (still = s) }}>
   <div class="graphs" class:single={!velocity}>
-    <CurveGraph {spec} compare={specB} {progress} editable={false} {height} />
+    <CurveGraph {spec} compare={specB} {progress} editable={false} {height} {xLabel} label={yLabel ?? "position"} />
     {#if velocity}<VelocityGraph {spec} compare={specB} {progress} {height} />{/if}
   </div>
   {#if track}

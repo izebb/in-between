@@ -88,6 +88,7 @@
     transport.offline(every, (s, i, total) => {
       const last = i === total;
       pencils.red = last ? realRed : pencils.blue;
+      (pencils as Record<string, unknown>).ghost = !last;
       oc.clearRect(0, 0, w, h);
       prog!.draw!(oc, s, w, h);
       c.save();
@@ -97,6 +98,7 @@
       c.restore();
     });
     pencils.red = realRed;
+    (pencils as Record<string, unknown>).ghost = false;
   }
 
   function redraw() {

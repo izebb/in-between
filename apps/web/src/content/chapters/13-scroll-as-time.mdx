@@ -1,0 +1,245 @@
+---
+number: 13
+lede: "Scroll is a clock the reader holds. Let it drive the motion, and never take it back."
+---
+
+Most animation runs on a clock. Something starts it, and it takes the time it was given, whether anyone is watching or not. Scroll is another kind of clock. It only moves when the reader moves it, and it can stop, go back, or race.
+
+Tie an animation to scroll and the reader holds the playhead. That's a gift when the motion shows where they are. It turns into hijacking when the page takes the wheel away from them.
+
+<Beat kind="see">The page is the playhead</Beat>
+
+Scroll the small page in the figure. Go slowly, then quickly. Stop halfway through a card. Then scroll back up.
+
+<Figure n="13.1" caption="A progress bar and card reveals, driven by scroll" static>
+  <Scroll />
+</Figure>
+
+The red line at the top is exactly as long as you are far down the page. Each card rises into place as it arrives. Stop, and everything stops, halfway if that's where you are. Scroll back, and it all runs backwards.
+
+Nothing here has a duration, and no script moves anything. The browser reads the scroll position and turns it into each animation's progress.
+
+<Beat kind="feel">Who is holding the wheel?</Beat>
+
+Now press **Scroll-jacked** and scroll the same page again, with a mouse wheel or a trackpad. Then switch back to **Native scroll**. Don't watch the cards this time. Pay attention to your hand. (The jack takes over the wheel, so on a touchscreen both modes feel the same.)
+
+**Which page feels like yours?**
+
+The native page does what your hand does, when your hand does it. The jacked page starts late and keeps sliding after you've stopped. It gets to the same place in the end, but on its own schedule, and every small correction you make arrives late. Within a few scrolls you're steering it instead of scrolling it. Same page, same cards. Only one of them lets you drive.
+
+<Beat kind="more">Scroll is a timeline</Beat>
+
+<Margin kind="def">
+  <p><b>Scroll-driven animation.</b> An animation whose timeline is a scroll position instead of time. <code>scroll()</code> follows how far a scroller has scrolled. <code>view()</code> follows how far one element has travelled through the scroller's visible area.</p>
+</Margin>
+
+Every animation is two things: what changes, written as keyframes, and a timeline that says how far along it is. Usually the timeline is the document's clock, counting milliseconds, and a duration says how many of them the animation lasts.
+
+A scroll-driven animation keeps the keyframes, the easing and the fill, and swaps the clock for a scroll position. At the top of the scroller it is at 0%; at the bottom, 100%. There's no duration, because there's nothing to count. In figure 13.1 the red line runs on `scroll()`, and each card runs on its own `view()`.
+
+That changes who decides the speed. On a clock, the designer does: 280ms, whether the reader is ready or not. On a scroll timeline, the reader does. The motion can't be too slow or too fast. It runs at reading speed, because reading is what drives it.
+
+<Beat kind="more">When scrubbing helps</Beat>
+
+<Margin kind="wild">
+  <p>Apple's product pages made scroll-scrubbed product shots famous: scroll down and the product opens or turns, scroll back and it reverses. Some have been built as a long sequence of still frames drawn to a canvas, the frame picked by the scroll position.</p>
+</Margin>
+
+Scrub with scroll when the motion *is* a position, or belongs to one:
+
+- **Progress.** A reading bar, a step counter, a contents list that marks the section you're in. Half full means half read.
+- **Reveals tied to reading.** A card that settles as it arrives, a figure that draws itself in as you reach it. Stop, and it waits for you.
+- **Parallax, lightly.** A background that moves a little slower than the text reads as further away. A little. Strong parallax makes the whole page swim.
+- **Step-by-step explanations.** A diagram that changes as you read each paragraph beside it, and changes back if you scroll up to reread. This is scrollytelling; chapter 23 builds one.
+
+<Margin kind="note">
+  <p>WCAG 2.3.3, <i>Animation from Interactions</i> (level AAA), asks that motion triggered by interaction can be turned off, unless it's essential. Scrolling is an interaction.</p>
+</Margin>
+
+Under reduced motion, keep what the reader needs and drop the rest. A progress bar can stay: it's small, and it moves only as the reader does, like the scrollbar beside it. Reveals and parallax go. Figure 13.1 does this. With reduced motion on, the bar still fills and the cards are simply there.
+
+<Beat kind="more">When it's hijacking</Beat>
+
+Scroll makes one promise: *the page moves exactly as much as I do, when I do.* People rely on it without thinking, on every page they read. Hijacking breaks it, usually in one of three ways:
+
+- **Smoothing.** The page cancels the wheel, remembers where you asked to go, and eases toward it frame by frame. That's the jacked mode in figure 13.1, and it's what many smooth-scroll libraries do. Every scroll now lags, and keeps going after you stop.
+- **Pacing.** One flick, one section, at the designer's speed. A quick reader has to wait. A careful one is thrown past the line they were reading.
+- **Pinning.** The page stops moving, and your scrolling plays a film instead. A short pin that is clearly scrubbed can work. A long one feels like the page is stuck.
+
+The browser's own smooth scrolling and the trackpad's momentum are fine. They're the same on every page, and the reader's hand has learned them. A page that adds its own is a new physics for one site, stacked on top of the one the hand expects.
+
+CSS scroll snap sits in between. While a finger is on the screen, the page follows it, and the browser picks a resting place only when the gesture ends. That suits carousels and galleries, where each stop is a thing. On a page of full-screen sections, `scroll-snap-type: y mandatory` means no scroll can end between two sections. The reader can stop only where the designer allowed: pacing again.
+
+The test is simple. Stop your hand: does the page stop? Reverse it: does the page reverse at once, by the same amount? If both, the reader is scrubbing. If not, you've taken the wheel.
+
+<Beat kind="more">Triggered or scrubbed</Beat>
+
+There are two ways to tie motion to scrolling, and they feel different.
+
+A **triggered** animation waits for its element to come into view, usually noticed by an `IntersectionObserver`, then plays an ordinary animation on the clock. Once it starts, it's on its own: 360ms however fast the reader scrolls, and it finishes even if they stop. A **scrubbed** animation has no clock. Its progress is the scroll position, so it moves only while the page moves.
+
+| | Triggered | Scrubbed |
+|---|---|---|
+| Built with | `IntersectionObserver` and a transition | `scroll()` or `view()` as its timeline |
+| Runs on | the clock, once started | the scroll position |
+| Reader stops | it finishes anyway | it stops where they are |
+| Reader scrolls back | it stays done | it runs backwards |
+| Speed set by | the designer | the reader |
+
+So choose by what the motion says. If it says *something happened*, trigger it: a card arrived, a number counted up, a chart drew its bars. Those should be seen whole, at a speed that reads well. A chart frozen half-drawn because the reader paused says something false. If the motion says *where you are*, scrub it. Half a progress bar is true.
+
+Scrubbed reveals have one trap. The reader can stop in the middle of one and leave a card half-faded and hard to read. So finish the reveal early. The cards in figure 13.1 use `animation-range: entry 0% cover 30%`. Each starts when its top edge appears at the bottom of the view, and it's done while the card is still in the lower half, before you get to it.
+
+`view()` measures one element's trip through the view, and the named ranges pick out parts of that trip:
+
+| Range | 0% | 100% |
+|---|---|---|
+| `cover` | its top edge meets the bottom of the view | its bottom edge meets the top: the whole trip |
+| `entry` | its top edge meets the bottom | its bottom edge meets the bottom: fully in |
+| `contain` | fully in | its top edge meets the top |
+| `exit` | its top edge meets the top | its bottom edge meets the top: gone |
+
+That's for an element shorter than the view. For one taller than the view, `contain` is the stretch where it fills the view.
+
+<Beat kind="more">Easing bends distance</Beat>
+
+On a scroll timeline, the easing curve maps scroll to progress, not time to progress. For a reveal that's fine: with an ease-out, the card does most of its travel early in the range and settles over the rest.
+
+For a progress bar it's a lie. With `--ease-out`, the bar would be three-quarters full a quarter of the way down the page, and 95% full at the halfway point. A measurement has to be `linear`, and in CSS you have to say so. The default timing function is `ease`, which would put the bar at 80% halfway down.
+
+Stagger comes free. Each card's `view()` starts when that card appears, so a card lower on the page starts later, by exactly the scroll between them. On a scrubbed page, the layout is the exposure sheet.
+
+Scroll effects used to be written in JavaScript: listen for `scroll`, read the position, set a style. That work runs on the main thread, and in modern browsers scrolling mostly doesn't, so the page can move before the script hears about it, and a busy script falls behind. In Chromium, a scroll-driven animation of `transform` or `opacity` can run off the main thread, in step with the scroll itself.
+
+<Beat kind="tune">Scrub it by hand</Beat>
+
+A scroll timeline hands the playhead to the reader. Take it yourself. This is a list entering on the clock, with its exposure sheet underneath. Don't press play yet.
+
+- Drag the playhead along the time bar under the stage: slowly, then fast, then back. The list moves at your speed, in either direction. That's all a scroll timeline does.
+- Let go partway through. The rows sit there half-faded, and they stay that way until you move again. That's the trap of a scrubbed reveal with a long range.
+- Set **Step** to 0 and scrub again. The rows move as one block. On a page they wouldn't: each row's `view()` starts when that row appears, so the layout staggers them.
+- Now press play. That's the triggered version: the same sheet, on the clock, at its own speed, whatever you do.
+
+<Lab id="exposure-sheet" source="list" code={false} />
+
+<Beat kind="write">The notation</Beat>
+
+<Margin kind="read">
+  <p>Bramus Van Damme's <i>scroll-driven-animations.style</i> is a collection of demos of both timelines, <code>scroll()</code> and <code>view()</code>.</p>
+</Margin>
+
+A scroll-driven animation is an ordinary CSS animation with a different timeline. Write the `@keyframes`, then set `animation-timeline`. Three rules:
+
+- **No duration.** The scroll replaces the clock.
+- **Timeline after the shorthand.** The `animation` shorthand resets `animation-timeline`, so set it afterwards.
+- **Name the scroller when it matters.** `scroll()` alone means the nearest scroller, on its block axis. `scroll(root)` means the page.
+
+Scroll-driven animations shipped first in Chromium and aren't in every browser yet. So build the page to work without them, and add them inside `@supports`. Where they're missing, the cards are simply there and the bar isn't drawn. In JavaScript the same timelines exist as objects, `ScrollTimeline` and `ViewTimeline`, which you pass to `element.animate()` as its `timeline`.
+
+<div class="snippets">
+<Snippet title="13 · Scroll as Time: a reading progress bar" lab="curve-bench" easing="linear" compare="--ease-out">
+
+```css
+/* As full as you are far down the page. */
+@keyframes grow {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
+.progress {
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: currentColor;
+  transform-origin: left;
+  transform: scaleX(0); /* no support: no bar */
+}
+
+@supports (animation-timeline: scroll()) {
+  .progress {
+    /* No duration: the scroll is the clock. linear: it's a measurement. */
+    animation: grow linear both;
+    /* After the shorthand, which resets it. root = the page. */
+    animation-timeline: scroll(root);
+  }
+}
+```
+
+</Snippet>
+
+<Snippet title="13 · Scroll as Time: a reveal scrubbed by view()" lab="exposure-sheet" source="list">
+
+```css
+@keyframes reveal {
+  from { opacity: 0; translate: 0 24px; }
+}
+
+/* Only where scroll timelines exist, and only if motion is welcome.
+   Everywhere else the cards are simply there. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .card {
+      animation: reveal cubic-bezier(.2, .8, .2, 1) both;
+      animation-timeline: view();
+      /* From its first pixel in, to 30% of its trip through the view. */
+      animation-range: entry 0% cover 30%;
+    }
+  }
+}
+```
+
+</Snippet>
+
+<Snippet title="13 · Scroll as Time: a triggered reveal, the CSS" lab="exposure-sheet" source="list">
+
+```css
+/* Hidden only once the script has run (it adds .will-reveal),
+   so without it nothing stays invisible. */
+.will-reveal .reveal:not(.is-in) {
+  opacity: 0;
+  translate: 0 24px;
+}
+
+/* In view: it plays on the clock, 360ms, whatever the scroll does. */
+.will-reveal .reveal.is-in {
+  transition: opacity 240ms linear,
+              translate 360ms cubic-bezier(.2, .8, .2, 1);
+}
+```
+
+</Snippet>
+
+<Snippet title="13 · Scroll as Time: a triggered reveal, the observer" lab="exposure-sheet" source="list">
+
+```js
+// Reveal each .reveal once, the first time it scrolls into view.
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+if (!reduce) {
+  document.documentElement.classList.add('will-reveal'); // hide them only now
+
+  const io = new IntersectionObserver((entries) => {
+    for (const entry of entries) {
+      if (!entry.isIntersecting) continue;
+      entry.target.classList.add('is-in');
+      io.unobserve(entry.target); // once: scrolling back won't replay it
+    }
+  }, {
+    threshold: 0.2,                  // a fifth of it showing...
+    rootMargin: '0px 0px -10% 0px',  // ...above a line 10% up from the bottom
+  });
+
+  document.querySelectorAll('.reveal').forEach((el) => io.observe(el));
+}
+```
+
+</Snippet>
+</div>
+
+The observer has two dials. `rootMargin` moves the edges of the view: here the bottom edge comes up by a tenth, so nothing counts until it's properly on screen. `threshold` says how much of the element must be inside those edges. And `unobserve` makes the reveal a one-off, so the page doesn't replay its entrance every time the reader scrolls back past it.
+
+<Beat kind="drill">Timed right</Beat>
+
+Once the reader arrives, a triggered reveal runs on the clock, so its timing is back in your hands. Each round shows two versions of the same change. Pick the better-timed one, then read why.
+
+<Drill kind="blind-ab" topic="timing" trials={5} chapter={13} />

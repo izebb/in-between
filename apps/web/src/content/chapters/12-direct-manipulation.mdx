@@ -1,0 +1,435 @@
+---
+number: 12
+lede: "While you hold it, it stays under your finger. When you let go, it keeps your speed."
+---
+
+export const letGo = (keep) => {
+  // A finger drags the card from rest, speeding up, 70% of the way, then lets go.
+  // A spring (response 0.35, bounce 0.1) takes it the rest of the way,
+  // starting at the finger's speed (keep) or from a standstill.
+  const hold = 0.35, at = 0.7, total = 0.8, dt = 0.001;
+  const k = ((2 * Math.PI) / 0.35) ** 2, c = (4 * Math.PI * 0.9) / 0.35;
+  const stops = [];
+  for (let i = 0; i < 21; i++) stops.push([(hold * i) / 21, at * (i / 21) ** 2]);
+  let x = at, v = keep ? (2 * at) / hold : 0;
+  for (let n = 0; hold + n * dt < total; n++) {
+    if (n % 10 === 0) stops.push([hold + n * dt, x]);
+    v += (-k * (x - 1) - c * v) * dt;
+    x += v * dt;
+  }
+  stops.push([total, 1]);
+  return `linear(${stops.map(([t, p]) => `${+p.toFixed(4)} ${+((t / total) * 100).toFixed(2)}%`).join(", ")})`;
+};
+
+export const kept = letGo(true);
+
+export const dropped = letGo(false);
+
+export const dragLab = `// Drag the puck. While you hold it, it stays under your finger.
+// Past either end it rubber-bands. Let go, and the landing is
+// projected, the nearest stop is chosen, and a spring carries it
+// there, starting at your speed.
+const RUBBER = 0.55;         // c: 0 is a wall, 0.55 is iOS-like
+const RESPONSE = 0.35;       // the release spring, in seconds
+const BOUNCE = 0.1;          // 0 = no overshoot
+const KEEP_VELOCITY = true;  // hand your speed to the spring
+const RATE = 0.998;          // friction, to project the landing
+
+const lambda = -Math.log(RATE) * 1000;               // per second
+const k = (2 * Math.PI / RESPONSE) ** 2;             // stiffness, mass 1
+const c = (4 * Math.PI * (1 - BOUNCE)) / RESPONSE;   // damping
+
+function setup(w, h) {
+  const min = Math.round(w * 0.15), max = w - min;
+  return { x: min, v: 0, y: Math.min(h / 2, 120), min, max,
+    stops: [min, (min + max) / 2, max], target: min,
+    drag: false, grab: 0, finger: 0, samples: [],
+    landing: null, speed: null, idle: 0.8 };
+}
+
+// Past an edge: (1 - 1 / (past * c / d + 1)) * d. And its inverse,
+// to catch the puck past an edge without a jump.
+function band(past, d) {
+  return Math.sign(past) * (1 - 1 / ((Math.abs(past) * RUBBER) / d + 1)) * d;
+}
+function unband(past, d) {
+  if (RUBBER <= 0) return 0;
+  const p = Math.min(Math.abs(past), d * 0.99);
+  return (Math.sign(past) * p * d) / (RUBBER * (d - p));
+}
+function limit(s, raw, f = band) {
+  const d = s.max - s.min;
+  if (raw < s.min) return s.min + f(raw - s.min, d);
+  if (raw > s.max) return s.max + f(raw - s.max, d);
+  return raw;
+}
+
+// Release velocity, px/s: the least-squares slope of the last 100ms.
+function velocity(samples) {
+  const n = samples.length;
+  if (n < 2) return 0;
+  let st = 0, sx = 0, stt = 0, stx = 0;
+  for (const p of samples) {
+    const t = (p.t - samples[0].t) / 1000;
+    st += t; sx += p.x; stt += t * t; stx += t * p.x;
+  }
+  const d = n * stt - st * st;
+  return d === 0 ? 0 : (n * stx - st * sx) / d;
+}
+
+function release(s, v) {
+  s.speed = v;
+  s.landing = s.x + v / lambda;                // where the throw would stop
+  s.target = s.stops.reduce((a, b) =>
+    Math.abs(b - s.landing) < Math.abs(a - s.landing) ? b : a);
+  s.v = KEEP_VELOCITY ? v : 0;
+}
+
+function update(s, dt) {
+  if (s.idle > 0 && (s.idle -= dt) <= 0) release(s, 1200);  // one throw, to start
+  if (s.drag) return;
+  s.v += (-k * (s.x - s.target) - c * s.v) * dt;   // the pull, minus friction
+  s.x += s.v * dt;                                 // semi-implicit Euler
+}
+
+function onPointer(s, p, type) {
+  if (type === "down" && Math.abs(p.x - s.x) < 30 && Math.abs(p.y - s.y) < 30) {
+    s.drag = true;                                 // caught: it stops right here
+    s.idle = 0; s.landing = null; s.samples = [];
+    s.grab = p.x - limit(s, s.x, unband);          // keep where you took hold
+  }
+  if (!s.drag) return;
+  const t = performance.now();
+  s.finger = p.x - s.grab;
+  s.x = limit(s, s.finger);                        // 1:1 inside, banded outside
+  s.samples.push({ x: s.x, t });
+  while (s.samples.length > 2 && t - s.samples[0].t > 100) s.samples.shift();
+  if (type === "up") {
+    s.drag = false;
+    release(s, velocity(s.samples));
+  }
+}
+
+function draw(ctx, s, w, h) {
+  const y = s.y, P = pencils;
+  ctx.clearRect(0, 0, w, h);
+  segment(ctx, s.min, y, s.max, y, P.rule);
+  for (const x of s.stops) segment(ctx, x, y + 20, x, y + 28, P.graphite);
+  if (s.drag && Math.abs(s.finger - s.x) > 1) {    // rubber-banding
+    segment(ctx, s.x, y, s.finger, y, P.blue);
+    circle(ctx, s.finger, y, 6, null, P.blue);
+    label(ctx, "finger", clamp(s.finger, 20, w - 20), y - 14, P.blue, "center");
+  }
+  if (s.landing != null) {
+    const lx = clamp(s.landing, 16, w - 16);
+    circle(ctx, lx, y, 16, null, P.blue);
+    label(ctx, "would stop", clamp(lx, 34, w - 34), y - 26, P.blue, "center");
+    segment(ctx, s.target, y + 18, s.target, y + 30, P.blue, 3);
+  }
+  circle(ctx, s.x, y, 14, P.red);
+  label(ctx, "rubber " + RUBBER + " · response " + RESPONSE + " · bounce " + BOUNCE, 20, y + 70);
+  if (s.speed != null) label(ctx, "release " + Math.round(s.speed) + " px/s", 20, y + 86);
+}
+`;
+
+Most motion in an interface is played *to* you. Direct manipulation is played *by* you. You put a finger on a card and move it, and the card moves because you did. There is no curve and no duration. There is only your hand.
+
+That makes a promise, and it is easy to break. While your finger is down, the thing stays under it: however far you move, it moves, at once. When you let go, it doesn't stop and start again. It carries on at the speed your hand gave it. And whatever it is doing, you can take hold of it again.
+
+<Beat kind="see">Letting go</Beat>
+
+A finger drags a card most of the way along its track, speeding up, and lets go. Then a spring takes the card the rest of the way. In the top row the spring starts at the finger's speed. In the bottom row it starts from rest. Every ghost is one frame.
+
+<Figure n="12.1" caption="One drag, two releases">
+  <SpacingChart rows={[
+    { label: "speed kept", easing: kept, duration: 800, to: 440 },
+    { label: "speed dropped", easing: dropped, duration: 800, to: 440, tone: "blue" }
+  ]} readout={false} ghosts="always" />
+</Figure>
+
+Until the finger lifts, the rows are the same: the ghosts spread out as the hand speeds up. Then they part. The top row carries straight on and closes up gently into place. In the bottom row the gaps collapse at the point of release, open up again, and close again. For a moment the card nearly stopped, though nothing stopped it. The hand was moving, and the card forgot.
+
+<Beat kind="feel">Throw it</Beat>
+
+Now do it yourself. Drag the card slowly: the spot you took hold of stays under your finger. Pull it past either end. Then fling it and let go, first with *Keep the velocity* on, then with it off.
+
+<Figure n="12.2" caption="A card you can hold, throw, and catch">
+  <Drag />
+</Figure>
+
+With the velocity kept, the throw and the settle are one motion. Without it, the card stops dead as your finger lifts, then sets off again on its own, as if it slipped out of your hand. Last, throw it and grab it before it lands. It stops under your finger, wherever it is.
+
+<Beat kind="more">Under the finger</Beat>
+
+<Margin kind="def">
+  <p><b>1:1 tracking.</b> The thing moves exactly as far as the pointer moved, in the same event, with no easing and no smoothing. The point you grabbed stays under the pointer for the whole drag.</p>
+</Margin>
+
+The first half of the promise has no animation in it at all. On every pointer event, the card moves by exactly as much as the pointer did. Three common mistakes break it:
+
+- **A transition on `transform`.** Every move starts a short tween toward the finger, so the card is always catching up. It trails the finger, and the faster you move, the further behind it falls.
+- **Smoothing.** `x += (finger − x) · 0.2` on each frame looks smooth, and it puts the card behind the finger on purpose. Your hand is already smooth. Anything you add is lag.
+- **Centring on the pointer.** Take hold of a card near its edge and it jumps to put its middle under your finger. Remember the offset between the pointer and the card at `pointerdown`, and keep it for the whole drag.
+
+On the web, Pointer Events give one set of events for mouse, pen and touch: `pointerdown`, `pointermove`, `pointerup`. Two more details make them work for dragging:
+
+- **Pointer capture.** Call `setPointerCapture(e.pointerId)` in `pointerdown`, and every later event from that pointer comes to your element, even when the pointer is no longer over it. A fast mouse can leave the card behind between two events. Without capture, the moves stop arriving, and a `pointerup` somewhere else is never heard.
+- **`touch-action: none`.** On a touch screen the browser wants a moving finger for itself, to scroll or zoom. When it takes over, it sends `pointercancel` and your moves stop. `touch-action: none` on the card tells it not to. If the card only moves sideways, `touch-action: pan-y` still lets vertical swipes scroll the page.
+
+<Beat kind="more">Past the edge</Beat>
+
+A card on a track has ends. When the finger goes past one, the card can do one of three things:
+
+- **Stop at the edge.** It's a wall. The card leaves your finger behind, and the promise is broken.
+- **Keep following 1:1.** The edge means nothing, and the card goes wherever you drag it.
+- **Rubber-band.** It keeps following, but less and less the further you pull.
+
+<Margin kind="wild">
+  <p>Pull an iPhone list past its top and it keeps following your finger, less and less; let go and it springs back. UIKit scroll views do this by default, and their <code>bounces</code> property turns it off.</p>
+</Margin>
+
+The rubber band is the honest one. The card never stops moving while your finger moves, so it never feels as if you lost your grip. But every extra pixel costs more, and that resistance says: there is nothing more this way. The usual way to imitate the iOS rubber band is one line:
+
+<p><code>pulled = (1 − 1 / (x · c / d + 1)) · d</code></p>
+
+Here `x` is how far the finger is past the edge, `d` is the size of the thing (the track's length, a list's height), and `c` is a constant, about `0.55`. Right at the edge the card moves at `c` times the finger's speed, about half. Further out that share keeps falling. And however far you pull, the card never gets `d` past the edge. For a track 400px long:
+
+| Finger past the edge | Card past the edge | Share |
+|---|---|---|
+| 25px | 13px | 53% |
+| 100px | 48px | 48% |
+| 200px | 86px | 43% |
+| 400px | 142px | 35% |
+| 800px | 210px | 26% |
+
+Fig. 12.2 uses the width of its track as `d`. Switch *Rubber-band* off and pull past an end: the card stops dead at the edge and your finger slides on without it.
+
+<Beat kind="more">Let go: keep the velocity</Beat>
+
+The second half of the promise is the handoff. At the moment of release the card is moving, and whatever happens next has to start at that speed. It takes three steps, each from an earlier chapter:
+
+1. **Measure.** The release velocity is the slope of the last 100ms of pointer positions (chapter 06). Older samples describe a different gesture.
+2. **Project and choose.** Where would the throw stop, with friction? At `x + v / λ` (chapter 06). Fig. 12.2 uses iOS's `normal` friction, so a release at 1000 px/s lands about 500px further on. The stop nearest that landing is the target: left, middle or right.
+3. **Carry.** A spring takes the card to the target, starting at the release velocity (chapter 05). Its first position and speed are the card's last position and speed under the finger, so there is no seam.
+
+After every throw, the readout under Fig. 12.2 shows the release velocity, the projected landing and the stop it chose. Turn off *Project the landing* and make a short, quick flick: the card goes back to the stop nearest where you let go, as if the flick didn't count.
+
+Now throw it toward the middle, but gently. The projection falls short and picks the stop the card started from. The spring starts out moving the way you threw it, slows, turns, and comes back. That turn is honest: the card really was moving that way, and the spring spends the speed before it returns.
+
+A spring that starts with the finger's speed can overshoot with very little bounce. That overshoot is the hand's momentum, not the spring's (chapter 05, Fig. 5.4), so a release spring should be well damped. The one in Fig. 12.2 has `response 0.35` and `bounce 0.1`.
+
+<Beat kind="more">Catch it</Beat>
+
+<Margin kind="read">
+  <p>Apple's WWDC 2018 talk <i>Designing Fluid Interfaces</i> makes the case for gestures that respond at once, track the finger 1:1, and can interrupt any animation.</p>
+</Margin>
+
+Interruptible means the card never makes you wait. Put your finger on it while it's settling and it stops, right there, under your finger. The spring is simply dropped. Its whole state was a position and a velocity, and the finger now owns both. There's nothing to finish, cancel or reverse.
+
+- **Never ignore input while something moves.** Don't lock the drag until the spring settles. The moment someone wants to change their mind is exactly when the thing is moving.
+- **Stop where it is, not where it was going.** Jumping to the target first is a teleport. With the Web Animations API, call `commitStyles()` and then `cancel()`: the element keeps the position it had.
+- **Take hold from where it is.** Measure the grab offset from the card's position now, so the catch doesn't jump. If it's past an edge, undo the rubber band first to find where the finger would be.
+- **Start a new gesture.** Clear the velocity samples. The throw that sent it is over.
+
+<Beat kind="tune">Tune the release</Beat>
+
+This is the whole chapter in one small program: a puck on a track with three stops, dragged 1:1, rubber-banded past the ends, projected and sprung on release. The design is in the constants at the top. Change one at a time, and throw after each change.
+
+- Set `RUBBER` to `0`. Pull past an end: the edge is a wall, and the puck leaves your finger. Set it to `1`: the edge barely resists. Find the value where the edge feels like resistance, not a wall.
+- Set `KEEP_VELOCITY` to `false` and fling. Watch the puck stall where you let go.
+- Set `BOUNCE` to `0.4`. A hard throw now swings past its stop. Is that the throw, or the spring?
+
+<Lab id="canvas-sandbox" source={dragLab} title="Drag, rubber-band, release" />
+
+<Beat kind="write">The notation</Beat>
+
+CSS can't do the dragging, because it never learns where the finger is. Its part is to get out of the way. Everything else is JavaScript: Pointer Events for the drag, a spring for the release.
+
+<div class="snippets">
+<Snippet title="12 · Direct manipulation: a card that can be dragged" lab="canvas-sandbox" source={dragLab}>
+
+```css
+.track {
+  position: relative;
+}
+
+.card {
+  position: absolute;
+  left: 0;
+  touch-action: none;        /* a finger drags the card; the page doesn't pan or zoom */
+  -webkit-user-select: none;
+  user-select: none;         /* a drag never selects text */
+  cursor: grab;
+}
+
+/* If the card only moves sideways, let vertical swipes still scroll the page:
+   touch-action: pan-y; */
+
+.card.is-dragging {
+  cursor: grabbing;
+}
+
+/* No transition on transform. JS writes it on every pointer move and every
+   spring frame; a transition would leave the card behind the finger. */
+```
+
+</Snippet>
+
+<Snippet title="12 · Direct manipulation: 1:1, rubber-band, velocity" lab="canvas-sandbox" source={dragLab}>
+
+```js
+// Drag a card along its track: 1:1, with pointer capture.
+// stop() and release() are in the next card.
+const card = document.querySelector('.card');
+const C = 0.55;            // rubber-band constant, iOS-like
+let x = 0;                 // the card's offset, px
+let min = 0, max = 0;      // the ends of its travel
+let grab = 0;              // pointer minus card, kept for the whole drag
+const samples = [];        // positions from the last 100ms
+
+function moveTo(to) {
+  x = to;
+  card.style.transform = `translateX(${x}px)`;
+}
+
+// Past an edge it still follows, less and less: (1 − 1 / (x·c/d + 1))·d.
+const band = (past, d) =>
+  Math.sign(past) * (1 - 1 / ((Math.abs(past) * C) / d + 1)) * d;
+
+// The inverse: how far past the edge the finger is, for the card to sit here.
+const unband = (past, d) => {
+  const p = Math.min(Math.abs(past), d * 0.99);
+  return (Math.sign(past) * p * d) / (C * (d - p));
+};
+
+function limit(raw) {
+  const d = max - min;
+  if (raw < min) return min + band(raw - min, d);
+  if (raw > max) return max + band(raw - max, d);
+  return raw;
+}
+
+function unlimit(pos) {
+  const d = max - min;
+  if (pos < min) return min + unband(pos - min, d);
+  if (pos > max) return max + unband(pos - max, d);
+  return pos;
+}
+
+function sample(t) {
+  samples.push({ x, t });
+  while (samples.length > 2 && t - samples[0].t > 100) samples.shift();
+}
+
+// Px per second: the least-squares slope of the samples (chapter 06).
+function releaseVelocity() {
+  const n = samples.length;
+  if (n < 2) return 0;
+  let st = 0, sx = 0, stt = 0, stx = 0;
+  for (const s of samples) {
+    const t = (s.t - samples[0].t) / 1000;
+    st += t; sx += s.x; stt += t * t; stx += t * s.x;
+  }
+  const d = n * stt - st * st;
+  return d === 0 ? 0 : (n * stx - st * sx) / d;
+}
+
+card.addEventListener('pointerdown', (e) => {
+  stop();                                // catch it mid-flight, where it is
+  card.setPointerCapture(e.pointerId);   // every move comes here, even off the card
+  card.classList.add('is-dragging');
+  max = card.parentElement.clientWidth - card.offsetWidth;
+  grab = e.clientX - unlimit(x);         // keep the spot you took hold of
+  samples.length = 0;
+  sample(e.timeStamp);
+});
+
+card.addEventListener('pointermove', (e) => {
+  if (!card.hasPointerCapture(e.pointerId)) return;
+  moveTo(limit(e.clientX - grab));       // 1:1: no easing, no smoothing
+  sample(e.timeStamp);
+});
+
+card.addEventListener('pointerup', release);
+card.addEventListener('pointercancel', release);
+```
+
+</Snippet>
+
+<Snippet title="12 · Direct manipulation: release into a spring" lab="canvas-sandbox" source={dragLab}>
+
+```js
+// Uses card, x, min, max, moveTo() and releaseVelocity() from the card above.
+const lambda = -Math.log(0.998) * 1000;            // friction, to project (chapter 06)
+const response = 0.35, bounce = 0.1;               // the release spring (chapter 05)
+const k = ((2 * Math.PI) / response) ** 2;         // stiffness, for mass 1
+const c = (4 * Math.PI * (1 - bounce)) / response; // damping
+const reduce = matchMedia('(prefers-reduced-motion: reduce)');
+let raf = 0;
+
+function stop() {
+  cancelAnimationFrame(raf);
+}
+
+function release(e) {
+  if (!card.hasPointerCapture(e.pointerId)) return;
+  card.classList.remove('is-dragging');
+  const v = releaseVelocity();               // px/s, from the last 100ms
+  const landing = x + v / lambda;            // where the throw would stop
+  const stops = [min, (min + max) / 2, max];
+  const target = stops.reduce((a, b) =>
+    Math.abs(b - landing) < Math.abs(a - landing) ? b : a);
+  if (reduce.matches) return moveTo(target); // the drag was theirs; skip the settle
+  settle(target, v, e.timeStamp);
+}
+
+// A spring that starts at the finger's speed: semi-implicit Euler, a step per frame.
+function settle(target, v, t0) {
+  let last = t0;
+  const frame = (now) => {
+    const dt = Math.min(Math.max(now - last, 0), 32) / 1000;
+    last = now;
+    v += (-k * (x - target) - c * v) * dt;   // the pull, minus friction
+    moveTo(x + v * dt);
+    if (Math.abs(target - x) < 0.5 && Math.abs(v) < 5) moveTo(target);
+    else raf = requestAnimationFrame(frame);
+  };
+  raf = requestAnimationFrame(frame);
+}
+```
+
+</Snippet>
+
+<Snippet title="12 · Direct manipulation: the same release in Motion" lab="spring-bench" response={0.35} bounce={0.1}>
+
+```js
+import { animate } from 'motion';
+
+// Replaces stop() and settle() from the card above.
+// Motion takes velocity in px per second. Give it stiffness and damping:
+// in Motion 13, a spring set by duration or bounce ignores `velocity`.
+let controls = null;
+
+function stop() {
+  controls?.stop();       // it stops where it is, and x already holds that
+}
+
+function settle(target, v) {
+  controls = animate(x, target, {
+    type: 'spring',
+    stiffness: 322.3,     // response 0.35, bounce 0.1, mass 1
+    damping: 32.31,
+    velocity: v,
+    onUpdate: moveTo,
+  });
+}
+```
+
+</Snippet>
+</div>
+
+<Beat kind="drill">Blind A/B</Beat>
+
+Two versions of the same change. Pick the one that feels right, then say why in one word. Ask of each one: does it feel like something a hand could hold?
+
+<Drill kind="blind-ab" topic="direct" trials={5} chapter={12} />

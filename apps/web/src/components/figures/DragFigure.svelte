@@ -80,7 +80,8 @@
 
 <div class="drag">
   <div class="track" bind:this={track} use:resize={(width) => (w = width)}>
-    {#each detents as d (d)}<span class="detent" style={`left:${d + CARD / 2}px`}></span>{/each}
+    <!-- Placed by fraction of the track, so the server render fits any width before hydration. -->
+    {#each [0, 0.5, 1] as f (f)}<span class="detent" style={`left:calc(${f * 100}% + ${CARD / 2 - f * CARD}px)`}></span>{/each}
     {#if last}
       <span class="landing" style={`left:${Math.max(-40, Math.min(w + 40, last.landing + CARD / 2))}px`} title="Projected landing"></span>
     {/if}

@@ -241,5 +241,5 @@ box.animate(
   .code-col { display: flex; flex-direction: column; height: 100%; }
   .code-head { display: flex; align-items: center; justify-content: space-between; padding: 0.6rem 0.6rem 0.5rem 0.75rem; border-bottom: 1px solid var(--rule); }
   .code-head .smallcaps { color: var(--graphite-strong); }
-  .code-body { flex: 1; position: relative; min-height: 260px; }
+  .code-body { flex: 1; position: relative; min-height: 260px; overflow: hidden; }
 </style>

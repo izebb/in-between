@@ -73,6 +73,8 @@
 <div class="code-editor" bind:this={host}></div>
 
 <style>
-  .code-editor { position: relative; height: 100%; min-height: 200px; }
-  .code-editor :global(.cm-editor) { position: absolute; inset: 0; }
+  /* CodeMirror forces .cm-editor to position: relative, so the wrapper is the fixed box and clips. */
+  .code-editor { position: absolute; inset: 0; overflow: hidden; }
+  .code-editor :global(.cm-editor) { height: 100%; }
+  .code-editor :global(.cm-scroller) { overflow: auto; }
 </style>

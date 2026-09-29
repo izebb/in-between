@@ -31,7 +31,7 @@ function draw(ctx, s, w, h) {
   ctx.clearRect(0, 0, w, h);
   s.rows.forEach((r, i) => {
     const y = 34 + i * ((h - 40) / 3);
-    label(ctx, r.hz + "Hz", 12, y + 4, pencils.ink);
+    if (params.labels !== 0) label(ctx, r.hz + "Hz", 12, y + 4, pencils.ink);
     segment(ctx, 40, y + 12, w - 12, y + 12, pencils.rule);
     for (let k = 0; k < r.ticks.length; k += 1) {
       const x = r.ticks[k];
@@ -40,7 +40,7 @@ function draw(ctx, s, w, h) {
     circle(ctx, Math.min(r.perFrame, w - 16), y - 4, 6, pencils.blue);
     circle(ctx, Math.min(r.perSecond, w - 16), y + 12, 7, pencils.red);
   });
-  label(ctx, "blue: 3px per frame   red: 180px per second × dt", w - 12, h - 6, pencils.graphite, "right");
+  if (params.labels !== 0) label(ctx, "blue: 3px per frame   red: 180px per second × dt", w - 12, h - 6, pencils.graphite, "right");
 }
 `;
 
@@ -51,12 +51,12 @@ const RATES = [30, 60, 120];
 const LAMBDA = -Math.log(1 - 0.1) * 60;   // matches k = 0.1 at 60fps
 
 function setup(w, h) {
-  return { target: w - 40, clock: 0, rows: RATES.map((hz) => ({ hz, acc: 0, naive: 40, fixed: 40 })) };
+  return { target: w - 40, clock: 0, rows: RATES.map((hz) => ({ hz, acc: 0, naive: 64, fixed: 64 })) };
 }
 
 function update(s, dt) {
   s.clock += dt;
-  const target = s.clock % 3 < 1.5 ? 40 + (s.target - 40) : 40;
+  const target = s.clock % 3 < 1.5 ? s.target : 64;
   for (const r of s.rows) {
     r.acc += dt;
     const step = 1 / r.hz;
@@ -72,12 +72,12 @@ function draw(ctx, s, w, h) {
   ctx.clearRect(0, 0, w, h);
   s.rows.forEach((r, i) => {
     const y = 34 + i * ((h - 40) / 3);
-    label(ctx, r.hz + "Hz", 12, y + 4, pencils.ink);
-    segment(ctx, 40, y + 12, w - 20, y + 12, pencils.rule);
+    if (params.labels !== 0) label(ctx, r.hz + "Hz", 12, y + 4, pencils.ink);
+    segment(ctx, 56, y + 12, w - 20, y + 12, pencils.rule);
     circle(ctx, r.naive, y - 4, 6, pencils.blue);
     circle(ctx, r.fixed, y + 12, 7, pencils.red);
   });
-  label(ctx, "blue: k per frame   red: λ per second", w - 12, h - 6, pencils.graphite, "right");
+  if (params.labels !== 0) label(ctx, "blue: k per frame   red: λ per second", w - 12, h - 6, pencils.graphite, "right");
 }
 `;
 
@@ -142,7 +142,8 @@ function update(s, dt) {
   for (const b of s.balls) {
     b.vy += params.gravity * dt;
     b.x += b.vx * dt; b.y += b.vy * dt;
-    if (b.y > s.h - b.r) { b.y = s.h - b.r; b.vy *= -params.bounce; b.vx *= 1 - params.friction; }
+    // Friction is a rate per second, so the ball slides the same distance at any step size.
+    if (b.y > s.h - b.r) { b.y = s.h - b.r; b.vy *= -params.bounce; b.vx *= Math.exp(-params.friction * dt); }
     if (b.x < b.r) { b.x = b.r; b.vx *= -params.bounce; }
     if (b.x > s.w - b.r) { b.x = s.w - b.r; b.vx *= -params.bounce; }
   }
@@ -191,7 +192,7 @@ function draw(ctx, s, w, h) {
     circle(ctx, p.x, p.y, 3 * (1 - k) + 1, k < 0.15 ? pencils.red : pencils.ink);
   }
   ctx.globalAlpha = 1;
-  label(ctx, s.list.length + " alive · press and drag to move the emitter", 12, h - 8);
+  if (params.labels !== 0) label(ctx, s.list.length + " alive · press and drag to move the emitter", 12, h - 8);
 }
 `;
 
@@ -200,16 +201,19 @@ const trails = `// Motion trails from translucent clears: instead of erasing the
 const LOOP = 6;
 
 function setup(w, h) {
-  return { t: 0, w, h, first: true };
+  return { t: 0, w, h, first: true, since: 0 };
 }
 
-function update(s, dt) { s.t += dt; }
+function update(s, dt) { s.t += dt; s.since += dt; }
 
 function draw(ctx, s, w, h) {
   if (params.fade >= 1 || s.first) { ctx.clearRect(0, 0, w, h); s.first = false; }
   else {
+    // The fade is set per 60th of a second, and scaled by the time since the last paint,
+    // so the tails are the same length on a 60Hz and a 120Hz screen.
+    const a = 1 - Math.pow(1 - params.fade, s.since * 60);
     ctx.globalCompositeOperation = "destination-out";   // erase a little of everything
-    ctx.fillStyle = "rgba(0,0,0," + params.fade + ")";
+    ctx.fillStyle = "rgba(0,0,0," + a + ")";
     ctx.fillRect(0, 0, w, h);
     ctx.globalCompositeOperation = "source-over";
   }
@@ -219,6 +223,7 @@ function draw(ctx, s, w, h) {
     const y = h / 2 + Math.sin(a * 1.3) * (h * 0.32 - i * 10);
     circle(ctx, x, y, 7, i === 0 ? pencils.red : pencils.ink);
   }
+  s.since = 0;
 }
 `;
 
@@ -307,7 +312,7 @@ function draw(ctx, s, w, h) {
 `;
 
 const idle = `// Idle motion that never loops obviously: slow noise on scale, sway and tilt.
-const LOOP = 10;
+const LOOP = 120;
 
 function setup(w, h) { return { t: 0 }; }
 
@@ -356,7 +361,7 @@ export const programs2: Record<string, ProgramDef> = {
     params: [
       { key: "gravity", label: "Gravity", value: 1200, min: 0, max: 3000, step: 50, unit: "px/s²" },
       { key: "bounce", label: "Restitution", value: 0.7, min: 0, max: 0.98, step: 0.01 },
-      { key: "friction", label: "Floor friction", value: 0.04, min: 0, max: 0.3, step: 0.01 },
+      { key: "friction", label: "Floor friction", value: 2.5, min: 0, max: 12, step: 0.1, unit: "/s" },
     ],
   },
   particles: {
@@ -407,9 +412,9 @@ export const programs2: Record<string, ProgramDef> = {
     id: "idle",
     title: "Idle motion",
     source: idle,
-    loop: 10,
+    loop: 120,
     height: 200,
-    ghostEvery: 40,
+    ghostEvery: 400,
     params: [{ key: "speed", label: "Speed", value: 1, min: 0.2, max: 3, step: 0.05 }],
   },
 };

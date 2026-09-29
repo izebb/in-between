@@ -348,7 +348,8 @@
   .cp-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding: 0.6rem 0.6rem 0.5rem 0.75rem; border-bottom: 1px solid var(--rule); }
   .tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
   .cp-editor { position: relative; flex: 1; min-height: 220px; overflow: hidden; }
-  .cp-editor :global(.cm-editor) { height: 100%; position: absolute; inset: 0; }
+  .cp-editor :global(.cm-editor) { height: 100%; }
+  .cp-editor :global(.cm-scroller) { overflow: auto; }
   .morph-layer { position: absolute; inset: 0; pointer-events: none; z-index: 5; }
   .morph-layer :global(.token-ghost) {
     position: absolute;

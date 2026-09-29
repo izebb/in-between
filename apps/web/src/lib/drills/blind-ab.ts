@@ -38,6 +38,9 @@ export const PAIRS: ABPair[] = [
   { kind: "expand", good: { easing: "--ease-out", duration: 460 }, bad: { easing: "--ease-out", duration: 1400 }, word: "quicker", why: "The tile should grow into its detail, not crawl there: at 1.4s the connection is clear but you wait for it.", topics: ["permanence", "timing"] },
   { kind: "drawer", good: { easing: "--ease-out", duration: 360 }, bad: { none: true }, word: "connected", why: "The panel slides in from the edge it lives on, so you know where it went when it closes. A cut hides the geography.", topics: ["spatial", "continuity"] },
   { kind: "modal", good: { easing: "--ease-out", duration: 280 }, bad: { easing: "linear", duration: 900 }, word: "clearer", why: "A dialog comes toward you and the page behind dims: one quick move up the z-axis. Slow and linear, it drifts in with no sense of depth.", topics: ["spatial", "timing"] },
+  { kind: "toggle", good: { easing: "spring.snappy" }, bad: { easing: "ease-in-out", duration: 520 }, word: "physical", why: "A switch you flick should answer at once and settle. A slow ease-in-out makes the knob lag behind the tap.", topics: ["direct", "feedback", "springs"] },
+  { kind: "dot", good: { easing: "--ease-out", duration: 700 }, bad: { easing: "steps(9)", duration: 700 }, word: "clearer", why: "The same move with most of its frames missing: it holds, then jumps. That is what a dropped frame looks like; the smooth one had every frame drawn.", topics: ["performance", "medium"] },
+  { kind: "card", good: { easing: "--ease-out", duration: 300, distance: 20 }, bad: { easing: "steps(5)", duration: 300, distance: 20 }, word: "clearer", why: "Five positions for a 300ms move reads as a stutter. Motion that can't keep its frames looks broken, not fast.", topics: ["performance"] },
 ];
 
 export interface BlindSpec {

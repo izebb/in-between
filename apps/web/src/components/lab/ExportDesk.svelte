@@ -170,10 +170,11 @@
 <style>
   .desk { display: flex; flex-direction: column; gap: 1.5rem; }
   .source { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 1.5rem; align-items: start; }
-  @media (max-width: 860px) { .source { grid-template-columns: 1fr; } }
+  @media (max-width: 860px) { .source { grid-template-columns: minmax(0, 1fr); } }
   .preview { border: 1px solid var(--rule); border-radius: 8px; padding: 1rem; background: var(--plate-bg); display: flex; flex-direction: column; gap: 0.6rem; }
   .inputs { display: flex; flex-direction: column; gap: 0.5rem; }
-  .row { display: flex; gap: 0.35rem; }
+  .row { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+  .row input:first-child { flex-basis: 14rem; }
   .row input { flex: 1; min-width: 0; font-size: var(--text-sm); padding: 0.35rem 0.5rem; border: 1px solid var(--rule); border-radius: 5px; background: var(--paper); }
   .row .dur { flex: 0 0 5.5rem; }
   .err { font-size: var(--text-xs); color: var(--ink); }

@@ -1,0 +1,318 @@
+---
+number: 15
+lede: "An easing is one line of maths you can write yourself. So is smoothing, as long as it counts seconds, not frames."
+---
+
+export const glideCurve = (stops) =>
+  `linear(${Array.from({ length: stops + 1 }, (_, i) => +((1 - Math.exp((-Math.log(100) * i) / stops)) / 0.99).toFixed(4)).join(", ")})`;
+
+export const glide = glideCurve(40);
+
+export const follow = `// Blue: x += (target − x) · K, every frame.
+// Red: damp() with a half-life, in seconds.
+const K = 0.1;          // share of gap per frame
+const HALF_LIFE = 0.11; // seconds to close half
+const LAMBDA = Math.LN2 / HALF_LIFE;  // ≈ K at 60Hz
+
+function setup(w, h) {
+  return { w, target: w * 0.8, wait: 1.4,
+    blue: w * 0.2, red: w * 0.2 };
+}
+
+function update(s, dt) {
+  if ((s.wait -= dt) <= 0) {  // idle: jump across
+    const left = s.target > s.w / 2;
+    s.target = s.w * (left ? 0.2 : 0.8);
+    s.wait = 1.4;
+  }
+  s.blue += (s.target - s.blue) * K;
+  s.red = damp(s.red, s.target, LAMBDA, dt);
+}
+
+function onPointer(s, p) {
+  s.target = p.x; s.wait = 2.5;  // then wait
+}
+
+function draw(ctx, s, w, h) {
+  const y = h / 2;
+  ctx.clearRect(0, 0, w, h);
+  circle(ctx, s.target, y, 18, null, pencils.blue);
+  circle(ctx, s.blue, y, 11, pencils.blue);
+  circle(ctx, s.red, y, 7, pencils.red);
+}`;
+
+On a canvas nothing moves unless your code moves it. There is no transition to hand the job to. Every frame, you answer one question yourself: where is it now?
+
+Two small functions answer it almost every time. One mixes a start and an end. The other bends time, so the mix speeds up and slows down. [Chapter 03](/chapters/03-spacing) showed that easing is spacing. Here you write the spacing yourself, and meet the one line of it that behaves differently on every screen.
+
+<Beat kind="see">One line, three screens</Beat>
+
+Each row is a screen that redraws at its own rate: a slow one at the top, a fast one at the bottom. In every row two dots chase the same target, which jumps to the far end and back. The blue dot runs the most common smoothing line there is: every frame, close a fixed share of the gap. The red dot closes a share for every moment of time that passes, however many frames that moment holds.
+
+<Figure n="15.1" caption="Smoothing per frame (blue) and per second (red), three refresh rates">
+  <Canvas program="smoothing-trap" readout={false} />
+</Figure>
+
+Look down the blue dots. The top one trails behind and the bottom one races ahead: the same code, three different feels. The red dots move as one. In the middle row, blue and red keep level, because the red dot was tuned to match the blue one on that screen.
+
+<Beat kind="feel">Which one was designed?</Beat>
+
+Don't count. Just look.
+
+<FeelAB
+  question="This dot was tuned to glide into place: soft, a little unhurried. Which one is the design?"
+  kind="dot"
+  options={[
+    { motion: { easing: glide, duration: 728 }, caption: "x += (target − x) · 0.1 per frame, at 60Hz" },
+    { motion: { easing: glide, duration: 364 }, caption: "the same line, unchanged, at 120Hz" }
+  ]}
+  answer={0}
+  explain="A is the design, on the 60Hz screen it was tuned on. B is the same code, not a character changed, on a screen that draws twice as often. The line closes a tenth of the gap every frame, so twice the frames close it in half the time. The glide is gone, and nobody touched it."
+/>
+
+<Beat kind="more">Mix, then bend</Beat>
+
+<Margin kind="def">
+  <p><b>lerp</b>, short for linear interpolation: <code>a + (b − a) · t</code>. At <code>t = 0</code> it gives <code>a</code>, at <code>1</code> it gives <code>b</code>, and at <code>0.25</code> a quarter of the way from one to the other.</p>
+</Margin>
+
+Every tween does three things each frame, whether the browser runs it or you do.
+
+1. **Where in time?** `t = (now − start) / duration`, clamped to 0…1. It is 0 at the start and 1 at the end.
+2. **Where along the way?** `p = ease(t)`. The easing bends time into progress, also from 0 to 1.
+3. **Where on screen?** `x = lerp(from, to, p)`. The mix turns progress into a value: pixels, degrees, opacity, a colour channel.
+
+Keep the three apart and each stays simple. The easing never sees pixels or milliseconds, only a number from 0 to 1, so one easing works for every value and every duration.
+
+And `t` doesn't have to come from a clock. Anything with a start and an end can become `t`: a scroll position, how far a sheet has been dragged, a slider. `invLerp(a, b, v)`, which is `(v − a) / (b − a)`, is lerp run backwards: where `v` sits between `a` and `b`, as 0 to 1. Chain the two and any range maps onto any other. A header that fades out as the page scrolls from 200px to 600px takes `t = invLerp(200, 600, scrollY)`, clamps it to 0…1, and sets its opacity to `lerp(1, 0, t)`. Put an easing in the middle and the fade eases too. The chain is often called `remap`.
+
+<Beat kind="more">Write the bend</Beat>
+
+An easing is any function where `ease(0)` is 0 and `ease(1)` is 1. What it does in between is the spacing, and you can type it.
+
+<Figure n="15.2" caption="Four easings written by hand, 600ms each">
+  <SpacingChart rows={[
+    { label: "linear", easing: "linear", duration: 600 },
+    { label: "squared", easing: "cubic-bezier(.333,0,.667,.333)", duration: 600 },
+    { label: "squared, reversed", easing: "cubic-bezier(.333,.667,.667,1)", duration: 600 },
+    { label: "smoothstep", easing: "cubic-bezier(.333,0,.667,1)", duration: 600 }
+  ]} />
+</Figure>
+
+- **Linear**, `t`: no bend. Even gaps.
+- **Squared**, `t * t`: at half the time it is a quarter of the way. It leaves from rest and arrives at twice the average speed. That's an ease-in, and the exact shape of a fall from [chapter 04](/chapters/04-weight).
+- **Reversed**, `1 − (1 − t) * (1 − t)`: the same curve turned round. Three-quarters of the way at half the time, then a long settle: an ease-out.
+- **Smoothstep**, `t * t * (3 − 2 * t)`: halfway at half the time, at rest at both ends, and 1.5× the average speed in the middle.
+
+<Margin kind="wild">
+  <p>GSAP names this family by power: <code>power1</code> is Penner's quad (<code>t²</code>), <code>power2</code> his cubic (<code>t³</code>), up to <code>power4</code>, each with <code>.in</code>, <code>.out</code> and <code>.inOut</code>.</p>
+</Margin>
+
+Raise the power and the bend gets stronger. `t * t * t` covers an eighth of the way in half the time; `t ** 4`, a sixteenth. Higher powers wait longer, then rush.
+
+<Margin kind="note">
+  <p>GLSL, the shading language, has smoothstep built in. <code>smoothstep(edge0, edge1, x)</code> is an invLerp clamped to 0…1, then <code>t * t * (3 − 2 * t)</code>.</p>
+</Margin>
+
+Smoothstep is the one to reach for when a value has to start and stop gently and you don't want to think about it. It's cheap, it's symmetric, and its speed is zero at both ends, so a back-and-forth built from it never has a corner.
+
+<Beat kind="more">Turn it round</Beat>
+
+You only need to write ease-ins. The others follow from them.
+
+- **Reverse** plays the clock backwards and turns the answer upside down: `1 − ease(1 − t)`. On the graph, it spins the curve half a turn about its centre. An ease-in becomes an ease-out.
+- **Mirror** fits the ease-in into the first half of the time and the first half of the way, and its reverse into the second half. Before halfway it is `ease(2t) / 2`; after, `1 − ease(2 − 2t) / 2`. An ease-in becomes an ease-in-out.
+
+<Figure n="15.3" caption="Squared and its reverse, position and velocity">
+  <CurvePlot easing="cubic-bezier(.333,0,.667,.333)" compare="cubic-bezier(.333,.667,.667,1)" duration={600} label="squared" compareLabel="reversed" />
+</Figure>
+
+The velocity graph shows what reverse does. The speed of `t * t` climbs in a straight line, from rest to twice the speed of linear motion. Its reverse, the dashed blue line, runs the same line backwards: it leaves at twice that speed and slows to rest. Smoothstep is its own reverse. Turn it round and you get it back, because it was already symmetric.
+
+<Beat kind="more">What CSS can draw</Beat>
+
+CSS can't run your function, but it can often run its shape. A `cubic-bezier()` is a cubic curve, and when its two x values sit at a third and two thirds, its x is simply time. The two y values can then draw any cubic polynomial that runs from 0 to 1. The first y is a third of the starting speed; the second is 1 minus a third of the arriving speed. So each of these is `cubic-bezier(.333, y1, .667, y2)`:
+
+| By hand | `y1` | `y2` |
+|---|---|---|
+| `t * t` | `0` | `.333` |
+| `1 − (1 − t)²` | `.667` | `1` |
+| `t * t * t` | `0` | `0` |
+| `1 − (1 − t)³` | `1` | `1` |
+| `t * t * (3 − 2 * t)` | `0` | `1` |
+
+With exact thirds these are exact. Rounded to three decimals, they stay within 0.03% of the maths.
+
+The rest is out of reach of a single bézier: `t ** 4` and higher powers, mirrored in-outs, which switch curves at the halfway point, and exponentials. A bézier can only come close. This app's `--ease-inout`, `cubic-bezier(.65, 0, .35, 1)`, stays within 1% of a mirrored `t³`. For anything at all, `linear()` takes samples: evaluate your function at even steps and list the results. Twenty-one stops keep a mirrored `t³` within 0.4%.
+
+<Beat kind="more">Chasing a target</Beat>
+
+A tween knows where it is going and when it will get there. Often you know neither. A marker trails the pointer. A camera follows a player. A needle eases towards a live reading. The target moves every frame, and there is no duration to divide by.
+
+The usual answer is one line, `x += (target − x) * k`. It is lerp with a fixed `t`, run every frame towards wherever the target is now. Each frame it closes the share `k` of the gap that's left. With `k = 0.1`, it closes a tenth of the gap, then a tenth of what's left, and so on. After 7 frames it is just over halfway; after 22, it is 90% of the way.
+
+It never quite arrives, and it doesn't need to. It gets close quickly, slows as it nears, and if the target moves, it simply chases the new one: no clock, no restart. Its curve is an ease-out, the same exponential shape as the glide in [chapter 06](/chapters/06-momentum-and-friction).
+
+<Beat kind="more">The frame-rate trap</Beat>
+
+The line works *per frame*, and a frame is not a unit of time. Screens draw at different rates. 60Hz is common, many phones and laptops draw at 120Hz, some monitors draw faster still, and a busy page can drop frames on any of them. Here is the same `k = 0.1` on three screens:
+
+| Screen | Half the gap closed | 90% closed |
+|---|---|---|
+| 30Hz | about 220ms | about 730ms |
+| 60Hz | about 110ms | about 360ms |
+| 120Hz | about 55ms | about 180ms |
+
+Tuned on a 60Hz laptop, it is twice as tight on a 120Hz phone and twice as loose on a page stuck at 30 frames a second. That is Figure 15.1, and the FEEL above. The code never changed.
+
+The common patch is to scale `k` by the length of the frame: `k * dt * 60`. It's close while frames are short. At 30Hz it closes 20% of the gap per frame where the right share is 19%. It breaks on a long frame. After a half-second stall, from a long task or a tab coming back into view, `k * dt * 60` is 3. Instead of closing the gap, the dot leaps across the target and lands twice as far away on the other side.
+
+<Beat kind="more">Count in seconds</Beat>
+
+Ask what the line does over time instead. Each frame leaves `1 − k` of the gap, so the part left shrinks by the same factor again and again: it is an exponential. Over any stretch of time `dt`, the part left is `e^(−λ·dt)`, and the part to close is one minus that:
+
+<p><code>x += (target − x) · (1 − e<sup>−λ·dt</sup>)</code></p>
+
+Two frames of `dt / 2` leave `e^(−λ·dt/2) · e^(−λ·dt/2)`, which is `e^(−λ·dt)`: exactly what one frame of `dt` leaves. However time is cut into frames, the dot is where it should be at that moment. And the share closed is always between 0 and 1, so no stall, however long, can throw it past the target. That is the red dot in Figure 15.1.
+
+`λ` (lambda) is a rate per second. To keep the feel of a `k` tuned at a given frame rate, use `λ = −ln(1 − k) · fps`. For `k = 0.1` at 60fps, `λ` is about 6.32 per second.
+
+<Margin kind="def">
+  <p><b>Half-life.</b> The time it takes to close half of whatever gap is left. After two half-lives, three-quarters of the gap is closed; after three, seven-eighths.</p>
+</Margin>
+
+A rate per second is hard to picture. A half-life isn't: how long until it's halfway there? They are the same number seen from two sides: `halfLife = ln 2 / λ`, so `λ = ln 2 / halfLife`. The `k = 0.1` from 60fps has a half-life of about 110ms. A short half-life feels attached; a long one feels like the thing is on a loose string. Choose it in seconds, and it feels the same on every screen.
+
+<Beat kind="tune">The screen, then the half-life</Beat>
+
+Two dots follow the ring: blue with `K` per frame, red with `HALF_LIFE` in seconds. Move your pointer across the canvas to lead them. Leave it, and the ring jumps by itself.
+
+- Set **Refresh rate** to 30Hz, then 120Hz. The blue dot goes loose, then tight. The red one doesn't change.
+- Back at 60Hz, change `HALF_LIFE` to `0.05`, then `0.3`. Find where the red dot stops feeling attached and starts feeling late.
+- Change `K` to `0.3`. At 60Hz the blue dot is now tighter than the red. Find the `HALF_LIFE` that matches it again: about `0.032`.
+
+<Lab id="canvas-sandbox" source={follow} title="Follow the pointer" />
+
+<Beat kind="write">The notation</Beat>
+
+Easing by hand is three small functions and a loop. CSS can run the curves themselves: `cubic-bezier()` for anything up to a cubic, `linear()` samples for the rest. A chase stays in JavaScript. It has no duration, and CSS transitions are built around one.
+
+<div class="snippets">
+<Snippet title="15 · Easing by Hand: hand-written curves as cubic-bezier" lab="curve-bench" easing="cubic-bezier(.333,0,.667,1)" duration={600} compare="linear">
+
+```css
+/* Easings written by hand, as CSS. With its x values at a third
+   and two thirds, a cubic-bezier draws any cubic exactly.
+   Rounded to three decimals: within 0.03%. */
+:root {
+  --quad-in:    cubic-bezier(.333, 0, .667, .333);  /* t * t */
+  --quad-out:   cubic-bezier(.333, .667, .667, 1);  /* 1 - (1 - t)² */
+  --cubic-in:   cubic-bezier(.333, 0, .667, 0);     /* t * t * t */
+  --cubic-out:  cubic-bezier(.333, 1, .667, 1);     /* 1 - (1 - t)³ */
+  --smoothstep: cubic-bezier(.333, 0, .667, 1);     /* t * t * (3 - 2 * t) */
+}
+
+.dot {
+  transition: transform 600ms var(--smoothstep);
+}
+```
+
+</Snippet>
+
+<Snippet title="15 · Easing by Hand: any curve as linear() stops" lab="spacing-chart" easing="linear(0, 0.0005, 0.004, 0.0135, 0.032, 0.0625, 0.108, 0.1715, 0.256, 0.3645, 0.5, 0.6355, 0.744, 0.8285, 0.892, 0.9375, 0.968, 0.9865, 0.996, 0.9995, 1)" duration={600}>
+
+```css
+/* mirror(t => t * t * t), the in-out cubic, which no single
+   bézier draws exactly. Sampled at 21 even steps; stops without
+   a % are spread evenly. Within 0.4% of the function. */
+.panel {
+  transition: transform 600ms linear(
+    0, 0.0005, 0.004, 0.0135, 0.032, 0.0625, 0.108, 0.1715, 0.256, 0.3645,
+    0.5, 0.6355, 0.744, 0.8285, 0.892, 0.9375, 0.968, 0.9865, 0.996, 0.9995, 1
+  );
+}
+```
+
+</Snippet>
+
+<Snippet title="15 · Easing by Hand: lerp, easings and a tween" lab="curve-bench" easing="cubic-bezier(.333,0,.667,1)" duration={600} distance={240}>
+
+```js
+const lerp = (a, b, t) => a + (b - a) * t;
+const clamp01 = (t) => Math.min(1, Math.max(0, t));
+
+// An easing bends time (0 → 1) into progress (0 → 1).
+const easeInQuad = (t) => t * t;
+const easeInCubic = (t) => t * t * t;
+const smoothstep = (t) => t * t * (3 - 2 * t);
+
+// Write the ease-in; turn it round for the others.
+const reverse = (ease) => (t) => 1 - ease(1 - t);
+const mirror = (ease) => (t) =>
+  t < 0.5 ? ease(2 * t) / 2 : 1 - ease(2 - 2 * t) / 2;
+
+const easeOutQuad = reverse(easeInQuad);     // 1 - (1 - t)²
+const easeInOutCubic = mirror(easeInCubic);
+
+// A tween: time → t → ease → mix.
+function tween(el, from, to, duration, ease) {
+  const start = performance.now();
+  requestAnimationFrame(function frame(now) {
+    const t = clamp01((now - start) / duration);
+    el.style.transform = `translateX(${lerp(from, to, ease(t))}px)`;
+    if (t < 1) requestAnimationFrame(frame);
+  });
+}
+
+tween(document.querySelector('.dot'), 0, 240, 600, smoothstep);
+
+// Any easing as CSS: n + 1 evenly spaced linear() stops.
+function toLinear(ease, n = 20) {
+  const stops = [];
+  for (let i = 0; i <= n; i++) stops.push(+ease(i / n).toFixed(4));
+  return `linear(${stops.join(', ')})`;
+}
+
+toLinear(easeInOutCubic); // the stops in the card above
+```
+
+</Snippet>
+
+<Snippet title="15 · Easing by Hand: a chase that counts seconds" lab="canvas-sandbox" source={follow}>
+
+```js
+// Close a share of the gap per second, not per frame.
+const lerp = (a, b, t) => a + (b - a) * t;
+const damp = (x, target, lambda, dt) =>
+  lerp(x, target, 1 - Math.exp(-lambda * dt));
+
+// Choose the feel in seconds: the time to close half the gap.
+const halfLife = 0.11;
+const lambda = Math.LN2 / halfLife;  // ≈ 6.3 per second
+// Porting x += (target - x) * k, tuned at 60fps?
+//   const lambda = -Math.log(1 - k) * 60;
+
+const dot = document.querySelector('.dot');
+let x = 0, target = 0, last = null;
+
+addEventListener('pointermove', (e) => { target = e.clientX; });
+
+function frame(now) {
+  const dt = last === null ? 0 : (now - last) / 1000;  // seconds
+  last = now;
+  x = damp(x, target, lambda, dt);  // any dt is safe: never past the target
+  dot.style.transform = `translateX(${x}px)`;
+  requestAnimationFrame(frame);
+}
+
+requestAnimationFrame(frame);
+```
+
+</Snippet>
+</div>
+
+<Beat kind="drill">Match the curve</Beat>
+
+Watch a motion and pick the curve that made it. You have written these now, so think of the function. Is it slow at the start, like `t * t`? At the end, like its reverse? At both, like smoothstep?
+
+<Drill kind="match-curve" trials={5} chapter={15} />

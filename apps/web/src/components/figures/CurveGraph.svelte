@@ -16,9 +16,11 @@
     index?: number;
     height?: number;
     label?: string;
+    /** Horizontal axis label, e.g. "scroll →". */
+    xLabel?: string;
     onedit?: () => void;
   }
-  let { spec = $bindable(), compare = null, progress = null, editable = true, index = 0, height = 260, label = "position", onedit }: Props = $props();
+  let { spec = $bindable(), compare = null, progress = null, editable = true, index = 0, height = 260, label = "position", xLabel = "time →", onedit }: Props = $props();
 
   let w = $state(300);
   const M = { l: 34, r: 16, t: 16, b: 28 };
@@ -123,7 +125,7 @@
     <line class="ax reveal-axes" pathLength="1" x1={X(0)} x2={X(1)} y1={Y(0)} y2={Y(0)} />
     <text class="label" x={X(0) - 6} y={Y(0) + 3} text-anchor="end">0</text>
     <text class="label" x={X(0) - 6} y={Y(1) + 3} text-anchor="end">1</text>
-    <text class="label upper" x={X(1)} y={height - 6} text-anchor="end">time →</text>
+    <text class="label upper" x={X(1)} y={height - 6} text-anchor="end">{xLabel}</text>
     <text class="label upper" x={X(0) + 6} y={M.t + 2}>{label}</text>
 
     <!-- linear reference -->

@@ -66,7 +66,8 @@ Use `<Beat>` headings in this order. `kind="more"` makes a plain section heading
   onion-skin spacing chart. Or `curve="ease-out" frames={12}` for one row. `tone: "blue"` marks a comparison row.
   `readout={false}` hides ms/frame counts (use before FEEL). `chart={false}` hides the tick chart.
 - `<CurvePlot easing="--ease-out" compare="linear" duration={600} velocity label compareLabel />` — curve + velocity + motion.
-  Colours: the main curve is ink (solid), `compare` is blue (dashed); the moving dot is red. (SpringPlot differs: its
+  `xLabel="scroll →"` / `yLabel="progress"` relabel the axes. Colours: the main curve is ink (solid), `compare` is
+  blue (dashed); the moving dot is red. (SpringPlot differs: its
   first spring is the red/ink one, later springs blue.)
 - `<SpringPlot springs={[{ response: 0.5, bounce: 0.3, label: "bouncy" }, { stiffness: 170, damping: 26, mass: 1 }]} envelope />`
   — spring position over real time, settle marker, overshoot; first spring red, others blue.
@@ -106,8 +107,9 @@ Use `<Beat>` headings in this order. `kind="more"` makes a plain section heading
   velocity. Toggles let readers switch each behaviour off.
 - `<Scroll />` — real CSS scroll-driven animations (`animation-timeline: scroll()` progress bar, `view()` card
   reveals) inside a scroller, with a "scroll-jacked" mode for comparison and a no-support fallback note.
-- `<Medium initial={800} modes={["transform", "left", "canvas"]} />` — N dots moved with DOM transform, DOM left/top,
-  or Canvas 2D; measured frame time and fps on the reader's machine (runs only while on screen).
+- `<Medium initial={800} modes={["transform", "left", "canvas"]} readout />` — N dots moved with DOM transform, DOM left/top,
+  or Canvas 2D; measured frame time and fps on the reader's machine (runs only while on screen; under Still or
+  reduced motion it waits for a "Run the test" click). `readout={false}` hides the numbers.
 - `<Pipeline />` — Style → Layout → Paint → Composite: pick a property (left, width, background-color, box-shadow,
   transform, opacity) and see which stages run every frame, with a live element.
 - `<Count values={[3912, 2047]} />` — a number changing instantly, counting up, or rolling digit by digit;
@@ -143,7 +145,7 @@ Motion (`MockMotion`): `{ easing, duration, distance, stagger, exitEasing, exitD
 `fix-feeling`, `transition-lies`.
 Blind A/B can be focused with `topic="…"`: easing, spacing, enter-exit, timing, taste, frequency, stagger,
 choreography, hierarchy, springs, direct, physics, continuity, permanence, information, attention, principles,
-spatial, momentum, weight, feedback.
+spatial, momentum, weight, feedback, performance, medium.
 
 ## Rules
 

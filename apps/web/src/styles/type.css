@@ -66,6 +66,10 @@
     background: color-mix(in srgb, var(--ink) 6%, transparent);
     white-space: nowrap;
   }
+  /* On a phone a long token must wrap rather than widen the page. */
+  @media (max-width: 640px) {
+    :not(pre) > code { white-space: normal; overflow-wrap: anywhere; }
+  }
 
   kbd {
     font-size: 0.8em;

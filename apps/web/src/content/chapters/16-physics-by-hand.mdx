@@ -1,0 +1,439 @@
+---
+number: 16
+lede: "Physics by hand is two lines, run again and again: the force changes the speed, then the speed changes the position."
+---
+
+export const stepped = ({ k, c, m = 1, dt, order = "semi", steps }) => {
+  // A spring from 0 to 1, stepped by hand. One linear() stop per step,
+  // so the stops are evenly spaced and need no percentages.
+  const s = { x: 0, v: 0 };
+  const xs = [0];
+  let moving = 0;
+  const n = steps ?? Math.round(5 / dt);
+  for (let i = 1; i <= n; i++) {
+    const a = (-k * (s.x - 1) - c * s.v) / m;
+    if (order === "semi") { s.v += a * dt; s.x += s.v * dt; } // velocity first
+    else { s.x += s.v * dt; s.v += a * dt; }                   // position first
+    xs.push(s.x);
+    if (Math.abs(s.x - 1) > 0.001 || Math.abs(s.v) > 0.01) moving = i;
+  }
+  const end = steps ?? moving + 1;
+  const stops = xs.slice(0, end + 1);
+  stops[end] = 1;
+  return {
+    easing: `linear(${stops.map((x) => +x.toFixed(4)).join(", ")})`,
+    duration: Math.round(end * dt * 1000),
+  };
+};
+
+export const feelSemi = stepped({ k: 250, c: 16, dt: 1 / 30, order: "semi" });
+export const feelEuler = stepped({ k: 250, c: 16, dt: 1 / 30, order: "explicit" });
+
+export const byHand = stepped({ k: 246.74, c: 21.99, dt: 1 / 120, steps: 84 });
+
+export const fixedSpring = `// A spring on a fixed step. The sandbox calls update() once a frame;
+// update() spends the frame's time in steps of exactly STEP seconds.
+// Switch Refresh rate between 30, 60 and 120Hz: the motion doesn't change,
+// only the number of steps each frame takes. Tap to move the target.
+const STEP = 1 / 120;
+
+function step(s, target, dt, k = 170, c = 26, m = 1) {
+  const force = -k * (s.x - target) - c * s.v;
+  s.v += (force / m) * dt;   // semi-implicit Euler:
+  s.x += s.v * dt;           // velocity first, then position
+  return s;
+}
+
+function setup(width, height) {
+  return { x: 60, v: 0, target: width - 60, acc: 0, wait: 1.5, steps: 0, width };
+}
+
+function update(s, dt) {
+  s.acc += Math.min(dt, 1 / 15);        // clamp a long pause
+  s.steps = 0;
+  while (s.acc >= STEP) {               // as many whole steps as fit
+    step(s, s.target, STEP);
+    s.acc -= STEP;
+    s.steps++;
+  }
+  s.wait -= dt;
+  if (s.wait <= 0) {                    // nobody tapping: jump across
+    s.target = s.target > s.width / 2 ? 60 : s.width - 60;
+    s.wait = 1.5;
+  }
+}
+
+function onPointer(s, p, type) {
+  if (type === "down") { s.target = clamp(p.x, 20, s.width - 20); s.wait = 3; }
+}
+
+function draw(ctx, s, width, height) {
+  ctx.clearRect(0, 0, width, height);
+  const y = height / 2;
+  segment(ctx, 20, y, width - 20, y, pencils.rule);
+  circle(ctx, s.target, y, 18, null, pencils.blue);
+  circle(ctx, s.x, y, 12, pencils.red);
+  label(ctx, s.steps + (s.steps === 1 ? " step" : " steps") + " this frame", 20, height - 12);
+}
+`;
+
+export const floorBalls = `// Gravity, a floor, walls, a bounce and friction, stepped by hand
+// on a fixed step. Tap to drop a ball.
+// Try RESTITUTION 0.95, then 0.2. Try FRICTION 0, then 12.
+const GRAVITY = 1200;     // px/s², downwards
+const RESTITUTION = 0.7;  // share of speed kept at each bounce
+const FRICTION = 3;       // per second, while touching the floor
+const STEP = 1 / 120;
+
+// One step for one ball, velocity first. The box is width × floor px.
+function step(b, dt, width, floor) {
+  b.vy += GRAVITY * dt;                    // gravity changes the speed
+  b.x += b.vx * dt;                        // the speed changes the position
+  b.y += b.vy * dt;
+
+  if (b.y + b.r > floor) {                 // below the floor: put it back
+    b.y = floor - b.r;
+    if (b.vy > 0) b.vy = -b.vy * RESTITUTION;  // bounce, keeping a share
+    b.vx *= Math.exp(-FRICTION * dt);      // the floor drags it sideways
+  }
+  if (b.x - b.r < 0) {                     // walls: the same check, sideways
+    b.x = b.r;
+    b.vx = Math.abs(b.vx) * RESTITUTION;
+  } else if (b.x + b.r > width) {
+    b.x = width - b.r;
+    b.vx = -Math.abs(b.vx) * RESTITUTION;
+  }
+}
+
+function setup(width, height) {
+  rand = seeded(4);
+  const balls = [];
+  for (let i = 0; i < 5; i++) {
+    balls.push({ x: 50 + i * 60, y: 30 + random(0, 40), vx: random(-220, 220), vy: 0, r: 9 + random(0, 8) });
+  }
+  return { balls, acc: 0, width, height };
+}
+
+function update(s, dt) {
+  s.acc += Math.min(dt, 1 / 15);
+  while (s.acc >= STEP) {
+    for (const b of s.balls) step(b, STEP, s.width, s.height);
+    s.acc -= STEP;
+  }
+}
+
+function onPointer(s, p, type) {
+  if (type !== "down") return;
+  s.balls.push({ x: p.x, y: p.y, vx: random(-150, 150), vy: 0, r: 9 + random(0, 8) });
+  if (s.balls.length > 30) s.balls.shift();
+}
+
+function draw(ctx, s, width, height) {
+  ctx.clearRect(0, 0, width, height);
+  segment(ctx, 0, height - 0.5, width, height - 0.5, pencils.graphite);
+  for (const b of s.balls) circle(ctx, b.x, b.y, b.r, pencils.red);
+}
+`;
+
+[Chapter 05](/chapters/05-springs) drew springs from a formula. Give it a time and it tells you where the spring is. That works because a spring on its own is simple enough to solve once, on paper, and the Spring Bench uses that answer. Put a floor under it, a wall beside it or a finger on it, and there is usually no formula to find. What's left is the rule: how hard is everything being pushed, right now?
+
+So you step. Work out the push, change the speed a little, change the position a little, move the clock on by a sliver of a second, and ask again. Every physics engine is that loop. What matters is how you take each step.
+
+<Beat kind="see">One spring, three ways to step</Beat>
+
+Here is a spring with no friction at all. A spring like that should swing forever between the same two heights, like a perfect pendulum. Each row steps it with the same fairly large step, and the line traces where it is over a few seconds. The rows differ in one thing: the order of two lines, and in the last row, what gets remembered.
+
+<Figure n="16.1" caption="One spring with no friction, stepped three ways">
+  <Canvas program="integrators" controls={false} readout={false} />
+</Figure>
+
+The top row doesn't keep its height. Each swing is wider than the last, and within two swings it runs off its row. Nothing pushed it. The energy came from the stepping. The top row moves first, with the speed it had before the spring pulled, and only then lets the pull change the speed. The middle row does the same two things the other way round: the pull changes the speed, then it moves. Its swing holds. So does the bottom row's, which doesn't store a speed at all.
+
+<Beat kind="feel">Which one gains energy?</Beat>
+
+Don't count. Just look.
+
+<FeelAB
+  question="Two springs: same stiffness, same friction, same step. One of them gains a little energy with every step. Which one?"
+  kind="badge"
+  options={[
+    { motion: { easing: feelSemi.easing, duration: feelSemi.duration }, caption: "velocity, then position · k 250, c 16 · 30 steps a second · settles in " + feelSemi.duration + "ms" },
+    { motion: { easing: feelEuler.easing, duration: feelEuler.duration }, caption: "position, then velocity · k 250, c 16 · 30 steps a second · settles in " + feelEuler.duration + "ms" }
+  ]}
+  answer={1}
+  explain="B. It moves before it lets the spring change its speed, like the top row of figure 16.1, so every step hands it a little energy. Here the friction still wins, but only just. B swings almost half the distance past its place, where A goes a tenth past, and B takes nearly three times as long to settle. A runs the same two lines the other way round."
+/>
+
+<Beat kind="more">Three numbers and a step</Beat>
+
+A simulation needs three numbers for each direction a thing can move in:
+
+- **Position** `x`: where it is, in pixels.
+- **Velocity** `v`: how fast it's moving and which way, in pixels per second.
+- **Acceleration** `a`: how fast the velocity is changing, in pixels per second, per second.
+
+<Margin kind="def">
+  <p><b>Integrator.</b> The rule that turns the forces at one moment into the position and velocity one step later. Explicit Euler, semi-implicit Euler, Verlet and RK4 are four of them.</p>
+</Margin>
+
+Forces decide the acceleration. Newton's second law, `F = m · a`, says the same push moves a heavy thing less: `a = F / m`. A spring pushes with `−k · x − c · v`, the pull and the friction from chapter 05. Gravity pulls with `m · g`, so its acceleration is just `g`, whatever the mass.
+
+Then, every step, in this order:
+
+1. **Acceleration from forces.** Add up the forces and divide by the mass.
+2. **Velocity from acceleration.** `v += a * dt`.
+3. **Position from velocity.** `x += v * dt`.
+
+`dt` is the length of the step, in seconds. [Chapter 14](/chapters/14-the-loop) showed why everything that changes over time gets multiplied by it.
+
+<Beat kind="more">Why the order matters</Beat>
+
+Steps 2 and 3 look independent. They aren't. Step 3 needs a velocity, and the question is which one: the velocity from before this step's push, or after it.
+
+- **Explicit Euler** moves first, with the old velocity, then updates it: `x += v * dt`, then `v += a * dt`. It's the most obvious way to write it, and the top row of figure 16.1.
+- **Semi-implicit Euler** updates the velocity first, then moves with the new one: `v += a * dt`, then `x += v * dt`. The middle row.
+
+Explicit Euler takes every step with numbers from the start of it. It moves with the speed from before the push, and the push it uses comes from the position before the move. Both halves look back, and on a spring both mistakes lean the same way: each adds a sliver of energy. With no friction, every step multiplies the energy by exactly `1 + (k / m) · dt²`. In figure 16.1, `k` is `60`, `m` is `1` and the step is 1/30 s. That's 6.7% more energy every step: it doubles every 11 steps, about a third of a second.
+
+<Margin kind="read">
+  <p>Daniel Shiffman's <i>The Nature of Code</i> builds forces, springs and particle systems out of these lines, one frame at a time. Its update adds the acceleration to the velocity, then the velocity to the position: velocity first, like the middle row.</p>
+</Margin>
+
+Semi-implicit Euler still takes the push from where the thing was, but then it moves with the speed that push produced. One half looks back and the other looks forward, so their mistakes lean opposite ways. It gains a little energy in one part of a swing and gives it back in the next, and its energy wobbles around the right value instead of climbing. It costs exactly the same as explicit Euler: the same two lines, in the other order.
+
+Friction hides the bug. With enough damping, explicit Euler still settles, only late and loose, as in the FEEL above. So it ships looking like a slightly bouncier spring, until someone turns the friction down, or the frame rate drops and the steps get longer.
+
+Semi-implicit Euler has a limit too. If one step is longer than about a third of the spring's response, the time one full swing takes, it blows up as well. Stiff springs need small steps.
+
+<Beat kind="more">Two more ways to step</Beat>
+
+**Verlet** keeps no velocity at all. It remembers where the thing is now and where it was one step ago, and the gap between the two *is* its velocity. Each step, the next position is `2 · x − previous + a · dt²`. Like semi-implicit Euler, it holds its energy: the bottom row of figure 16.1.
+
+<Margin kind="wild">
+  <p>Thomas Jakobsen's paper <i>Advanced Character Physics</i> (GDC 2001) explained the physics behind IO Interactive's <i>Hitman: Codename 47</i>, including its cloth and its ragdoll bodies: particles stepped with Verlet, held together by distance constraints.</p>
+</Margin>
+
+Its gift is constraints. A rope is a chain of points that must stay a fixed distance apart. With Verlet you step every point, then move any two that drifted apart back to the right distance. There is no velocity to fix up, because none was stored: next step, the velocity is read from where the points are. Cloth is the same idea, in two directions.
+
+**RK4**, the fourth-order Runge–Kutta method, samples the acceleration four times per step, once at the start, twice at the middle and once at the end, and blends them. It is far more accurate. Halve Euler's step and its error halves; halve RK4's and its error shrinks sixteen times. It costs four force calculations per step instead of one. For interface motion it's rarely worth it: semi-implicit Euler with a small step is close enough, and simpler.
+
+<Beat kind="more">Smaller steps, fixed steps</Beat>
+
+Every integrator gets better as the step gets smaller. Here is figure 16.1 again with its step exposed, set to 1/120 s, a quarter of the step you saw.
+
+<Figure n="16.2" caption="The same spring, with a choice of step">
+  <Canvas program="integrators" params={{ step: 1 / 120 }} />
+</Figure>
+
+At 1/120 s the explicit Euler row still grows, only more slowly: it takes over four seconds to run off its row instead of just over one. A smaller step slows the error down. It doesn't change which way the error leans. Now try 1/15 s: semi-implicit Euler and Verlet still hold, a little rougher.
+
+The step shouldn't depend on the screen, either. If every frame takes one step of its own `dt`, a 144Hz monitor takes small steps and a phone that drops to 30fps takes big ones. Same code, different physics: [chapter 15](/chapters/15-easing-by-hand)'s trap in a new form.
+
+The fix is a **fixed step**. Choose one step size, and 1/120 s is a good default. Then let each frame pay for as many whole steps as its time covers:
+
+1. Add the frame's `dt` to an *accumulator*. Clamp it first, as in chapter 14, so a long pause can't turn into a thousand steps at once.
+2. While the accumulator holds at least one step, take a step and subtract it.
+3. Keep the remainder for the next frame, and draw.
+
+At 60Hz that's two steps a frame, at 120Hz one, at 30Hz four. The spring takes the same steps and passes through the same positions on every screen, so the motion you tuned is the motion everyone gets. Figure 16.1 works this way: it saves up time and spends it in steps of the chosen size. Every canvas figure on this site runs its simulation on a fixed step, too, which is why stepping or scrubbing one always replays the same motion.
+
+<Margin kind="read">
+  <p>Glenn Fiedler's article <i>Fix Your Timestep!</i> is the classic account of the accumulator, including how to draw between the last two steps.</p>
+</Margin>
+
+The remainder means the drawing can lag the simulation by up to one step. At 1/120 s that's rarely visible. For perfectly smooth drawing, keep the last two states and draw between them, mixed by the remainder.
+
+<Beat kind="more">A spring from scratch</Beat>
+
+A spring is now a handful of lines. Work out the force, `−k · (x − target) − c · v`. Divide it by the mass for the acceleration. Add that to the velocity, then add the velocity to the position. That's semi-implicit Euler, and the whole spring fits in six lines of code. They're in the notation below.
+
+How close does it get? The Spring Bench (L3) doesn't step. It uses the exact solution from chapter 05, a formula for the position at any moment. Here are both, with the spring from chapter 05's CSS: response 0.4, bounce 0.3, which is `k = 246.7`, `c = 21.99`, `m = 1`.
+
+<Figure n="16.3" caption="A spring stepped by hand at 1/120 s, against the Spring Bench">
+  <CurvePlot easing={byHand.easing} duration={byHand.duration} compare="spring(response .4 bounce .3)" label="by hand · 1/120 s" compareLabel="Spring Bench · exact" />
+</Figure>
+
+The solid curve is the six lines, stepped 120 times a second. The dashed one is the bench. They nearly coincide. The stepped spring overshoots a little less, 3.3% past its target where the bench's goes 4.6%, and while it moves fastest it runs slightly ahead, by up to 4.9% of the distance. On the velocity graph the stepped spring's speed is a staircase, because it changes only once per step. Both gaps belong to the step, and both halve when the step does:
+
+| Step | Overshoot | Largest gap from the bench |
+|---|---|---|
+| Spring Bench, exact | 4.6% | none |
+| 1/60 s | 2.0% | 10% |
+| 1/120 s | 3.3% | 4.9% |
+| 1/240 s | 4.0% | 2.4% |
+| 1/1000 s | 4.5% | 0.6% |
+
+RK4 at 1/60 s stays within 0.01% of the bench the whole way. For a spring on screen, semi-implicit Euler at 1/120 s is close enough. When you work ahead of time, as when baking a curve for CSS below, nobody is waiting, so take tiny steps.
+
+<Beat kind="more">Gravity, floors and friction</Beat>
+
+Gravity is the simplest force there is: the same acceleration, straight down, whatever the mass. Add `g * dt` to the vertical speed each step and leave the sideways speed alone. The path comes out as the arc from [chapter 04](/chapters/04-weight), with nobody drawing it.
+
+A floor isn't a force. It's a check after each step: if the ball has gone below the floor, put it back on the surface and turn its vertical speed around, keeping only a share of it. That share is the restitution from chapter 04. Walls are the same check, sideways.
+
+Friction is the floor dragging on the ball while they touch. In this figure it takes a share of the sideways speed for every second of contact, written per second so the step size doesn't change it. A ball that has stopped bouncing touches the floor all the time, so it slides to a halt, losing the same share each second, like the glide in [chapter 06](/chapters/06-momentum-and-friction).
+
+<Figure n="16.4" caption="Gravity, walls, restitution and floor friction">
+  <Canvas program="collisions" />
+</Figure>
+
+Tap the figure to drop more balls. Turn **Restitution** up to 0.98 and they bounce almost forever; down to 0 and they land dead. Set **Floor friction** to 0 and the balls that have stopped bouncing slide from wall to wall. Raise it and they stop almost at once.
+
+Collisions are checked after the move, so they depend on the step too. A fast ball and a thin wall can miss each other: one step it's in front, the next it's already behind. That's called *tunnelling*. Small, fixed steps make it rarer, and physics engines also sweep the path between steps for fast objects.
+
+<Beat kind="tune">Swap two lines</Beat>
+
+This is the weight on a spring from chapter 05, with its code. It takes one step per frame, velocity first. Drag the weight down and let go.
+
+- Set **Damping c** to 0. It swings on and on, to the same height every time.
+- In `update`, swap the two stepping lines, so `s.y += s.v * dt` comes before `s.v += …`. That's explicit Euler. The swing grows with every pass until the weight leaves the canvas.
+- Set **Refresh rate** to 120Hz: smaller steps, slower growth. Then try 30Hz.
+- Swap the lines back. Still at 30Hz, raise **Stiffness k** to 600. It holds.
+
+<Lab id="canvas-sandbox" program="spring-mass" hz={60} />
+
+<Beat kind="write">The notation</Beat>
+
+CSS can't step anything. A transition knows a start, an end and a duration, and nothing about forces, so it can't feel a floor or a push halfway through. There are two ways to hand physics to it:
+
+- **Bake it.** Work the motion out ahead of time and play it back as `linear()`. The Spring Bench does this with the exact formula; for anything without one, step it. The browser can often run the result off the main thread, but it's a recording: it can't be pushed or interrupted.
+- **Drive it.** Step in JavaScript every frame and write the result to a `transform`, with no transition at all. CSS only draws. This is the real thing, and the only way when the motion has to react.
+
+<div class="snippets">
+<Snippet title="16 · Physics by Hand: a stepped spring, baked into linear()" lab="spring-bench" response={0.4} bounce={0.3} property="scale" to={1}>
+
+```css
+/* A spring stepped by hand, ahead of time: bake(246.7, 21.99)
+   from the cards below (response 0.4, bounce 0.3). One stop per
+   frame at 60Hz, so the stops need no percentages. Within 1% of
+   the Spring Bench's exact curve. */
+:root {
+  --spring-pop: linear(0, 0.0324, 0.1104, 0.2155, 0.3333, 0.4529, 0.567,
+    0.6707, 0.7612, 0.8375, 0.8994, 0.948, 0.9845, 1.0106, 1.028, 1.0384,
+    1.0434, 1.0443, 1.0424, 1.0386, 1.0338, 1.0285, 1.0233, 1.0183, 1.0138,
+    1.0099, 1.0066, 1.004, 1.0019, 1.0004, 0.9993, 0.9986, 0.9982, 0.9981,
+    0.998, 0.9981, 0.9983, 0.9985, 0.9988, 0.999, 0.9992, 0.9994, 1);
+  --spring-pop-dur: 700ms;
+}
+
+.badge {
+  transform: scale(0);
+  transition: transform var(--spring-pop-dur) var(--spring-pop);
+}
+
+.badge.is-shown {
+  transform: scale(1);
+}
+```
+
+</Snippet>
+
+<Snippet title="16 · Physics by Hand: a spring in 6 lines, on a fixed step" lab="canvas-sandbox" source={fixedSpring}>
+
+```js
+function step(s, target, dt, k = 170, c = 26, m = 1) {
+  const force = -k * (s.x - target) - c * s.v;
+  s.v += (force / m) * dt;   // semi-implicit Euler:
+  s.x += s.v * dt;           // velocity first, then position
+  return s;
+}
+
+// A fixed step: the same physics at 30, 60 or 144Hz.
+const STEP = 1 / 120;                         // seconds
+const box = document.querySelector('.box');
+const spring = { x: 0, v: 0 };
+let target = 0;
+let acc = 0;                                  // time not yet stepped, s
+let last;                                     // previous frame's timestamp, ms
+
+addEventListener('pointerdown', (e) => { target = e.clientX; });
+
+function frame(now) {
+  const elapsed = last === undefined ? 0 : (now - last) / 1000;
+  last = now;
+  acc += Math.min(elapsed, 1 / 15);           // clamp a long pause
+  while (acc >= STEP) {                       // as many whole steps as fit
+    step(spring, target, STEP);
+    acc -= STEP;
+  }
+  box.style.transform = `translateX(${spring.x}px)`;
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+```
+
+</Snippet>
+
+<Snippet title="16 · Physics by Hand: bake a spring for CSS" lab="spring-bench" response={0.4} bounce={0.3} property="scale" to={1}>
+
+```js
+// Step the spring ahead of time and keep one x per frame.
+// Uses step() from the card above.
+function bake(k, c, m = 1, fps = 60, substeps = 16) {
+  const s = { x: 0, v: 0 };
+  const stops = [0];
+  const dt = 1 / (fps * substeps);            // ahead of time, tiny steps are free
+  for (let frame = 1; frame <= fps * 5; frame++) {   // five seconds at most
+    for (let i = 0; i < substeps; i++) step(s, 1, dt, k, c, m);
+    stops.push(+s.x.toFixed(4));
+    if (Math.abs(s.x - 1) < 0.001 && Math.abs(s.v) < 0.01) break;  // settled
+  }
+  stops[stops.length - 1] = 1;                // end exactly on the target
+  return {
+    easing: `linear(${stops.join(', ')})`,
+    duration: Math.round(((stops.length - 1) * 1000) / fps),   // ms
+  };
+}
+
+const pop = bake(246.7, 21.99);               // response 0.4, bounce 0.3
+const root = document.documentElement.style;
+root.setProperty('--spring-pop', pop.easing); // the CSS card above
+root.setProperty('--spring-pop-dur', `${pop.duration}ms`);
+```
+
+</Snippet>
+
+<Snippet title="16 · Physics by Hand: gravity, a floor, a bounce, friction" lab="canvas-sandbox" source={floorBalls}>
+
+```js
+const GRAVITY = 1200;     // px/s², downwards
+const RESTITUTION = 0.7;  // share of speed kept at each bounce
+const FRICTION = 3;       // per second, while touching the floor
+
+// One step for one ball, velocity first. The box is width × floor px.
+function step(b, dt, width, floor) {
+  b.vy += GRAVITY * dt;                    // gravity changes the speed
+  b.x += b.vx * dt;                        // the speed changes the position
+  b.y += b.vy * dt;
+
+  if (b.y + b.r > floor) {                 // below the floor: put it back
+    b.y = floor - b.r;
+    if (b.vy > 0) b.vy = -b.vy * RESTITUTION;  // bounce, keeping a share
+    b.vx *= Math.exp(-FRICTION * dt);      // the floor drags it sideways
+  }
+  if (b.x - b.r < 0) {                     // walls: the same check, sideways
+    b.x = b.r;
+    b.vx = Math.abs(b.vx) * RESTITUTION;
+  } else if (b.x + b.r > width) {
+    b.x = width - b.r;
+    b.vx = -Math.abs(b.vx) * RESTITUTION;
+  }
+}
+
+// Run it inside the fixed-step loop, for every ball:
+//   while (acc >= STEP) {
+//     for (const b of balls) step(b, STEP, width, height);
+//     acc -= STEP;
+//   }
+```
+
+</Snippet>
+</div>
+
+Two details. Friction is written per second, `Math.exp(-FRICTION * dt)`, not as a share per step, so it survives a change of step size. And for readers who ask for reduced motion, check `matchMedia('(prefers-reduced-motion: reduce)').matches` and set the position straight to the target instead of stepping towards it.
+
+<Beat kind="drill">Tune the spring to match</Beat>
+
+A spring plays in blue. Match it with response and bounce. Behind those two dials are a `k` and a `c`, the same two numbers the six lines use. Read the tempo first, then the overshoot.
+
+<Drill kind="tune-to-match" trials={5} chapter={16} />

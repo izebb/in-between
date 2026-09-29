@@ -7,7 +7,7 @@
   import { onMount } from "svelte";
   import { damp, createLoop, type Loop } from "@inbetween/core";
 
-  let mode = $state<"native" | "jacked">("native");
+  let mode = $state<"native" | "triggered" | "jacked">("native");
   let supported = $state(true);
   let scroller: HTMLDivElement;
   let loop: Loop | null = null;
@@ -15,7 +15,10 @@
 
   onMount(() => {
     supported = typeof CSS !== "undefined" && CSS.supports("animation-timeline: scroll()");
-    return () => loop?.stop();
+    return () => {
+      loop?.stop();
+      io?.disconnect();
+    };
   });
 
   function wheel(e: WheelEvent) {
@@ -33,9 +36,20 @@
       });
     }
   }
-  function setMode(m: "native" | "jacked") {
+  let io: IntersectionObserver | null = null;
+  function setMode(m: "native" | "triggered" | "jacked") {
     mode = m;
     target = scroller.scrollTop;
+    io?.disconnect();
+    io = null;
+    scroller.querySelectorAll(".card").forEach((c) => c.classList.remove("in"));
+    if (m === "triggered") {
+      // Time-based: each card plays its own reveal once it enters, at its own speed.
+      io = new IntersectionObserver((entries) => {
+        for (const e of entries) if (e.isIntersecting) { e.target.classList.add("in"); io?.unobserve(e.target); }
+      }, { root: scroller, threshold: 0.35 });
+      scroller.querySelectorAll(".card").forEach((c) => io!.observe(c));
+    }
   }
   const cards = ["Timing", "Spacing", "Weight", "Springs", "Momentum", "Stagger", "Continuity", "The Loop"];
 </script>
@@ -44,11 +58,12 @@
   <div class="bar">
     <div class="seg" role="group" aria-label="Scroll mode">
       <button type="button" aria-pressed={mode === "native"} onclick={() => setMode("native")}>Native scroll</button>
+      <button type="button" aria-pressed={mode === "triggered"} onclick={() => setMode("triggered")}>Triggered</button>
       <button type="button" aria-pressed={mode === "jacked"} onclick={() => setMode("jacked")}>Scroll-jacked</button>
     </div>
     {#if !supported}<span class="note">This browser doesn't support scroll-driven animations yet, so the cards simply appear.</span>{/if}
   </div>
-  <div class="scroller" class:sd={supported} bind:this={scroller} onwheel={wheel} tabindex="0" aria-label="Scrollable page">
+  <div class="scroller" class:sd={supported && mode !== "triggered"} class:io={mode === "triggered"} bind:this={scroller} onwheel={wheel} tabindex="0" aria-label="Scrollable page">
     <div class="progress" aria-hidden="true"></div>
     <p class="intro serif">Scroll this page.</p>
     {#each cards as c, i (c)}
@@ -75,6 +90,9 @@
   @keyframes reveal { from { opacity: 0; translate: 0 var(--dist-travel); } }
   .sd .progress { animation: grow linear both; animation-timeline: scroll(nearest block); }
   .sd .card { animation: reveal var(--ease-out) both; animation-timeline: view(); animation-range: entry 0% cover 30%; }
+  /* Triggered: a time-based reveal once each card enters (IntersectionObserver). */
+  .io .card { opacity: 0; translate: 0 var(--dist-travel); transition: opacity var(--dur-base) var(--ease-out), translate var(--dur-base) var(--ease-out); }
+  .io .card:global(.in) { opacity: 1; translate: none; }
   @media (prefers-reduced-motion: reduce) {
     :global(:root:not([data-motion="full"])) .sd .card { animation: none; }
   }
