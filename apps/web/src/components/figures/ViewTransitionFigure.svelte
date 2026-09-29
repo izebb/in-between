@@ -83,7 +83,7 @@
         <button type="button" class="btn small back" onclick={() => go(null)}>← Back</button>
         <span class="hero t{it.id}" style={`view-transition-name:${name("img", it.id)}`}></span>
         <span class="title big serif" style={`view-transition-name:${name("title", it.id)}`}>{it.title}</span>
-        <p class="sub">{it.sub}. The hero image and the title are the same elements as in the list, in a new place.</p>
+        <p class="sub">{it.sub}. {shared ? "The picture and the title have the same view-transition-name as the row you tapped, so the browser carried them here." : "Nothing here shares a name with the list, so the whole view cross-faded."}</p>
       </div>
     {/if}
   </div>

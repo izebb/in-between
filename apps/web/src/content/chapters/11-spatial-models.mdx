@@ -33,7 +33,7 @@ This phone holds a small app: Home, an Inbox, a message, and a reply. Tap *Inbox
   <Spatial />
 </Figure>
 
-You saw two kinds of move. Going deeper slid the new screen in from the right, and the one you left gave way to the left. Back ran along the same line the other way. The reply did something else. It rose from below and sat *on top of* the message, and the message sank back a little behind it. The map records both: the screens lie in a row, and the reply floats above the end of it.
+You saw two kinds of move. Going deeper slid the new screen in from the right, and the one you left gave way to the left. Back ran the same trip in reverse: the top screen slid off to the right, the way it came, and the one under it came back from where you left it. The reply did something else. It rose from below and sat *on top of* the message, and the message sank back a little behind it. The map records both: the screens lie in a row, and the reply floats above the end of it.
 
 <Beat kind="feel">Where is Home?</Beat>
 
@@ -54,18 +54,18 @@ Two axes do most of the work: **x for sequence** and **z for hierarchy**.
 <Beat kind="more">x is sequence</Beat>
 
 <Margin kind="wild">
-  <p>On iPhone, each new screen in a navigation stack slides in from the right. Swipe in from the left edge and the top screen follows your finger back to the right, the way it came. A full-height sheet rises from the bottom, and the screen behind it shrinks back a little.</p>
+  <p>On iPhone, each new screen in a navigation stack slides in from the right. Swipe in from the left edge and the top screen follows your finger back to the right, the way it came. A sheet that covers most of the screen rises from the bottom, and the screen behind it shrinks back a little.</p>
 </Margin>
 
 Left to right is the order of things: pages in a book, steps in a form, screens in a navigation stack. Going deeper *pushes* a screen onto the stack. Back *pops* it off. The next screen is always to the right of this one, so a push arrives from the right, and back moves everything the other way.
 
-In figure 11.1 the arriving screen travels the full width in 360ms with `--ease-out`. The screen it replaces moves 30% of the width the same way and fades to half in 252ms with `--ease-in`: 0.7× the time, the exit rule from chapter 03. Going back swaps the sides and changes nothing else.
+In figure 11.1 the arriving screen travels the full width in 360ms with `--ease-out`. The screen it replaces moves 30% of the width the same way and fades to half in 252ms with `--ease-in`: 0.7× the time, the exit rule from chapter 03. Going back plays both paths in reverse. The top screen slides back off the full width, on the exit's 252ms, and the screen under it returns from 30%, on the enter's 360ms.
 
 <Margin kind="def">
   <p><b>Parallax.</b> When you move, near things slide past faster than far things. So of two layers moving together, the one that moves less looks further away.</p>
 </Margin>
 
-That short 30% move does real work. The two screens move the same way at different speeds, so the slower one looks further away: *under* the new one, not beside it. A push is mostly x, with a little z.
+That short 30% move does real work. The two screens move the same way at different speeds, so the slower one looks further away: *under* the new one, not beside it. A push is mostly x, with a little z. Back keeps that order: the screen that was on top leaves on top.
 
 Which side is "forward" comes from reading. In Arabic or Hebrew, text runs right to left, and the model mirrors: forward arrives from the left, and the back arrow points right. Mirror the whole model at once, never one transition on its own.
 
@@ -120,7 +120,7 @@ Set it back to `0` and read the sheet. Both screens start on the same frame, and
 
 <Beat kind="write">The notation</Beat>
 
-A same-document view transition can run figure 11.1's push and pop. Decide the direction *before* the transition starts, and let one variable carry it: a `data-direction` attribute on `<html>` flips `--dir`, and a right-to-left page flips it again. The keyframes never change, only the sign. Under reduced motion the slides are skipped, and the browser's default cross-fade runs instead.
+A same-document view transition can run figure 11.1's push and pop. Decide the direction *before* the transition starts, and put it on `<html>` as a `data-direction` attribute. Back plays the same two paths in reverse, so it only swaps the keyframes and lifts the old picture above the new one. `--dir` says which side forward comes from, and a right-to-left page flips it. Under reduced motion the slides are skipped, and the browser's default cross-fade runs instead.
 
 Newer browsers can also hand the direction to the transition itself: pass `types: ['back']` along with the `update` callback to `startViewTransition()`, and match it in CSS with `:active-view-transition-type(back)` on the root. The attribute works wherever view transitions do.
 
@@ -128,31 +128,35 @@ Newer browsers can also hand the direction to the transition itself: pass `types
 <Snippet title="11 · Spatial models: push and pop as a view transition" lab="exposure-sheet" extra={push}>
 
 ```css
-/* Which way is forward? 1: from the right. -1: from the left. */
+/* Which side does forward come from? 1: the right. -1: the left. */
 html { --dir: 1; }
-html[data-direction="back"] { --dir: -1; }
 html[dir="rtl"] { --dir: -1; }                        /* mirror the model */
-html[dir="rtl"][data-direction="back"] { --dir: 1; }
 
 @media (prefers-reduced-motion: no-preference) {
-  /* The screen you arrive on travels the full width, on top. */
+  /* Forward: the new page arrives over the old one,
+     which gives way 30% and fades. */
   ::view-transition-new(root) {
     animation: 360ms cubic-bezier(.2, .8, .2, 1) both arrive;
   }
-
-  /* The screen you leave moves 30% the same way, and fades. */
   ::view-transition-old(root) {
     animation: 252ms cubic-bezier(.4, 0, 1, 1) both give-way;
   }
+
+  /* Back retraces it: the old page leaves the way it came, on top,
+     and the page under it comes back from where it was left. */
+  html[data-direction="back"]::view-transition-old(root) {
+    z-index: 1;
+    animation: 252ms cubic-bezier(.4, 0, 1, 1) both leave;
+  }
+  html[data-direction="back"]::view-transition-new(root) {
+    animation: 360ms cubic-bezier(.2, .8, .2, 1) both come-back;
+  }
 }
 
-@keyframes arrive {
-  from { transform: translateX(calc(100% * var(--dir))); }
-}
-
-@keyframes give-way {
-  to { transform: translateX(calc(-30% * var(--dir))); opacity: 0.5; }
-}
+@keyframes arrive    { from { transform: translateX(calc(100% * var(--dir))); } }
+@keyframes give-way  { to   { transform: translateX(calc(-30% * var(--dir))); opacity: 0.5; } }
+@keyframes leave     { to   { transform: translateX(calc(100% * var(--dir))); } }
+@keyframes come-back { from { transform: translateX(calc(-30% * var(--dir))); opacity: 0.5; } }
 ```
 
 </Snippet>
@@ -180,40 +184,44 @@ navigate(() => showPage('home'), 'back');  // back: from the left
 
 ```js
 // Pages sit on top of each other (position: absolute; inset: 0)
-// in a container with overflow: clip. dir: 1 forward, -1 back.
+// in a container with overflow: clip.
 const ARRIVE = { duration: 360, easing: 'cubic-bezier(.2, .8, .2, 1)' };
 const LEAVE = { duration: 252, easing: 'cubic-bezier(.4, 0, 1, 1)' };
+const reduce = matchMedia('(prefers-reduced-motion: reduce)');
 
-async function slide(from, to, dir) {
-  if (getComputedStyle(from).direction === 'rtl') dir = -dir; // mirror
-  from.after(to); // the arriving page goes on top
-  to.hidden = false;
-  if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    const leave = from.animate([
-      { transform: 'none', opacity: 1 },
-      { transform: `translateX(${-30 * dir}%)`, opacity: 0.5 },
-    ], { ...LEAVE, fill: 'forwards' }); // hold until the new page lands
-    await to.animate([
-      { transform: `translateX(${100 * dir}%)` },
-      { transform: 'none' },
-    ], ARRIVE).finished;
-    leave.cancel();
+// Forward: `top` arrives over `under`, which gives way 30% and fades.
+// Back plays the same two paths in reverse, and `top` stays on top.
+async function slide(under, top, back) {
+  const side = getComputedStyle(top).direction === 'rtl' ? -1 : 1; // mirror
+  const aside = { transform: `translateX(${100 * side}%)`, opacity: 1 };
+  const given = { transform: `translateX(${-30 * side}%)`, opacity: 0.5 };
+  const home = { transform: 'none', opacity: 1 };
+  under.after(top); // the deeper page is always the upper one
+  under.hidden = top.hidden = false;
+  if (!reduce.matches) {
+    const a = top.animate(back ? [home, aside] : [aside, home],
+      { ...(back ? LEAVE : ARRIVE), fill: 'forwards' });
+    const b = under.animate(back ? [given, home] : [home, given],
+      { ...(back ? ARRIVE : LEAVE), fill: 'forwards' });
+    await Promise.all([a.finished, b.finished]);
+    a.cancel();
+    b.cancel();
   }
-  from.hidden = true;
+  (back ? top : under).hidden = true;
 }
 
 const stack = [document.querySelector('.page')];
 
 function forward(page) {
-  const from = stack.at(-1);
+  const under = stack.at(-1);
   stack.push(page);
-  return slide(from, page, 1);
+  return slide(under, page, false);
 }
 
 function back() {
   if (stack.length < 2) return;
-  const from = stack.pop();
-  return slide(from, stack.at(-1), -1); // same path, other way
+  const top = stack.pop();
+  return slide(stack.at(-1), top, true); // same paths, the other way
 }
 ```
 

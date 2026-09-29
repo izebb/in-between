@@ -3,7 +3,10 @@
  * A spacing chart is just these samples, drawn as ticks.
  */
 
-/** Times (ms) of every frame from 0 to duration inclusive, on an fps grid. */
+/**
+ * Times (ms) of every frame from 0 to duration inclusive: duration × fps frames (rounded), spaced
+ * evenly so the last one lands on the end (e.g. 280ms at 60fps: 17 frames of 16.47ms, not 16.67).
+ */
 export function frameTimes(duration: number, fps = 60): number[] {
   const n = Math.max(1, Math.round((duration / 1000) * fps));
   const out: number[] = [];

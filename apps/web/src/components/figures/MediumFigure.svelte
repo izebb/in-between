@@ -3,7 +3,7 @@
    * The same N dots moved three ways: DOM with transform, DOM with left/top, and Canvas.
    * The readout is measured, on your machine, right now. Runs only while on screen.
    */
-  import { onMount, onDestroy, tick } from "svelte";
+  import { onMount, onDestroy, tick, untrack } from "svelte";
   import { createLoop, type Loop } from "@inbetween/core";
   import { prefs, watchPlateStill } from "~/lib/prefs.svelte";
   import { resize } from "~/lib/actions";
@@ -17,6 +17,8 @@
   let host: HTMLDivElement;
   let canvas: HTMLCanvasElement;
   let loop: Loop | null = null;
+  /** Seconds of motion so far. Kept across restarts, so changing the mode or the count never jumps the dots. */
+  let clock = 0;
   let frameMs = $state(0);
   let fps = $state(0);
   let visible = false;
@@ -83,14 +85,17 @@
     loop?.stop();
     if (!visible) return;
     if ((prefs.reduced || plateStill) && !requested) {
-      frame(0);
+      frame(clock);
       return;
     }
     let samples: number[] = [];
     let lastT = performance.now();
-    loop = createLoop(({ time }) => {
+    // The first frames after a change pay for building the dots, once. Measure the steady state.
+    let warmup = 6;
+    loop = createLoop(({ dt }) => {
       const now = performance.now();
-      samples.push(now - lastT);
+      if (warmup > 0) warmup--;
+      else samples.push(now - lastT);
       lastT = now;
       if (samples.length >= 30) {
         const avg = samples.reduce((a, b) => a + b, 0) / samples.length;
@@ -98,15 +103,21 @@
         fps = 1000 / avg;
         samples = [];
       }
-      frame(time);
+      clock += dt;
+      frame(clock);
     });
   }
+
+  $effect(() => {
+    if (prefs.reduced) untrack(() => (requested = false));
+  });
 
   $effect(() => {
     void n;
     void mode;
     void requested;
     void plateStill;
+    void prefs.reduced;
     build().then(start);
   });
 
@@ -118,7 +129,11 @@
       else loop?.stop();
     });
     io.observe(host.parentElement!);
-    const off = watchPlateStill(host, (v) => (plateStill = v));
+    // Turning Still back on stops a test the reader ran: the toggle always wins.
+    const off = watchPlateStill(host, (v) => {
+      plateStill = v;
+      if (v) requested = false;
+    });
     return () => {
       io.disconnect();
       off();

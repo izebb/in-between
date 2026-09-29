@@ -207,7 +207,7 @@ Then, in `release()`, change `s.natural = s.x + v / lambda` to `s.natural = s.x`
 
 CSS can't simulate friction. A transition only knows a start, an end and a duration, and it can't react to a throw. But every decay has the same shape, stretched in time, so once JS has worked out where the throw lands, CSS can replay the glide. A long ease-out is the rough version; `linear()` sampled from <code>1 − e<sup>−λt</sup></code> is close to exact, and `cubic-bezier(.18, .8, .4, 1)` stays within 1% of it.
 
-In JS the glide is the real thing. Per frame, it is `v *= Math.exp(-lambda * dt)` then `x += v * dt`, which is what Fig. 6.2 does. The cards below compute position from the time since release instead, so the glide ends exactly on the projection at any frame rate.
+In JS the glide is the real thing. Per frame, it is roughly `v *= Math.exp(-lambda * dt)` then `x += v * dt`, but those steps add up to a little short of the projection, and more so at low frame rates. Fig. 6.2 moves each frame by the exact distance, `v / lambda * (1 - Math.exp(-lambda * dt))`, before it takes the speed down. The cards below compute position from the time since release instead. Both end exactly on the projection at any frame rate.
 
 <div class="snippets">
 <Snippet title="06 · Friction: a decay, replayed in CSS" lab="spacing-chart" easing={decayCss} duration={460} distance={100}>
@@ -333,4 +333,4 @@ function snapToPage(v, pageWidth, pageCount) {
 
 Two versions of the same change. Pick the one that feels right, then say why in one word. Watch the endings: does it run out of speed, or hit a wall?
 
-<Drill kind="blind-ab" trials={5} chapter={6} />
+<Drill kind="blind-ab" topic="physics" trials={5} chapter={6} />

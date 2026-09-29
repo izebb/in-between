@@ -12,7 +12,7 @@ A spring makes no promise about time. It describes the thing instead: how hard i
 Both dots chase the same target, the blue ring. Every so often the target jumps. Tap the figure to move it yourself. Under each row, a line traces the dot's velocity.
 
 <Figure n="5.1" caption="A tween and a spring, retargeted mid-flight">
-  <Canvas program="interrupt" />
+  <Canvas program="interrupt" readout={false} />
 </Figure>
 
 Watch each jump. The tween starts its new trip from a standstill: its velocity line drops straight to zero and climbs again, and the dot stalls before it turns. The spring never stalls. The pull changes direction, but the speed the dot already had is still there, so it curves into the new trip. The spring never needs to know how long the trip will take. It only needs to know where the target is now.
@@ -60,7 +60,7 @@ On every frame the spring adds two forces, the pull `−k · x` and the friction
   <Canvas program="spring-mass" />
 </Figure>
 
-Drag the weight down and let go. With these settings it swings back and forth for a while, because there is almost no friction. Raise the damping to about 22 and it returns without passing the rest line. Then double the mass: it gets slower, and it overshoots again, a little.
+Every few seconds the figure pulls the weight down and lets go, and you can drag it yourself. With these settings it swings back and forth for a while, because there is almost no friction. Raise the damping to about 22 and it returns without passing the rest line. Then double the mass: it gets slower, and it overshoots again, a little.
 
 That is the trouble with `k`, `c` and `m` as design tools: each one changes two things at once. Stiffer means faster and bouncier. Heavier means slower and bouncier. More damping means less bounce, but past a point it also means slower.
 

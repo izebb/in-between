@@ -24,14 +24,15 @@
     c.clearRect(0, 0, w, height);
     const pen = prefs.pencils;
     if (t === null) {
-      // Still: an onion skin of the loop, ghosts in blue, the rest pose in red.
+      // Still: an onion skin of the loop, ghosts in blue, the key pose in red.
+      const { from, to, key } = p.still ?? { from: 0, to: 0.6, key: 0.62 };
       const ghost = { ...pen, red: pen.blue };
       for (let i = 1; i < 8; i++) {
         c.globalAlpha = 0.18 + 0.05 * i;
-        p.draw(c, i / 8 * 0.6, w, height, ghost);
+        p.draw(c, from + ((to - from) * i) / 8, w, height, ghost);
       }
       c.globalAlpha = 1;
-      p.draw(c, 0.62, w, height, pen);
+      p.draw(c, key, w, height, pen);
       return;
     }
     p.draw(c, t, w, height, pen);

@@ -7,7 +7,7 @@
    */
   import { onMount, onDestroy } from "svelte";
   import { createLoop, rubberband, velocityTracker, spring, fromResponse, lambdaFromRate, DecelerationRate, type Loop } from "@inbetween/core";
-  import { prefs } from "~/lib/prefs.svelte";
+  import { prefs, watchPlateStill } from "~/lib/prefs.svelte";
   import { resize } from "~/lib/actions";
 
   let { response = 0.35, bounce = 0.1 }: { response?: number; bounce?: number } = $props();
@@ -26,6 +26,9 @@
   const tracker = velocityTracker(100);
   let grabOffset = 0;
   let track: HTMLDivElement;
+  let root: HTMLElement;
+  let still = $state(false);
+  const RUBBER = 0.55; // the rubberband() default: iOS-like
 
   function toTrack(clientX: number) {
     return clientX - track.getBoundingClientRect().left;
@@ -33,7 +36,16 @@
   function limit(raw: number) {
     if (raw >= 0 && raw <= max) return raw;
     if (!rubber) return Math.min(max, Math.max(0, raw));
-    return raw < 0 ? rubberband(raw, w) : max + rubberband(raw - max, w);
+    return raw < 0 ? rubberband(raw, w, RUBBER) : max + rubberband(raw - max, w, RUBBER);
+  }
+  /** The inverse: where the finger would be for the card to sit at `pos`. Catching the card past an
+   *  edge must start from here, or the band is applied twice and the card jumps toward the edge. */
+  function unlimit(pos: number) {
+    if (pos >= 0 && pos <= max) return pos;
+    const past = pos < 0 ? -pos : pos - max;
+    const p = Math.min(past, w * 0.99);
+    const raw = (p * w) / (RUBBER * (w - p));
+    return pos < 0 ? -raw : max + raw;
   }
 
   function down(e: PointerEvent) {
@@ -41,44 +53,61 @@
     loop = null;
     dragging = true;
     (e.currentTarget as Element).setPointerCapture(e.pointerId);
-    grabOffset = toTrack(e.clientX) - x;
+    grabOffset = toTrack(e.clientX) - (rubber ? unlimit(x) : x); // keep the spot you took hold of
     tracker.reset();
     tracker.add(x, e.timeStamp);
   }
-  let raw = 0;
   function move(e: PointerEvent) {
     if (!dragging) return;
-    raw = toTrack(e.clientX) - grabOffset;
-    x = limit(raw);
-    tracker.add(raw, e.timeStamp);
+    x = limit(toTrack(e.clientX) - grabOffset);
+    tracker.add(x, e.timeStamp); // the card's own path, so the spring starts at the card's speed
   }
-  function up() {
+  function up(e: PointerEvent) {
     if (!dragging) return;
     dragging = false;
+    // Where it lifted, and when: a finger that stopped before lifting has no speed left to give.
+    // (A cancelled pointer may report no position, so it keeps the last one.)
+    if (e.type === "pointerup") x = limit(toTrack(e.clientX) - grabOffset);
+    tracker.add(x, e.timeStamp);
     const v = tracker.velocity(); // px/s, from the last ~100ms only
     const lambda = lambdaFromRate(DecelerationRate.normal);
     const landing = projectOn ? x + v / lambda : x;
     const target = detents.reduce((a, b) => (Math.abs(b - landing) < Math.abs(a - landing) ? b : a));
     last = { v, landing, target };
-    if (prefs.reduced) {
+    settle(target, carry ? v : 0);
+  }
+  /** A spring to the target, starting at velocity v. Reduced motion (or Still): the drag was the
+   *  reader's own, so it still tracks 1:1; only the settle is skipped. */
+  function settle(target: number, v: number) {
+    loop?.stop();
+    loop = null;
+    if (prefs.reduced || still) {
       x = target;
       return;
     }
-    const sp = spring(fromResponse(response, bounce), { from: x, to: target, velocity: carry ? v : 0 });
+    const sp = spring(fromResponse(response, bounce), { from: x, to: target, velocity: v });
     const end = sp.settleTime();
     loop = createLoop(({ time }) => {
       x = sp.position(Math.min(time, end));
       if (time >= end) {
         x = target;
+        loop = null;
         return false;
       }
     });
   }
-  onMount(() => prefs.start());
+  function key(e: KeyboardEvent) {
+    // The next stop along, from wherever the card is now (it may be mid-settle).
+    const next = e.key === "ArrowRight" ? detents.find((d) => d > x + 1) : e.key === "ArrowLeft" ? [...detents].reverse().find((d) => d < x - 1) : undefined;
+    if (next === undefined) return;
+    e.preventDefault();
+    settle(next, 0);
+  }
+  onMount(() => watchPlateStill(root, (v) => (still = v)));
   onDestroy(() => loop?.stop());
 </script>
 
-<div class="drag">
+<div class="drag" bind:this={root}>
   <div class="track" bind:this={track} use:resize={(width) => (w = width)}>
     <!-- Placed by fraction of the track, so the server render fits any width before hydration. -->
     {#each [0, 0.5, 1] as f (f)}<span class="detent" style={`left:calc(${f * 100}% + ${CARD / 2 - f * CARD}px)`}></span>{/each}
@@ -99,11 +128,7 @@
       onpointermove={move}
       onpointerup={up}
       onpointercancel={up}
-      onkeydown={(e) => {
-        const i = detents.findIndex((d) => Math.abs(d - x) < 1);
-        if (e.key === "ArrowRight" && i < 2) x = detents[i + 1] ?? max;
-        if (e.key === "ArrowLeft" && i > 0) x = detents[i - 1] ?? 0;
-      }}
+      onkeydown={key}
     >
       <span class="grip"></span>
     </div>

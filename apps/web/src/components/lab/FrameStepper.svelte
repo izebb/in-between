@@ -14,6 +14,7 @@
   import { PageTransport } from "~/lib/sandbox/page.svelte";
   import { readUrlState } from "~/lib/labstate";
   import { resize } from "~/lib/actions";
+  import { cssToWaapi, waapiToCss } from "~/lib/sandbox/translate";
   import type { SandboxTransport } from "~/lib/sandbox/transport.svelte";
 
   export interface StepperState {
@@ -24,6 +25,7 @@
     pass: number;
   }
 
+  // The demos travel 160px, so the overshoot still lands inside the narrowest stage (a chapter embed).
   const CSS_DEMO = `/* Change a number, then step through it frame by frame. */
 .box {
   transform: translateX(0px);
@@ -31,14 +33,14 @@
 }
 
 .is-on .box {
-  transform: translateX(320px);
+  transform: translateX(160px);
 }
 `;
   const JS_DEMO = `// Any Web Animation, CSS transition, or rAF loop runs on the lab's clock.
 const box = document.querySelector('.box');
 
 box.animate(
-  [{ transform: 'translateX(0px)' }, { transform: 'translateX(320px)' }],
+  [{ transform: 'translateX(0px)' }, { transform: 'translateX(160px)' }],
   { duration: 600, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)', fill: 'both' },
 );
 `;
@@ -137,11 +139,25 @@ box.animate(
 
   // ---------------- code mode
   let sandboxTransport = $state<SandboxTransport | undefined>(undefined);
+  // Switching language keeps the example: the same motion, written the other way. What each side held
+  // when you left it comes back if you haven't edited since; code that can't be translated gets a demo.
+  const left: Partial<Record<"css" | "js", string>> = {};
+  let arrived = lab.code;
   function setDialect(d: "css" | "js") {
     if (d === lab.dialect) return;
+    const here = lab.code;
+    const back = left[d];
+    const next =
+      (back !== undefined && here === arrived ? back : null) ??
+      (d === "js" ? cssToWaapi(here) : waapiToCss(here)) ??
+      back ??
+      (d === "css" ? CSS_DEMO : JS_DEMO);
+    left[lab.dialect] = here;
+    if (debounce) clearTimeout(debounce);
     lab.dialect = d;
-    lab.code = d === "css" ? CSS_DEMO : JS_DEMO;
-    runCode = lab.code; // change language and code together, so the stage never runs CSS as JS
+    lab.code = next;
+    arrived = next;
+    runCode = next; // change language and code together, so the stage never runs CSS as JS
   }
   let runCode = $state(lab.code);
   let debounce: ReturnType<typeof setTimeout> | null = null;
@@ -150,10 +166,6 @@ box.animate(
     if (isDrag) runCode = v;
     else debounce = setTimeout(() => (runCode = v), 350);
   }
-  $effect(() => {
-    void lab.dialect;
-    runCode = lab.code;
-  });
 
   const transport = $derived(lab.mode === "code" ? (sandboxTransport ?? page) : page);
   const snapshot = $derived(JSON.parse(JSON.stringify(lab)));
@@ -169,7 +181,12 @@ box.animate(
       <span class="smallcaps">Runs as written</span>
     </div>
     <div class="code-body">
-      <CodeEditor bind:value={lab.code} language={lab.dialect === "css" ? "css" : "javascript"} onchange={codeChanged} label="Code to step through" />
+      <!-- A new language is a new page of code: it fades in, rather than swapping under the cursor. -->
+      {#key lab.dialect}
+        <div class="swap" data-motion="fade">
+          <CodeEditor bind:value={lab.code} language={lab.dialect === "css" ? "css" : "javascript"} onchange={codeChanged} label="Code to step through" />
+        </div>
+      {/key}
     </div>
   </div>
 {/snippet}
@@ -242,4 +259,5 @@ box.animate(
   .code-head { display: flex; align-items: center; justify-content: space-between; padding: 0.6rem 0.6rem 0.5rem 0.75rem; border-bottom: 1px solid var(--rule); }
   .code-head .smallcaps { color: var(--graphite-strong); }
   .code-body { flex: 1; position: relative; min-height: 260px; overflow: hidden; }
+  .swap { position: absolute; inset: 0; }
 </style>

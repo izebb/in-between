@@ -104,7 +104,12 @@ function draw(ctx, s, width, height) {
       <span class="smallcaps hint">hot reload · state kept</span>
     </div>
     <div class="code-body">
-      <CodeEditor bind:value={lab.code} language="javascript" onchange={edited} label="Canvas program" />
+      <!-- Another program fades in; edits to this one don't. -->
+      {#key lab.example}
+        <div class="swap" data-motion="fade">
+          <CodeEditor bind:value={lab.code} language="javascript" onchange={edited} label="Canvas program" />
+        </div>
+      {/key}
     </div>
   </div>
 {/snippet}
@@ -168,6 +173,7 @@ function draw(ctx, s, width, height) {
   .code-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding: 0.7rem 0.75rem; border-bottom: 1px solid var(--rule); }
   .code-head .smallcaps { color: var(--graphite-strong); }
   .code-body { flex: 1; position: relative; min-height: 320px; overflow: hidden; }
+  .swap { position: absolute; inset: 0; }
   .select { width: 100%; font-size: var(--text-sm); padding: 0.3rem 0.4rem; border: 1px solid var(--rule); border-radius: 5px; background: var(--paper); color: var(--ink); }
   .row { display: flex; gap: 0.3rem; }
   .readouts { display: flex; gap: 1rem; font-size: var(--text-xs); color: var(--graphite-strong); }

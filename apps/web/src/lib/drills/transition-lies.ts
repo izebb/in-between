@@ -5,7 +5,7 @@ export type Lie = "overshoot" | "index" | "baseline";
 
 export const LIES: Record<Lie, { name: string; why: string }> = {
   overshoot: { name: "Overshoot", why: "The bars bounce past their values. For a moment the chart shows numbers that are not in the data." },
-  index: { name: "Identity swap", why: "Bars are matched by position, not by datum: each bar morphs into a different product. Follow one and it becomes someone else." },
+  index: { name: "Identity swap", why: "Bars are matched by position, not by datum: each bar morphs into whichever tree ends up in its slot. Follow the red one and halfway it becomes a different tree." },
   baseline: { name: "Truncated axis", why: "The axis quietly stops starting at zero during the move, so small differences suddenly look huge." },
 };
 
@@ -35,11 +35,11 @@ export const transitionLies: DrillDef<LiesSpec, number> = {
   kind: "choice",
   make(rand) {
     const [from, to] = PAIRS[Math.floor(rand() * PAIRS.length)];
+    // Every pair here reorders the bars (or drops some), so each lie, the identity swap too, shows in each.
     const lies: Lie[] = ["overshoot", "index", "baseline"];
-    // Identity swaps only show when the order changes.
-    const pool = to === "2024" && from === "by-value" ? lies.filter((l) => l !== "index") : lies;
-    return { from, to, lie: pool[Math.floor(rand() * pool.length)], liar: rand() < 0.5 ? 0 : 1 };
+    return { from, to, lie: lies[Math.floor(rand() * lies.length)], liar: rand() < 0.5 ? 0 : 1 };
   },
+  key: (spec) => `${spec.from}>${spec.to}:${spec.lie}`,
   score(spec, answer) {
     const ok = answer === spec.liar;
     const L = LIES[spec.lie];

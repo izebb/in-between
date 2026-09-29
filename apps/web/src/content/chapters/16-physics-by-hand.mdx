@@ -285,8 +285,8 @@ Collisions are checked after the move, so they depend on the step too. A fast ba
 
 This is the weight on a spring from chapter 05, with its code. It takes one step per frame, velocity first. Drag the weight down and let go.
 
-- Set **Damping c** to 0. It swings on and on, to the same height every time.
-- In `update`, swap the two stepping lines, so `s.y += s.v * dt` comes before `s.v += …`. That's explicit Euler. The swing grows with every pass until the weight leaves the canvas.
+- Set **Damping c** to 0, then pull the weight down again and let go. It swings on and on, to the same height every time.
+- In `update`, swap the two stepping lines, so `s.y += s.v * dt` comes before `s.v += …`. That's explicit Euler. Each swing is wider than the last, until the weight leaves the canvas.
 - Set **Refresh rate** to 120Hz: smaller steps, slower growth. Then try 30Hz.
 - Swap the lines back. Still at 30Hz, raise **Stiffness k** to 600. It holds.
 

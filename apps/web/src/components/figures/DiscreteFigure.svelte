@@ -2,9 +2,16 @@
   /**
    * Enter and exit in pure CSS: @starting-style gives an element a style to arrive *from*;
    * transition-behavior: allow-discrete lets `display` wait for the exit to finish.
-   * This panel really is toggled with the `hidden` attribute.
+   * This panel really is toggled with the `hidden` attribute. Under reduced motion (or the plate's
+   * Still preview) the nudge distance is 0, so the enter and exit are fades.
    */
+  import { onMount } from "svelte";
+  import { watchPlateStill } from "~/lib/prefs.svelte";
+
   let open = $state(false);
+  let still = $state(false);
+  let root: HTMLElement;
+  onMount(() => watchPlateStill(root, (v) => (still = v)));
   const SOURCE = `.panel {
   transition: opacity var(--dur-base) var(--ease-out),
               translate var(--dur-base) var(--ease-out),
@@ -27,7 +34,7 @@
 }`;
 </script>
 
-<div class="discrete">
+<div class="discrete" class:still bind:this={root}>
   <div class="demo">
     <button class="btn" type="button" aria-expanded={open} onclick={() => (open = !open)}>{open ? "Hide panel" : "Show panel"}</button>
     <div class="panel" hidden={!open}>
@@ -60,6 +67,7 @@
   @starting-style {
     .panel:not([hidden]) { opacity: 0; translate: 0 var(--dist-nudge); }
   }
+  .still { --dist-nudge: 0px; } /* the reduced-motion tokens, previewed: reduce, don't remove */
   .l { height: 7px; border-radius: 4px; background: color-mix(in srgb, var(--ink) 14%, transparent); margin: 7px 0; }
   .w60 { width: 60%; } .w75 { width: 75%; } .w90 { width: 90%; }
   .code { margin: 0; font-size: 11.5px; line-height: 1.65; white-space: pre-wrap; color: var(--ink); background: var(--paper-raised); border: 1px solid var(--rule); border-radius: 6px; padding: 0.7rem 0.85rem; }

@@ -20,6 +20,7 @@ export const spotPrinciple: DrillDef<SpotSpec, number> = {
     const others = shuffle(rand, PRINCIPLES.filter((x) => x.id !== p.id)).slice(0, 3).map((x) => x.id);
     return { id: p.id, options: shuffle(rand, [p.id, ...others]) };
   },
+  key: (spec) => spec.id,
   score(spec, answer) {
     const ok = spec.options[answer] === spec.id;
     const p = PRINCIPLES.find((x) => x.id === spec.id)!;

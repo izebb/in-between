@@ -41,36 +41,7 @@
   .head { display: flex; justify-content: space-between; align-items: baseline; gap: 0.5rem; }
   label { font-size: var(--text-sm); color: var(--graphite-strong); }
   .hint { font-size: var(--text-xs); color: var(--graphite-strong); font-family: var(--font-mono); }
-  input[type="range"] {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 100%;
-    height: 18px;
-    background: transparent;
-    cursor: pointer;
-    margin: 0;
-  }
-  input[type="range"]::-webkit-slider-runnable-track {
-    height: 1px;
-    background: linear-gradient(to right, var(--graphite) var(--p), var(--rule) var(--p));
-  }
-  input[type="range"]::-moz-range-track { height: 1px; background: var(--rule); }
-  input[type="range"]::-moz-range-progress { height: 1px; background: var(--graphite); }
-  input[type="range"]::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 11px;
-    height: 11px;
-    margin-top: -5px;
-    border-radius: 50%;
-    background: var(--ink);
-    border: 2px solid var(--paper);
-    box-shadow: 0 0 0 1px var(--ink);
-    transition: scale var(--dur-instant) var(--ease-out);
-  }
-  input[type="range"]::-moz-range-thumb {
-    width: 9px; height: 9px; border-radius: 50%;
-    background: var(--ink); border: 2px solid var(--paper); box-shadow: 0 0 0 1px var(--ink);
-  }
-  input[type="range"]:active::-webkit-slider-thumb { scale: 1.2; }
+  /* The range itself is styled for every slider on the site (components.css input[type="range"]);
+     this one fills its track to the value (--p). */
   .slider:global(.is-linked) label { color: var(--blue-pencil); }
 </style>

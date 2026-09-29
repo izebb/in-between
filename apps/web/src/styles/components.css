@@ -51,8 +51,161 @@
     color: var(--graphite-strong);
     transition: background-color var(--dur-quick) var(--ease-out), color var(--dur-quick) var(--ease-out);
   }
+  /* A phone has less room: the options sit closer, so a three-way choice stays on one line */
+  @media (max-width: 480px) { .seg > button { padding: 0 0.4rem; } }
   .seg > button:hover { color: var(--ink); }
   .seg > button[aria-pressed="true"], .seg > button[aria-selected="true"] { color: var(--ink); background: color-mix(in srgb, var(--ink) 9%, transparent); }
+  /* The selection is one tint that slides to the option chosen, on the snappy spring, and retargets
+     if you click again mid-slide (motion/controls.ts measures, this moves). Until it has measured, and
+     without script, each pressed option carries its own tint as above. Under reduced motion the
+     tint doesn't travel: the options keep their own, which cross-fade. */
+  .seg { position: relative; isolation: isolate; }
+  .seg::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    top: 0;
+    left: 0;
+    width: var(--seg-w, 0px);
+    height: var(--seg-h, 0px);
+    translate: var(--seg-x, 0px) var(--seg-y, 0px);
+    border-radius: 4px;
+    background: color-mix(in srgb, var(--ink) 9%, transparent);
+    opacity: 0;
+    pointer-events: none;
+  }
+  .seg[data-seg]::before {
+    opacity: var(--seg-on, 0);
+    transition:
+      translate var(--spring-snappy-dur) var(--spring-snappy),
+      width var(--spring-snappy-dur) var(--spring-snappy),
+      height var(--spring-snappy-dur) var(--spring-snappy),
+      opacity var(--dur-quick) var(--ease-out);
+  }
+  .seg[data-seg][data-seg-snap]::before { transition: none; }
+  .seg[data-seg] > :is([aria-pressed="true"], [aria-selected="true"]) { background: transparent; }
+  @media (prefers-reduced-motion: reduce) {
+    :root:not([data-motion="full"]) .seg[data-seg]::before { opacity: 0; }
+    :root:not([data-motion="full"]) .seg[data-seg] > :is([aria-pressed="true"], [aria-selected="true"]) { background: color-mix(in srgb, var(--ink) 9%, transparent); }
+  }
+  :root[data-motion="reduce"] .seg[data-seg]::before { opacity: 0; }
+  :root[data-motion="reduce"] .seg[data-seg] > :is([aria-pressed="true"], [aria-selected="true"]) { background: color-mix(in srgb, var(--ink) 9%, transparent); }
+
+  /* ---------- The replay mark (ReplayIcon.svelte) ----------
+     Ink at rest. On its button's hover the blue pencil goes round the circle and then draws the head,
+     as the site's arrow is drawn over (.p-arrow); leaving, the blue lifts at once. Pressed, it turns once anticlockwise
+     (motion/controls.ts), so the button answers as the clip starts over. */
+  .r-ico { width: 14px; height: 14px; overflow: visible; flex: none; }
+  .r-ico path { fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+  .btn .r-ico { width: 14px; height: 14px; }
+  .ri-base { stroke: currentColor; }
+  .ri-ink { stroke: var(--blue-pencil); stroke-dasharray: 1 2; stroke-dashoffset: 1; transition: stroke-dashoffset var(--dur-quick) var(--ease-in); }
+  :is(button, a):focus-visible .ri-ink { stroke-dashoffset: 0; transition: stroke-dashoffset var(--dur-base) var(--ease-out); }
+  :is(button, a):focus-visible .ri-head { transition: stroke-dashoffset var(--dur-quick) var(--ease-out) calc(var(--dur-base) * 0.8); }
+  @media (hover: hover) {
+    :is(button, a):hover .ri-ink { stroke-dashoffset: 0; transition: stroke-dashoffset var(--dur-base) var(--ease-out); }
+    :is(button, a):hover .ri-head { transition: stroke-dashoffset var(--dur-quick) var(--ease-out) calc(var(--dur-base) * 0.8); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :root:not([data-motion="full"]) .ri-ink { stroke-dashoffset: 0; opacity: 0; transition: opacity var(--dur-quick) var(--ease-out); }
+    :root:not([data-motion="full"]) :is(button, a):is(:hover, :focus-visible) .ri-ink { opacity: 1; }
+  }
+  :root[data-motion="reduce"] .ri-ink { stroke-dashoffset: 0; opacity: 0; transition: opacity var(--dur-quick) var(--ease-out); }
+  :root[data-motion="reduce"] :is(button, a):is(:hover, :focus-visible) .ri-ink { opacity: 1; }
+
+  /* ---------- Range ----------
+     A hairline track and an ink bead. The bead answers the hand: it swells a little under the pointer
+     and more while held, and a blue-pencil ring marks it under keyboard focus. The track fills to the
+     value where the slider says where that is (--p, set by Slider.svelte); a bare range has no fill. */
+  input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 18px;
+    margin: 0;
+    background: transparent;
+    cursor: pointer;
+  }
+  input[type="range"]:focus-visible { outline: none; }
+  input[type="range"]::-webkit-slider-runnable-track {
+    height: 1px;
+    background: linear-gradient(to right, var(--graphite) var(--p, 0%), var(--rule) var(--p, 0%));
+  }
+  input[type="range"]::-moz-range-track { height: 1px; background: var(--rule); }
+  input[type="range"]::-moz-range-progress { height: 1px; background: var(--graphite); }
+  input[type="range"]:not([style*="--p"])::-moz-range-progress { background: transparent; }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 11px;
+    height: 11px;
+    margin-top: -5px;
+    border-radius: 50%;
+    background: var(--ink);
+    border: 2px solid var(--paper);
+    box-shadow: 0 0 0 1px var(--ink);
+    transition: scale var(--dur-instant) var(--ease-out), box-shadow var(--dur-quick) var(--ease-out);
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--ink);
+    border: 2px solid var(--paper);
+    box-shadow: 0 0 0 1px var(--ink);
+    transition: scale var(--dur-instant) var(--ease-out), box-shadow var(--dur-quick) var(--ease-out);
+  }
+  @media (hover: hover) {
+    input[type="range"]:hover::-webkit-slider-thumb { scale: 1.15; }
+    input[type="range"]:hover::-moz-range-thumb { scale: 1.15; }
+  }
+  input[type="range"]:active::-webkit-slider-thumb { scale: 1.3; }
+  input[type="range"]:active::-moz-range-thumb { scale: 1.3; }
+  input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 1px var(--ink), 0 0 0 4px color-mix(in srgb, var(--blue-pencil) 40%, transparent); }
+  input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 1px var(--ink), 0 0 0 4px color-mix(in srgb, var(--blue-pencil) 40%, transparent); }
+  input[type="range"]:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  /* ---------- Checkbox ----------
+     A hairline box in the house's ink. Checking it inks the box and draws the tick in, left to right,
+     as a pen would; unchecking lifts the tick at once. Under reduced motion the tick simply appears. */
+  input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    flex: none;
+    display: inline-grid;
+    place-items: center;
+    width: 14px;
+    height: 14px;
+    margin: 0;
+    vertical-align: -2px;
+    border: 1px solid var(--graphite);
+    border-radius: 3px;
+    background: var(--paper);
+    cursor: pointer;
+    transition: border-color var(--dur-quick) var(--ease-out), background-color var(--dur-quick) var(--ease-out), scale var(--dur-instant) var(--ease-out);
+  }
+  input[type="checkbox"]::before {
+    content: "";
+    width: 10px;
+    height: 10px;
+    background: var(--paper);
+    -webkit-mask: var(--tick) center / contain no-repeat;
+    mask: var(--tick) center / contain no-repeat;
+    clip-path: inset(0 100% 0 0);
+    transition: clip-path var(--dur-instant-exit) var(--ease-in);
+    --tick: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpath d='M1.6 5.3 4 7.6 8.5 2.6' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  }
+  input[type="checkbox"]:hover { border-color: var(--ink); }
+  input[type="checkbox"]:checked { border-color: var(--ink); background: var(--ink); }
+  input[type="checkbox"]:checked::before { clip-path: inset(0 0 0 0); transition: clip-path var(--dur-quick) var(--ease-out) var(--dur-instant-exit); }
+  input[type="checkbox"]:active { scale: 0.92; }
+  input[type="checkbox"]:disabled { opacity: 0.45; cursor: not-allowed; }
+  @media (prefers-reduced-motion: reduce) {
+    :root:not([data-motion="full"]) input[type="checkbox"]::before { transition: none; }
+  }
+  :root[data-motion="reduce"] input[type="checkbox"]::before { transition: none; }
+  /* A checkbox with its words, as the figures and instruments set them */
+  label:has(> input[type="checkbox"]) { display: inline-flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: var(--text-sm); color: var(--graphite-strong); transition: color var(--dur-quick) var(--ease-out); }
+  label:has(> input[type="checkbox"]):hover, label:has(> input[type="checkbox"]:checked) { color: var(--ink); }
 
   /* ---------- Small-caps labels and chips ---------- */
   .label { font-family: var(--font-mono); font-size: var(--text-xs); letter-spacing: 0.08em; text-transform: uppercase; color: var(--graphite-strong); }
@@ -105,14 +258,59 @@
   /* The four beats: SEE → FEEL → TUNE → WRITE → DRILL */
 
   /* ---------- Prev / next ---------- */
+  /* Two boxes, end to end across the sheet (the footer's ruler's width), ruled as the lab grid is
+     (.bench-list): the previous chapter on the left, the next on the right, set toward its own edge. */
   .pager {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
-    margin-top: 5rem; border-top: 1px solid var(--rule); padding-top: 1.5rem;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-top: 5rem;
+    border-top: 1px solid var(--rule);
+    border-left: 1px solid var(--rule);
   }
-  .pager a { text-decoration: none; display: flex; flex-direction: column; gap: 0.25rem; }
-  .pager a:hover .serif { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 0.2em; }
-  .pager .next { text-align: right; grid-column: 2; }
-  .pager .serif { font-size: var(--text-lg); line-height: 1.2; }
+  .pg { display: flex; flex-direction: column; gap: 0.4rem; padding: 1rem 1rem 1.1rem; min-height: 9rem; text-decoration: none; color: var(--ink); border-right: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
+  .pg-next { align-items: flex-end; text-align: right; }
+  .pg-n { font-size: 1.5rem; color: var(--ph-n, var(--graphite)); --o-hair: 42; }
+  /* Where there is no chapter to number, a word stands in the figures' place, at their height and on their baseline */
+  .pg-n-word { display: flex; align-items: flex-end; height: 1.0625rem; font-size: 0.6875rem; line-height: 1; }
+  .pg-title { font-size: 1.3rem; line-height: 1.15; }
+  .pg-foot { margin-top: auto; padding-top: 0.5rem; display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.6875rem; color: var(--ink); transition: color var(--dur-quick) var(--ease-out); }
+  @media (hover: hover) { .pg:hover .pg-foot { color: var(--blue-pencil); } }
+  .pg:focus-visible .pg-foot { color: var(--blue-pencil); }
+  @media (max-width: 560px) {
+    .pg { min-height: 7.5rem; padding-inline: 0.75rem; }
+    .pg-title { font-size: 1.1rem; }
+  }
+
+  /* ---------- The arrow (PencilArrow.astro) ----------
+     The lab grid's arrow, resting in ink. On its .pencil-hover's hover the blue pencil draws over the
+     shaft from the tail, then the head, as the grid's is drawn, and the arrow leans the way it points;
+     leaving, the blue is taken back at once and it settles. Reduced motion: the blue fades in whole. */
+  .p-arrow { width: 22px; height: 12px; overflow: visible; flex: none; transition: translate var(--dur-quick) var(--ease-out); }
+  .p-arrow path { fill: none; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
+  .pa-base { stroke: currentColor; }
+  .pa-ink {
+    stroke: var(--blue-pencil);
+    stroke-dasharray: 1 2;
+    stroke-dashoffset: 1;
+    transition: stroke-dashoffset var(--dur-quick) var(--ease-in);
+  }
+  .pencil-hover:focus-visible .p-arrow-right { translate: var(--dist-rise) 0; }
+  .pencil-hover:focus-visible .p-arrow-left { translate: calc(-1 * var(--dist-rise)) 0; }
+  .pencil-hover:focus-visible .pa-shaft { stroke-dashoffset: 0; transition: stroke-dashoffset var(--dur-base) var(--ease-out) var(--dur-instant); }
+  .pencil-hover:focus-visible .pa-head { stroke-dashoffset: 0; transition: stroke-dashoffset var(--dur-quick) var(--ease-out) calc(var(--dur-instant) + var(--dur-base) * 0.8); }
+  @media (hover: hover) {
+    .pencil-hover:hover .p-arrow { transition: translate var(--dur-base) var(--ease-out); }
+    .pencil-hover:hover .p-arrow-right { translate: var(--dist-rise) 0; }
+    .pencil-hover:hover .p-arrow-left { translate: calc(-1 * var(--dist-rise)) 0; }
+    .pencil-hover:hover .pa-shaft { stroke-dashoffset: 0; transition: stroke-dashoffset var(--dur-base) var(--ease-out) var(--dur-instant); }
+    .pencil-hover:hover .pa-head { stroke-dashoffset: 0; transition: stroke-dashoffset var(--dur-quick) var(--ease-out) calc(var(--dur-instant) + var(--dur-base) * 0.8); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :root:not([data-motion="full"]) .pa-ink { stroke-dashoffset: 0; opacity: 0; transition: opacity var(--dur-quick) var(--ease-out); }
+    :root:not([data-motion="full"]) .pencil-hover:is(:hover, :focus-visible) .pa-ink { opacity: 1; }
+  }
+  :root[data-motion="reduce"] .pa-ink { stroke-dashoffset: 0; opacity: 0; transition: opacity var(--dur-quick) var(--ease-out); }
+  :root[data-motion="reduce"] .pencil-hover:is(:hover, :focus-visible) .pa-ink { opacity: 1; }
 
   /* ---------- Snippet card ---------- */
   .snippet {
@@ -202,7 +400,7 @@
   }
   :root[data-motion="reduce"] .ph-outline rect { stroke-dashoffset: 0; opacity: 0; transition: opacity var(--dur-quick) var(--ease-out); }
   :root[data-motion="reduce"] .pencil-hover:is(:hover, :focus-visible) .ph-outline rect { opacity: 1; }
-  .bench-item.pencil-hover { --ph-radius: 0px; }
+  :is(.bench-item, .pg).pencil-hover { --ph-radius: 0px; }
 
   /* ---------- Outline numerals (OutlineNumber.astro) ----------
      A hairline in the number's colour at rest. On a .pencil-hover's hover the blue pencil draws over

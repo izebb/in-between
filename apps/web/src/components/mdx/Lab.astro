@@ -30,7 +30,7 @@ const preset = labPreset(id, short) as any;
   {id === "exposure-sheet" && <ExposureSheet client:visible embedded {preset} showCode={code} />}
   {id === "data-stage" && <DataStage client:visible embedded {preset} />}
   {id === "specimen-journal" && <SpecimenJournal client:visible />}
-  {id === "export-desk" && <ExportDesk client:visible {preset} />}
+  {id === "export-desk" && <ExportDesk client:visible embedded {preset} />}
 </div>
 <style>
   .lab-embed { margin-block: 2.5rem !important; }

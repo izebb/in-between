@@ -1,6 +1,28 @@
 import type { DrillDef } from "./types";
 import { shuffle } from "./types";
 import type { MockKind, MockMotion } from "~/components/figures/Mock.svelte";
+import { easingFn } from "@inbetween/core";
+import { parseSpec } from "~/lib/spec";
+
+/**
+ * A curve with frames missing, as a linear() easing. Each number in `holds` is how many 60Hz frames one
+ * drawing stays on screen; the frames in between are never drawn, so the move holds, then jumps to where
+ * it should be by now. The path and the timing are the curve's own: only the drawing is missing.
+ */
+function dropped(curve: string, holds: number[]): string {
+  const ease = easingFn(parseSpec(curve)).ease;
+  const frames = holds.reduce((a, b) => a + b, 0);
+  const pct = (f: number) => `${+((f / frames) * 100).toFixed(2)}%`;
+  const stops: string[] = [];
+  let f = 0;
+  for (const h of holds) {
+    const v = +ease(f / frames).toFixed(4);
+    stops.push(`${v} ${pct(f)}`, `${v} ${pct(f + h)}`);
+    f += h;
+  }
+  stops.push("1 100%");
+  return `linear(${stops.join(", ")})`;
+}
 
 export interface ABPair {
   kind: MockKind;
@@ -29,22 +51,24 @@ export const PAIRS: ABPair[] = [
   { kind: "dot", good: { easing: "cubic-bezier(.1,.7,.1,1)", duration: 900 }, bad: { easing: "linear", duration: 300 }, word: "physical", why: "A thrown thing glides to a stop: speed decays. Stopping dead at full speed looks like a wall.", topics: ["momentum", "physics", "direct"] },
   { kind: "modal", good: { easing: "spring.soft" }, bad: { easing: "ease-in-out", duration: 700 }, word: "quicker", why: "The dialog is ready almost at once and settles. The slow ease-in-out makes you wait at both ends.", topics: ["timing", "springs", "enter-exit"] },
   { kind: "drop", good: { easing: "ease-in", duration: 420 }, bad: { easing: "ease-out", duration: 420 }, word: "physical", why: "Falling things accelerate: gravity. Easing out makes the ball brake in mid-air.", topics: ["weight", "physics", "principles"] },
-  { kind: "like", good: { easing: "--ease-out", duration: 340 }, bad: { none: true }, word: "clearer", why: "The heart squashes under your tap, then fills and pops: the press was felt. With a cut it just turns red, which is easy to miss.", topics: ["feedback", "principles", "information"] },
+  { kind: "like", good: { easing: "--ease-out", duration: 340 }, bad: { none: true }, word: "clearer", why: "The heart squashes under your tap, then fills and pops: the press was felt. With a cut it just turns red, which is easy to miss.", topics: ["feedback", "principles", "information", "direct"] },
   { kind: "list", good: { easing: "--ease-out", duration: 240, stagger: 24, distance: 10 }, bad: { easing: "--ease-out", duration: 240, stagger: 0, distance: 10 }, word: "clearer", why: "A small stagger gives the list a reading order. All at once, it's one block appearing.", topics: ["stagger", "choreography", "hierarchy"] },
-  { kind: "list", good: { easing: "--ease-out", duration: 280, stagger: 35, distance: 12 }, bad: { easing: "--ease-out", duration: 280, stagger: 110, distance: 12 }, word: "quicker", why: "Every row is a wait at 110ms apart; at 35ms the list has arrived before you've finished reading the first row.", topics: ["stagger", "timing"] },
+  { kind: "list", good: { easing: "--ease-out", duration: 280, stagger: 35, distance: 12 }, bad: { easing: "--ease-out", duration: 280, stagger: 110, distance: 12 }, word: "quicker", why: "Every row is a wait at 110ms apart; at 35ms the list has arrived before you've finished reading the first row.", topics: ["stagger", "timing", "choreography"] },
   { kind: "list", good: { easing: "--ease-out", duration: 320, stagger: 30, distance: 10 }, bad: { easing: "--ease-out", duration: 320, stagger: 30, distance: 60 }, word: "calmer", why: "Same stagger, but each row travels 60px: the cascade becomes a waterfall. Short rises keep the order without the noise.", topics: ["stagger", "choreography", "taste"] },
   // Care (chapter 21): what to show someone who asked for less motion. Reduce, don't remove.
   { kind: "card", good: { easing: "--ease-out", duration: 200, distance: 0 }, bad: { easing: "spring(response .5 bounce .4)", distance: 120 }, word: "calmer", why: "For someone who asked for less motion, the fade still says something arrived. A bouncing slide across the card is exactly the travel they asked to be spared.", topics: ["care", "taste"] },
   { kind: "modal", good: { easing: "--ease-out", duration: 200, distance: 0 }, bad: { none: true }, word: "clearer", why: "Reduce, don't remove: the fade keeps the message that a dialog arrived. The cut can be missed, and then the page just changed under you.", topics: ["care", "information"] },
   { kind: "toast", good: { easing: "--ease-out", duration: 220, distance: 0 }, bad: { easing: "--ease-out", duration: 520, distance: 90 }, word: "calmer", why: "The reduced version fades where it will sit. The long rise pulls the eye across the screen for a routine note.", topics: ["care", "attention"] },
-  { kind: "list", good: { easing: "--ease-out", duration: 260, stagger: 25, distance: 10 }, bad: { easing: "linear", duration: 260, stagger: 25, distance: 10 }, word: "arrives", why: "With linear timing each row stops dead; with ease-out each one settles, so the list lands row by row.", topics: ["stagger", "easing"] },
+  { kind: "list", good: { easing: "--ease-out", duration: 260, stagger: 25, distance: 10 }, bad: { easing: "linear", duration: 260, stagger: 25, distance: 10 }, word: "arrives", why: "With linear timing each row stops dead; with ease-out each one settles, so the list lands row by row.", topics: ["stagger", "easing", "choreography"] },
   { kind: "swap", good: { easing: "--ease-inout", duration: 520 }, bad: { none: true }, word: "connected", why: "The item travels to the other list, so you see which one moved. With a cut, you compare both lists to find it.", topics: ["permanence", "continuity", "information"] },
   { kind: "expand", good: { easing: "--ease-out", duration: 460 }, bad: { easing: "--ease-out", duration: 1400 }, word: "quicker", why: "The tile should grow into its detail, not crawl there: at 1.4s the connection is clear but you wait for it.", topics: ["permanence", "timing"] },
   { kind: "drawer", good: { easing: "--ease-out", duration: 360 }, bad: { none: true }, word: "connected", why: "The panel slides in from the edge it lives on, so you know where it went when it closes. A cut hides the geography.", topics: ["spatial", "continuity"] },
   { kind: "modal", good: { easing: "--ease-out", duration: 280 }, bad: { easing: "linear", duration: 900 }, word: "clearer", why: "A dialog comes toward you and the page behind dims: one quick move up the z-axis. Slow and linear, it drifts in with no sense of depth.", topics: ["spatial", "timing"] },
   { kind: "toggle", good: { easing: "spring.snappy" }, bad: { easing: "ease-in-out", duration: 520 }, word: "physical", why: "A switch you flick should answer at once and settle. A slow ease-in-out makes the knob lag behind the tap.", topics: ["direct", "feedback", "springs"] },
-  { kind: "dot", good: { easing: "--ease-out", duration: 700 }, bad: { easing: "steps(9)", duration: 700 }, word: "clearer", why: "The same move with most of its frames missing: it holds, then jumps. That is what a dropped frame looks like; the smooth one had every frame drawn.", topics: ["performance", "medium"] },
-  { kind: "card", good: { easing: "--ease-out", duration: 300, distance: 20 }, bad: { easing: "steps(5)", duration: 300, distance: 20 }, word: "clearer", why: "Five positions for a 300ms move reads as a stutter. Motion that can't keep its frames looks broken, not fast.", topics: ["performance"] },
+  // 700ms is 42 frames at 60Hz; the stuttering one draws 9 of them.
+  { kind: "dot", good: { easing: "--ease-out", duration: 700 }, bad: { easing: dropped("--ease-out", [3, 5, 4, 6, 3, 7, 4, 5, 5]), duration: 700 }, word: "clearer", why: "The same move with most of its frames missing: it holds, then jumps. That is what a dropped frame looks like; the smooth one had every frame drawn.", topics: ["performance", "medium"] },
+  // 300ms is 18 frames; the stuttering one draws 5.
+  { kind: "card", good: { easing: "--ease-out", duration: 300, distance: 20 }, bad: { easing: dropped("--ease-out", [4, 3, 4, 3, 4]), duration: 300, distance: 20 }, word: "clearer", why: "The same rise drawn five times in 300ms reads as a stutter. Motion that can't keep its frames looks broken, not fast.", topics: ["performance"] },
 ];
 
 export interface BlindSpec {
@@ -74,6 +98,7 @@ export const blindAB: DrillDef<BlindSpec, BlindAnswer> = {
     const others = shuffle(rand, WORDS.filter((w) => w !== pair.word)).slice(0, 3);
     return { pair, goodSide: rand() < 0.5 ? 0 : 1, words: shuffle(rand, [pair.word, ...others]) };
   },
+  key: (spec) => JSON.stringify([spec.pair.kind, spec.pair.good, spec.pair.bad]),
   score(spec, a) {
     const ok = a.pick === spec.goodSide;
     const wordOk = a.word === spec.pair.word;
@@ -83,7 +108,7 @@ export const blindAB: DrillDef<BlindSpec, BlindAnswer> = {
       points: ok ? (wordOk ? 100 : 80) : 0,
       truth: spec.goodSide,
       answer: a.pick,
-      verdict: `${ok ? `Yes, ${L}` : `Most designers pick ${L}`} — "${spec.pair.word}". ${spec.pair.why}`,
+      verdict: `${ok ? `Yes, ${L}` : `Most designers pick ${L}`}${ok && !wordOk ? `, though the word is "${spec.pair.word}", not "${a.word}"` : `: "${spec.pair.word}"`}. ${spec.pair.why}`,
       meta: { word: a.word, expected: spec.pair.word, kind: spec.pair.kind },
     };
   },

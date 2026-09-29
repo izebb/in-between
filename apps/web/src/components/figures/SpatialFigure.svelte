@@ -1,83 +1,127 @@
 <script lang="ts">
   /**
-   * The app as a place. Forward slides in from the right (x is sequence); a sheet rises and the page
-   * behind recedes (z is hierarchy); back reverses exactly. Switch the model off and directions go random.
-   * The map on the right shows where you are.
+   * The app as a place. Forward slides the new screen in from the right, over the one you leave,
+   * which gives way 30% and dims (x is sequence). A sheet rises and the page behind recedes
+   * (z is hierarchy). Back retraces the push: the top screen slides off the way it came and the
+   * one under it returns from where it was left. Switch the model off and directions go random.
+   * Every screen stays mounted and each move starts from where the screen is now, so a tap
+   * mid-flight turns it around instead of jumping. The map on the right shows where you are.
    */
   import { onMount } from "svelte";
   import { cubicBezier } from "@inbetween/core";
-  import { prefs } from "~/lib/prefs.svelte";
+  import { prefs, watchPlateStill } from "~/lib/prefs.svelte";
+  import { duration as dur, exitDuration, exitRatio, easing, easingCss } from "~/motion/tokens";
 
   let { duration = 360, coherent: startCoherent = true, hint = "Tap through the app. Then turn the model off and do it again." }: { duration?: number; coherent?: boolean; hint?: string } = $props();
 
   type Page = "home" | "inbox" | "message";
   const TITLES: Record<Page, string> = { home: "Home", inbox: "Inbox", message: "Message" };
+  const all: Page[] = ["home", "inbox", "message"];
   let stack = $state<Page[]>(["home"]);
   let sheet = $state(false);
   let coherent = $state(startCoherent);
-  let dir = $state(1); // +1 forward, -1 back
-  let axis = $state<"x" | "y">("x");
-  onMount(() => prefs.start());
-
-  const outE = cubicBezier(0.2, 0.8, 0.2, 1);
-  const inE = cubicBezier(0.4, 0, 1, 1);
-  const dur = () => (prefs.reduced ? 0 : duration);
-
-  function slide(_node: Element, { enter }: { enter: boolean }) {
-    const d = dir;
-    const ax = axis;
-    return {
-      duration: enter ? dur() : Math.round(dur() * 0.7),
-      easing: enter ? outE : inE,
-      css: (t: number) => {
-        const off = (1 - t) * 100 * (enter ? d : -d) * (enter ? 1 : 0.3);
-        const tr = ax === "x" ? `translateX(${off}%)` : `translateY(${off}%)`;
-        return enter ? `transform: ${tr}` : `transform: ${tr}; opacity: ${0.5 + 0.5 * t}`;
-      },
-    };
+  let still = $state(false);
+  let root: HTMLElement;
+  const els: Partial<Record<Page, HTMLElement>> = {};
+  function register(node: HTMLElement, page: Page) {
+    els[page] = node;
+    return { destroy: () => delete els[page] };
   }
-  function rise(_node: Element) {
-    return { duration: dur(), easing: outE, css: (t: number) => `transform: translateY(${(1 - t) * 100}%)` };
-  }
+  let shown = $state<Record<Page, boolean>>({ home: true, inbox: false, message: false });
+  onMount(() => watchPlateStill(root, (v) => (still = v)));
 
-  function pick() {
-    if (coherent) axis = "x";
-    else {
-      axis = Math.random() < 0.5 ? "x" : "y";
-      if (Math.random() < 0.5) dir = -dir;
-    }
+  /** A screen's pose: offset in % of the phone (x, y) and opacity. */
+  interface Pose { x: number; y: number; o: number }
+  const TOP: Pose = { x: 0, y: 0, o: 1 };
+  const AHEAD: Pose = { x: 100, y: 0, o: 1 }; // the next screen waits off the right edge
+  const UNDER: Pose = { x: -30, y: 0, o: 0.5 }; // the one you left: a little left, and dimmed
+  const calm = () => prefs.reduced || still;
+  const enter = () => ({ duration, easing: easingCss.out });
+  const exit = () => ({ duration: Math.round(duration * exitRatio), easing: easingCss.in });
+
+  const frame = (el: HTMLElement, p: Pose) => ({ transform: `translate(${(p.x / 100) * el.offsetWidth}px, ${(p.y / 100) * el.offsetHeight}px)`, opacity: String(p.o) });
+  /** Move a screen to a pose. It starts from where it is on screen now (so interruptions never jump),
+   *  unless it's at rest and `from` places it first: off screen, or hidden under the top screen. */
+  function place(page: Page, to: Pose, timing: { duration: number; easing: string }, from?: Pose) {
+    const el = els[page];
+    if (!el) return;
+    const moving = el.getAnimations().some((a) => a.playState === "running");
+    const cs = getComputedStyle(el);
+    const start = from && !moving ? frame(el, from) : { transform: cs.transform, opacity: cs.opacity };
+    el.getAnimations().forEach((a) => a.cancel());
+    shown[page] = true;
+    el.animate([start, frame(el, to)], { ...timing, fill: "forwards" }).finished.then(
+      () => (shown[page] = page === top), // a screen at rest off screen or under the top one is hidden
+      () => {}, // cancelled: a newer move took over
+    );
   }
+  /** Scrambled: a random axis and side for every move. */
+  const anywhere = (dist: number, o = 1): Pose => {
+    const d = (Math.random() < 0.5 ? -1 : 1) * dist;
+    return Math.random() < 0.5 ? { x: d, y: 0, o } : { x: 0, y: d, o };
+  };
+
   function forward(p: Page) {
-    dir = 1;
-    pick();
+    const from = stack[stack.length - 1];
     stack = [...stack, p];
+    if (calm()) {
+      // Reduce, don't remove: the new screen dissolves in over the old one.
+      place(p, TOP, { duration: dur.quick, easing: easingCss.out }, { x: 0, y: 0, o: 0 });
+    } else {
+      place(p, TOP, enter(), coherent ? AHEAD : anywhere(100));
+      place(from, coherent ? UNDER : anywhere(30, 0.5), exit());
+    }
   }
   function back() {
     if (sheet) return (sheet = false);
     if (stack.length < 2) return;
-    dir = -1;
-    pick();
+    const from = stack[stack.length - 1];
     stack = stack.slice(0, -1);
+    const to = stack[stack.length - 1];
+    if (calm()) {
+      place(from, { x: 0, y: 0, o: 0 }, { duration: exitDuration.quick, easing: easingCss.in });
+      place(to, TOP, { duration: 0, easing: "linear" });
+    } else if (coherent) {
+      // The same path, the other way: the top screen leaves the way it came, the one under it comes back.
+      place(from, AHEAD, exit());
+      place(to, TOP, enter());
+    } else {
+      place(from, anywhere(100), exit());
+      place(to, TOP, enter(), anywhere(30, 0.5));
+    }
   }
+  /** The sheet rises on the enter's timing and sinks on the exit's; closed mid-rise, it turns around. */
+  function rise(_node: Element, _p: unknown, { direction }: { direction: "in" | "out" | "both" }) {
+    const out = direction === "out";
+    if (calm()) return { duration: out ? exitDuration.quick : dur.quick, css: (t: number) => `opacity: ${t}` };
+    return {
+      duration: out ? Math.round(duration * exitRatio) : duration,
+      easing: out ? inE : outE,
+      css: (t: number) => `transform: translateY(${(1 - t) * 100}%)`,
+    };
+  }
+  const outE = cubicBezier(...easing.out);
+  const inE = cubicBezier(...easing.in);
   const top = $derived(stack[stack.length - 1]);
-  const all: Page[] = ["home", "inbox", "message"];
+  const isCalm = $derived(prefs.reduced || still);
+  const rest = (p: Page) => (p === "home" ? "" : "transform: translateX(100%)");
 </script>
 
-<div class="spatial">
+<div class="spatial" class:calm={isCalm} bind:this={root}>
   <div class="phone" class:behind={sheet}>
     <div class="viewport">
-      {#key top}
-        <div class="page" in:slide={{ enter: true }} out:slide={{ enter: false }}>
+      {#each all as p (p)}
+        <div class="screen" class:hidden={!shown[p]} use:register={p} style={rest(p)} inert={p !== top}>
           <header class="nav">
-            {#if stack.length > 1 || sheet}<button type="button" class="back" onclick={back} aria-label="Back">‹</button>{/if}
-            <span class="serif">{TITLES[top]}</span>
+            {#if p !== "home"}<button type="button" class="back" onclick={back} aria-label="Back">‹</button>{/if}
+            <span class="serif">{TITLES[p]}</span>
           </header>
-          {#if top === "home"}
+          {#if p === "home"}
             <button type="button" class="cell" onclick={() => forward("inbox")}>Inbox <span>›</span></button>
             <div class="cell muted">Settings</div>
             <div class="cell muted">Archive</div>
-          {:else if top === "inbox"}
-            {#each ["A note from Ada", "Weekly digest", "Re: spacing"] as m, i (m)}
+          {:else if p === "inbox"}
+            {#each ["A note from Ada", "Weekly digest", "Re: spacing"] as m (m)}
               <button type="button" class="cell" onclick={() => forward("message")}>{m} <span>›</span></button>
             {/each}
           {:else}
@@ -85,10 +129,10 @@
             <button type="button" class="btn small reply" onclick={() => (sheet = true)}>Reply</button>
           {/if}
         </div>
-      {/key}
+      {/each}
     </div>
     {#if sheet}
-      <div class="sheet" in:rise out:rise>
+      <div class="sheet" transition:rise>
         <div class="grab"></div>
         <span class="serif">Reply</span>
         <div class="l w90"></div><div class="l w60"></div>
@@ -122,7 +166,9 @@
   .phone { position: relative; width: 250px; height: 380px; border: 1px solid var(--graphite); border-radius: 22px; background: var(--paper); overflow: hidden; flex: none; }
   .viewport { position: absolute; inset: 0; transition: transform var(--dur-base) var(--ease-out), filter var(--dur-base) var(--ease-out); }
   .phone.behind .viewport { transform: scale(0.93); filter: brightness(0.85); }
-  .page { position: absolute; inset: 0; padding: 14px; background: var(--paper); display: flex; flex-direction: column; gap: 6px; }
+  .calm .phone.behind .viewport { transform: none; } /* reduced motion: the page dims but doesn't move */
+  .screen { position: absolute; inset: 0; padding: 14px; background: var(--paper); display: flex; flex-direction: column; gap: 6px; }
+  .screen.hidden { visibility: hidden; }
   .nav { display: flex; align-items: center; gap: 8px; height: 36px; margin-bottom: 6px; }
   .nav .serif { font-size: 1.35rem; }
   .back { font-size: 1.6rem; line-height: 1; color: var(--ink); padding: 0 4px; }

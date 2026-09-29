@@ -1,7 +1,8 @@
 /**
  * The twelve principles of The Illusion of Life, each as a tiny UI clip.
- * draw(ctx, t, w, h, c): t runs 0 → 1 over one loop. Used by the ch. 07 figure and the
- * "Spot the principle" drill.
+ * draw(ctx, t, w, h, c): t runs 0 → 1 over one loop, and t = 1 draws the same frame as t = 0,
+ * so every loop meets itself at the seam. Draws multiply into ctx.globalAlpha rather than set it,
+ * so the still's onion skin keeps its fade. Used by the ch. 07 figure and the "Spot the principle" drill.
  */
 
 import { cubicBezier, easeIn, easeOut, easeInOut, spring, fromResponse, perlin1D } from "@inbetween/core";
@@ -13,6 +14,8 @@ export interface Principle {
   ui: string;
   /** One sentence shown after the drill answer. */
   why: string;
+  /** The still (onion skin): ghosts at even steps from `from` to `to`, the key pose at `key`. */
+  still?: { from: number; to: number; key: number };
   draw(ctx: CanvasRenderingContext2D, t: number, w: number, h: number, c: Pencils): void;
 }
 
@@ -60,6 +63,18 @@ function ring(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, st
 const soft = spring(fromResponse(0.35, 0.35));
 const softEnd = soft.settleTime();
 const noise = perlin1D(5);
+/** The wind-up curve of ch. 07's figure 7.2: dips to about −10%, then accelerates away. */
+const windUp = cubicBezier(0.36, 0, 0.66, -0.56);
+const settleRow = spring(fromResponse(0.4, 0.3));
+const pop = spring(fromResponse(0.45, 0.55));
+const knob = spring(fromResponse(0.35, 0.2));
+/** Draw with an extra opacity, on top of whatever the caller set (the onion skin fades its ghosts). */
+function faded(ctx: CanvasRenderingContext2D, a: number, fn: () => void) {
+  const a0 = ctx.globalAlpha;
+  ctx.globalAlpha = a0 * a;
+  fn();
+  ctx.globalAlpha = a0;
+}
 
 export const PRINCIPLES: Principle[] = [
   {
@@ -69,9 +84,10 @@ export const PRINCIPLES: Principle[] = [
     why: "The button flattens under the press and springs back: it has a material, and it felt your finger.",
     draw(ctx, t, w, h, c) {
       // Press: flatten. Release: spring back, overshooting into a small stretch.
+      // It keeps its volume: as it gets shorter it gets wider by as much (sx · sy = 1).
       const k = t < 0.25 ? easeOut(seg(t, 0, 0.25)) : 1 - soft.position(seg(t, 0.25, 0.75) * softEnd);
-      const sy = 1 - 0.22 * k;
-      const sx = 1 + 0.12 * k;
+      const sy = 1 - 0.2 * k;
+      const sx = 1 / sy;
       const bw = 96, bh = 34;
       ctx.save();
       ctx.translate(w / 2, h / 2 + bh / 2);
@@ -87,11 +103,14 @@ export const PRINCIPLES: Principle[] = [
     name: "Anticipation",
     ui: "A wind-up before a big move",
     why: "The card pulls back a little before it launches, so your eye is ready for the move.",
+    still: { from: 0.06, to: 0.56, key: 0.3 },
     draw(ctx, t, w, h, c) {
-      const back = -14 * easeOut(seg(t, 0.05, 0.3)) * (1 - seg(t, 0.3, 0.38));
-      const go = (w - 120) * easeIn(seg(t, 0.32, 0.62));
-      const x = 30 + back + go;
-      card(ctx, x, h / 2 - 22, 60, 44, c, c.red);
+      // One curve does both: it backs up, then accelerates off the right edge.
+      // Then the card fades back in at the start, ready for the next throw.
+      const x0 = 30;
+      const u = seg(t, 0.06, 0.62);
+      if (u < 1) card(ctx, x0 + (w + 20 - x0) * windUp(u), h / 2 - 22, 60, 44, c, c.red);
+      else faded(ctx, easeOut(seg(t, 0.74, 0.94)), () => card(ctx, x0, h / 2 - 22, 60, 44, c, c.red));
     },
   },
   {
@@ -107,15 +126,15 @@ export const PRINCIPLES: Principle[] = [
         const x = 20 + (i % cols) * (tw + 10);
         const y = 20 + Math.floor(i / cols) * ((h - 50) / 2 + 10);
         const hero = i === 4;
-        ctx.globalAlpha = hero ? 1 : 1 - 0.6 * k;
         const s = hero ? 1 + 0.12 * k : 1;
-        ctx.save();
-        ctx.translate(x + tw / 2, y + (h - 50) / 4);
-        ctx.scale(s, s);
-        card(ctx, -tw / 2, -(h - 50) / 4, tw, (h - 50) / 2, c, hero ? c.red : undefined);
-        ctx.restore();
+        faded(ctx, hero ? 1 : 1 - 0.6 * k, () => {
+          ctx.save();
+          ctx.translate(x + tw / 2, y + (h - 50) / 4);
+          ctx.scale(s, s);
+          card(ctx, -tw / 2, -(h - 50) / 4, tw, (h - 50) / 2, c, hero ? c.red : undefined);
+          ctx.restore();
+        });
       }
-      ctx.globalAlpha = 1;
     },
   },
   {
@@ -125,15 +144,22 @@ export const PRINCIPLES: Principle[] = [
     why: "Left, the dot is simulated frame by frame and wanders. Right, it moves between planned key poses (circled).",
     draw(ctx, t, w, h, c) {
       const half = w / 2;
-      // straight ahead: noise, drawn frame after frame
-      const sx = 20 + (half - 40) * t;
-      const sy = h / 2 + noise(t * 6) * 26;
+      // Straight ahead: each frame follows from the last, so it wanders (noise). Its trail is the
+      // frames just drawn. Out along the track and back: perlin noise is 0 at whole numbers, so
+      // the path closes on itself.
+      const wander = (v: number) => [24 + (half - 48) * (0.5 - 0.5 * Math.cos(TAU * v)), h / 2 + noise(v * 6) * 30];
+      for (let k = 6; k >= 1; k--) {
+        const [tx, ty] = wander((t - k * 0.015 + 1) % 1);
+        faded(ctx, 0.5 - k * 0.07, () => dot(ctx, tx, ty, 3, c.blue));
+      }
+      const [sx, sy] = wander(t);
       dot(ctx, sx, sy, 7, c.red);
-      // pose to pose: three keys with eased inbetweens
+      // Pose to pose: three planned keys, eased between, round the triangle and home again.
       const keys = [[half + 20, h - 30], [half + (half - 20) / 2, 26], [w - 20, h - 30]];
       keys.forEach(([x, y]) => ring(ctx, x, y, 9, c.red));
-      const u = t < 0.5 ? easeInOut(t / 0.5) : easeInOut((t - 0.5) / 0.5);
-      const [a, b] = t < 0.5 ? [keys[0], keys[1]] : [keys[1], keys[2]];
+      const leg = Math.min(2, Math.floor(t * 3));
+      const u = easeInOut(t * 3 - leg);
+      const [a, b] = [keys[leg], keys[(leg + 1) % 3]];
       dot(ctx, lerp(a[0], b[0], u), lerp(a[1], b[1], u), 7, c.red);
       ctx.strokeStyle = c.rule;
       ctx.beginPath();
@@ -148,16 +174,18 @@ export const PRINCIPLES: Principle[] = [
     ui: "Children settle after parents",
     why: "The panel stops first; its rows arrive a beat later and settle. Nothing stops all at once.",
     draw(ctx, t, w, h, c) {
-      const px = lerp(w, 20, out(seg(t, 0.05, 0.4)));
-      card(ctx, px, 14, w - 40, h - 28, c);
-      for (let i = 0; i < 3; i++) {
-        const lag = 0.08 + i * 0.07;
-        const u = seg(t, 0.05 + lag, 0.55 + lag);
-        const sp = spring(fromResponse(0.4, 0.3)).position(u * 0.9);
-        const rx = lerp(w + 40, px + 16, clamp(sp, 0, 1.2));
-        ctx.fillStyle = i === 0 ? c.red : c.graphite;
-        ctx.fillRect(rx, 32 + i * 22, (w - 90) * (i === 0 ? 0.8 : 0.6), 8);
-      }
+      const px = lerp(w + 2, 20, out(seg(t, 0.05, 0.4))); // starts just past the edge: not even its stroke shows
+      // Once everything has settled, the panel fades, so the loop starts again from empty.
+      faded(ctx, 1 - easeIn(seg(t, 0.84, 0.97)), () => {
+        card(ctx, px, 14, w - 40, h - 28, c);
+        for (let i = 0; i < 3; i++) {
+          const lag = 0.08 + i * 0.07;
+          const u = seg(t, 0.05 + lag, 0.55 + lag);
+          const rx = lerp(w + 40, px + 16, clamp(settleRow.position(u * 0.9), 0, 1.2));
+          ctx.fillStyle = i === 0 ? c.red : c.graphite;
+          ctx.fillRect(rx, 32 + i * 22, (w - 90) * (i === 0 ? 0.8 : 0.6), 8);
+        }
+      });
     },
   },
   {
@@ -165,6 +193,7 @@ export const PRINCIPLES: Principle[] = [
     name: "Slow in & slow out",
     ui: "Easing",
     why: "Tight spacing at both ends, wide in the middle: it starts gently, travels, and lands gently.",
+    still: { from: 0.05, to: 0.45, key: 0.47 },
     draw(ctx, t, w, h, c) {
       const y = h / 2;
       ctx.strokeStyle = c.rule;
@@ -180,7 +209,9 @@ export const PRINCIPLES: Principle[] = [
         ctx.lineTo(x, y + 18);
         ctx.stroke();
       }
-      dot(ctx, 20 + (w - 40) * easeInOut(seg(t, 0.05, 0.8)), y, 9, c.red);
+      // There and back, so the loop meets itself.
+      const u = t < 0.5 ? easeInOut(seg(t, 0.05, 0.45)) : 1 - easeInOut(seg(t, 0.55, 0.95));
+      dot(ctx, 20 + (w - 40) * u, y, 9, c.red);
     },
   },
   {
@@ -188,8 +219,10 @@ export const PRINCIPLES: Principle[] = [
     name: "Arcs",
     ui: "Curved paths for natural travel",
     why: "Thrown things travel on arcs, not rails. The curved path reads as natural; the straight one as mechanical.",
+    still: { from: 0.05, to: 0.45, key: 0.47 },
     draw(ctx, t, w, h, c) {
-      const u = easeInOut(seg(t, 0.05, 0.8));
+      // Over and back along the same arc, so the loop meets itself.
+      const u = t < 0.5 ? easeInOut(seg(t, 0.05, 0.45)) : 1 - easeInOut(seg(t, 0.55, 0.95));
       const x0 = 26, x1 = w - 26, y0 = h - 24;
       ctx.setLineDash([3, 4]);
       ctx.strokeStyle = c.blue;
@@ -238,15 +271,18 @@ export const PRINCIPLES: Principle[] = [
     name: "Timing",
     ui: "Duration as weight and importance",
     why: "Same path, different durations. The quick one feels light and minor; the slow one heavy and important.",
+    still: { from: 0.04, to: 0.44, key: 0.46 },
     draw(ctx, t, w, h, c) {
-      [0.3, 0.85].forEach((d, i) => {
+      // Both leave together and come back together; only the durations differ.
+      [0.16, 0.4].forEach((d, i) => {
         const y = h * (i ? 0.68 : 0.32);
         ctx.strokeStyle = c.rule;
         ctx.beginPath();
         ctx.moveTo(20, y);
         ctx.lineTo(w - 20, y);
         ctx.stroke();
-        dot(ctx, 20 + (w - 40) * out(seg(t, 0.05, 0.05 + d)), y, 8, c.red);
+        const u = t < 0.5 ? out(seg(t, 0.04, 0.04 + d)) : 1 - out(seg(t, 0.52, 0.52 + d));
+        dot(ctx, 20 + (w - 40) * u, y, 8, c.red);
       });
     },
   },
@@ -256,8 +292,8 @@ export const PRINCIPLES: Principle[] = [
     ui: "Overshoot for delight, used sparingly",
     why: "The badge overshoots its size and settles back. Exaggeration makes a moment feel alive, if it's rare.",
     draw(ctx, t, w, h, c) {
-      const sp = spring(fromResponse(0.45, 0.55));
-      const s = t < 0.05 ? 0 : sp.position(seg(t, 0.05, 0.9) * 1.6);
+      // Pops in on a bouncy spring (in real time: 0.7 of the 1.8s loop is 1.26s), holds, shrinks away.
+      const s = (t < 0.05 ? 0 : pop.position(seg(t, 0.05, 0.75) * 1.26)) * (1 - easeIn(seg(t, 0.84, 0.97)));
       ctx.save();
       ctx.translate(w / 2, h / 2);
       ctx.scale(Math.max(0, s), Math.max(0, s));
@@ -294,8 +330,7 @@ export const PRINCIPLES: Principle[] = [
     ui: "Personality, consistency, restraint",
     why: "One small, consistent gesture: the knob stretches a little as it travels and settles softly. Charm through restraint.",
     draw(ctx, t, w, h, c) {
-      const sp = spring(fromResponse(0.35, 0.2));
-      const on = t < 0.5 ? sp.position(seg(t, 0.05, 0.5) * 0.9) : 1 - sp.position(seg(t, 0.55, 1) * 0.9);
+      const on = t < 0.5 ? knob.position(seg(t, 0.05, 0.5) * 0.9) : 1 - knob.position(seg(t, 0.55, 1) * 0.9);
       const tw = 90, th = 40;
       const x0 = w / 2 - tw / 2;
       const y0 = h / 2 - th / 2;
@@ -303,8 +338,7 @@ export const PRINCIPLES: Principle[] = [
       ctx.fillStyle = c.rule;
       ctx.fill();
       const travel = tw - th;
-      const speed = Math.abs(on - 0.5) < 0.45 ? 1 : 0;
-      const stretch = 6 * speed * Math.sin(Math.PI * clamp(on));
+      const stretch = 6 * Math.sin(Math.PI * clamp(on)); // longest mid-travel, none at rest
       rrect(ctx, x0 + 4 + travel * clamp(on, -0.05, 1.05) - stretch / 2, y0 + 4, th - 8 + stretch, th - 8, (th - 8) / 2);
       ctx.fillStyle = c.red;
       ctx.fill();

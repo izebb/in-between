@@ -78,6 +78,14 @@ ${colorVars("dark").replace(/^    /gm, "      ")}
     }
   }
 
+  /* On paper it is always paper: printed pages take the light colours, whatever the screen's theme. */
+  @media print {
+    :root:root:root {
+      color-scheme: light;
+${colorVars("light").replace(/^    /gm, "      ")}
+    }
+  }
+
   /* Policy: reduce, don't remove. Movement stops; fades and ghosts stay. */
   :root[data-motion="reduce"] {
 ${Object.keys(tokens.distance)

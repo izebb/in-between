@@ -33,6 +33,7 @@ export const tuneToMatch: DrillDef<TuneSpec, TuneAnswer> = {
   unlocksAfter: 5,
   kind: "estimate",
   unit: "ms",
+  quantity: "response",
   make(rand, level) {
     const response = +(0.25 + rand() * (level < 2 ? 0.6 : 0.45)).toFixed(2);
     const bounce = +(level < 2 ? rand() * 0.55 : -0.2 + rand() * 0.7).toFixed(2);

@@ -7,12 +7,15 @@
   import type { Scored } from "~/lib/drills/types";
   import { toMove } from "~/lib/spec";
   import { prefs } from "~/lib/prefs.svelte";
+  import PlayLabel from "./PlayLabel.svelte";
 
   let { spec, result, onanswer }: { spec: MatchCurveSpec; result: Scored | null; onanswer: (v: number) => void } = $props();
   let mock: Mock;
   onMount(() => {
     prefs.start();
-    if (!prefs.reduced) setTimeout(() => mock?.play(), 350);
+    if (prefs.reduced) return;
+    mock?.cue();
+    setTimeout(() => mock?.play(), 350);
   });
   const truth = $derived(spec.options[spec.correct]);
   const rows = $derived(
@@ -30,7 +33,7 @@
 <div class="trial">
   <div class="stage">
     <Mock bind:this={mock} kind="dot" motion={{ easing: truth.easing, duration: spec.duration }} height={110} label="A motion to identify" />
-    <button class="btn small replay" type="button" onclick={() => mock.play()}>{prefs.reduced ? "Play" : "Replay"}</button>
+    <button class="btn small replay" type="button" onclick={() => mock.play()}><PlayLabel /></button>
   </div>
   <div class="options" role="group" aria-label="Curves">
     {#each spec.options as o, i (o.id)}
@@ -60,10 +63,10 @@
   .replay { position: absolute; right: 0.5rem; top: 0.5rem; background: var(--paper); }
   .options { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.5rem; }
   @media (max-width: 520px) { .options { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-  .option { display: flex; flex-direction: column; align-items: center; gap: 0.3rem; padding: 0.6rem 0.4rem 0.5rem; border: 1px solid var(--rule); border-radius: 6px; color: var(--ink); background: var(--paper); transition: border-color var(--dur-quick) var(--ease-out); }
+  .option { display: flex; flex-direction: column; align-items: center; gap: 0.3rem; padding: 0.6rem 0.4rem 0.5rem; border: 1px solid var(--rule); border-radius: 6px; color: var(--ink); background: var(--paper); transition: border-color var(--dur-quick) var(--ease-out), box-shadow var(--dur-quick) var(--ease-out), color var(--dur-quick) var(--ease-out); }
   .option:hover:not(:disabled) { border-color: var(--graphite); }
   .option .mono { font-size: var(--text-xs); color: var(--graphite-strong); }
   .option.right { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
-  .option.wrong { border-style: dashed; color: var(--blue-pencil); }
+  .option.wrong { border-style: dashed; border-color: currentColor; color: var(--blue-pencil); }
   .option:disabled { cursor: default; }
 </style>

@@ -10,7 +10,7 @@ const LOOP = 3;
 const RATES = [30, 60, 120];
 
 function setup(w, h) {
-  return { rows: RATES.map((hz) => ({ hz, acc: 0, perFrame: 40, perSecond: 40, ticks: [] })), t: 0 };
+  return { rows: RATES.map((hz) => ({ hz, acc: 0, perFrame: 0, perSecond: 0, ticks: [] })), t: 0 };
 }
 
 function update(s, dt) {
@@ -29,18 +29,28 @@ function update(s, dt) {
 
 function draw(ctx, s, w, h) {
   ctx.clearRect(0, 0, w, h);
+  const x0 = 56, end = w - 16;
+  // On a narrow screen the whole plate shrinks, so the red dot's 3 seconds still fit the track.
+  const k = Math.min(1, (end - x0) / (180 * LOOP));
+  const words = params.labels === 0;    // before a chapter's FEEL: words, no numbers
+  const two = w < 460;                  // too narrow for the legend on one line
   s.rows.forEach((r, i) => {
-    const y = 34 + i * ((h - 40) / 3);
-    if (params.labels !== 0) label(ctx, r.hz + "Hz", 12, y + 4, pencils.ink);
-    segment(ctx, 40, y + 12, w - 12, y + 12, pencils.rule);
-    for (let k = 0; k < r.ticks.length; k += 1) {
-      const x = r.ticks[k];
+    const y = 34 + i * ((h - (two ? 52 : 40)) / 3);
+    label(ctx, words ? ["slow", "middle", "fast"][i] : r.hz + "Hz", 12, y + 4, pencils.ink);
+    segment(ctx, x0, y + 12, w - 12, y + 12, pencils.rule);
+    for (let j = 0; j < r.ticks.length; j += 1) {
+      const x = x0 + r.ticks[j] * k;
       if (x < w - 12) segment(ctx, x, y + 9, x, y + 15, pencils.graphite);
     }
-    circle(ctx, Math.min(r.perFrame, w - 16), y - 4, 6, pencils.blue);
-    circle(ctx, Math.min(r.perSecond, w - 16), y + 12, 7, pencils.red);
+    circle(ctx, Math.min(x0 + r.perFrame * k, end), y - 4, 6, pencils.blue);
+    circle(ctx, Math.min(x0 + r.perSecond * k, end), y + 12, 7, pencils.red);
   });
-  if (params.labels !== 0) label(ctx, "blue: 3px per frame   red: 180px per second × dt", w - 12, h - 6, pencils.graphite, "right");
+  const blue = words ? "blue: a step per frame" : "blue: 3px per frame";
+  const red = words ? "red: a speed × time" : "red: 180px per second × dt";
+  if (two) {
+    label(ctx, blue, w - 12, h - 18, pencils.graphite, "right");
+    label(ctx, red, w - 12, h - 6, pencils.graphite, "right");
+  } else label(ctx, blue + "   " + red, w - 12, h - 6, pencils.graphite, "right");
 }
 `;
 
@@ -51,12 +61,13 @@ const RATES = [30, 60, 120];
 const LAMBDA = -Math.log(1 - 0.1) * 60;   // matches k = 0.1 at 60fps
 
 function setup(w, h) {
-  return { target: w - 40, clock: 0, rows: RATES.map((hz) => ({ hz, acc: 0, naive: 64, fixed: 64 })) };
+  return { w, clock: 0, rows: RATES.map((hz) => ({ hz, acc: 0, naive: 64, fixed: 64 })) };
 }
 
 function update(s, dt) {
   s.clock += dt;
-  const target = s.clock % 3 < 1.5 ? s.target : 64;
+  // Two seconds out, two seconds back: every dot is home again when the pass starts over.
+  const target = s.clock % LOOP < LOOP / 2 ? s.w - 40 : 64;
   for (const r of s.rows) {
     r.acc += dt;
     const step = 1 / r.hz;
@@ -70,14 +81,21 @@ function update(s, dt) {
 
 function draw(ctx, s, w, h) {
   ctx.clearRect(0, 0, w, h);
+  const words = params.labels === 0;    // before a chapter's FEEL: words, no numbers
+  const two = w < 460;                  // too narrow for the legend on one line
   s.rows.forEach((r, i) => {
-    const y = 34 + i * ((h - 40) / 3);
-    if (params.labels !== 0) label(ctx, r.hz + "Hz", 12, y + 4, pencils.ink);
+    const y = 34 + i * ((h - (two ? 52 : 40)) / 3);
+    label(ctx, words ? ["slow", "middle", "fast"][i] : r.hz + "Hz", 12, y + 4, pencils.ink);
     segment(ctx, 56, y + 12, w - 20, y + 12, pencils.rule);
     circle(ctx, r.naive, y - 4, 6, pencils.blue);
     circle(ctx, r.fixed, y + 12, 7, pencils.red);
   });
-  if (params.labels !== 0) label(ctx, "blue: k per frame   red: λ per second", w - 12, h - 6, pencils.graphite, "right");
+  const blue = words ? "blue: a share per frame" : "blue: k per frame";
+  const red = words ? "red: a share per second" : "red: λ per second";
+  if (two) {
+    label(ctx, blue, w - 12, h - 18, pencils.graphite, "right");
+    label(ctx, red, w - 12, h - 6, pencils.graphite, "right");
+  } else label(ctx, blue + "   " + red, w - 12, h - 6, pencils.graphite, "right");
 }
 `;
 
@@ -116,12 +134,25 @@ function draw(ctx, s, w, h) {
   ctx.clearRect(0, 0, w, h);
   const names = ["explicit Euler", "semi-implicit Euler", "Verlet"];
   const rowH = (h - 20) / 3;
+  const LIMIT = 3;                                        // the row holds ±3× the starting height
   names.forEach((n, i) => {
-    const mid = 14 + rowH * i + rowH / 2;
-    label(ctx, n.toUpperCase(), 12, 14 + rowH * i + 10);
+    const top = 10 + rowH * i;
+    label(ctx, n.toUpperCase(), 12, top + 10);
+    const mid = top + 14 + (rowH - 14) / 2;              // below the label
+    const scale = ((rowH - 14) / 2 - 3) / LIMIT;
     segment(ctx, 12, mid, w - 12, mid, pencils.rule);
     ctx.beginPath();
-    s.hist.forEach((p) => ctx.lineTo(12 + (p[3] / LOOP) * (w - 24), mid - clamp(p[i], -3, 3) * rowH * 0.14));
+    let px = 12, py = 0;
+    for (let j = 0; j < s.hist.length; j++) {
+      const p = s.hist[j], x = 12 + (p[3] / LOOP) * (w - 24);
+      if (Math.abs(p[i]) > LIMIT) {                      // runs off its row: draw to the edge, then stop
+        const edge = Math.sign(p[i]) * LIMIT, f = (edge - py) / (p[i] - py);
+        ctx.lineTo(px + (x - px) * f, mid - edge * scale);
+        break;
+      }
+      ctx.lineTo(x, mid - p[i] * scale);
+      px = x; py = p[i];
+    }
     ctx.strokeStyle = i === 0 ? pencils.red : pencils.ink;
     ctx.lineWidth = 1.2; ctx.stroke();
   });
@@ -134,7 +165,7 @@ const LOOP = 8;
 function setup(w, h) {
   rand = seeded(9);
   const balls = [];
-  for (let i = 0; i < 6; i++) balls.push({ x: 40 + i * 60, y: 30 + rand() * 40, vx: random(-120, 120), vy: 0, r: 8 + rand() * 8 });
+  for (let i = 0; i < 6; i++) balls.push({ x: w * (0.1 + i * 0.16), y: 30 + rand() * 40, vx: random(-120, 120), vy: 0, r: 8 + rand() * 8 });
   return { balls, w, h };
 }
 
@@ -196,8 +227,8 @@ function draw(ctx, s, w, h) {
 }
 `;
 
-const trails = `// Motion trails from translucent clears: instead of erasing the frame,
-// paint the background over it at low opacity, so old frames fade slowly.
+const trails = `// Motion trails from translucent clears: instead of erasing the whole frame,
+// erase only a share of it, so old frames fade slowly.
 const LOOP = 6;
 
 function setup(w, h) {
@@ -230,7 +261,7 @@ function draw(ctx, s, w, h) {
 const boids = `// Boids (Reynolds, 1986): three local rules, no leader.
 // Separation: don't crowd. Alignment: steer with neighbours. Cohesion: stay together.
 const LOOP = 12;
-const N = 70, SEE = 46, MAX = 120;
+const N = 70, SEE = 46, MIN = 45, MAX = 120;   // sight radius px, speed limits px/s
 
 function setup(w, h) {
   rand = seeded(2);
@@ -253,8 +284,9 @@ function update(s, dt) {
       b.vx += ((cx / n - b.x) * params.cohesion + (ax / n - b.vx) * params.alignment + sx * params.separation) * dt;
       b.vy += ((cy / n - b.y) * params.cohesion + (ay / n - b.vy) * params.alignment + sy * params.separation) * dt;
     }
-    const sp = Math.hypot(b.vx, b.vy);
-    if (sp > MAX) { b.vx *= MAX / sp; b.vy *= MAX / sp; }
+    const sp = Math.hypot(b.vx, b.vy);                 // a bird can't hover: keep the speed in range
+    const k = sp > MAX ? MAX / sp : sp < MIN && sp > 0 ? MIN / sp : 1;
+    b.vx *= k; b.vy *= k;
     b.x = (b.x + b.vx * dt + s.w) % s.w;
     b.y = (b.y + b.vy * dt + s.h) % s.h;
   }
@@ -281,15 +313,15 @@ const LOOP = 6;
 
 function setup(w, h) {
   rand = seeded(6);
-  return { t: 0, r: { x: w * 0.25, y: h / 2 }, histR: [], histN: [], w, h };
+  return { along: 0, r: { x: w * 0.25, y: h / 2 }, histR: [], histN: [], w, h };
 }
 
 function update(s, dt) {
-  s.t += dt;
+  s.along += params.speed * dt;                              // walk along the noise: t · speed
   s.r.x = s.w * 0.25 + random(-1, 1) * s.w * 0.18;          // a new random value every frame
   s.r.y = s.h / 2 + random(-1, 1) * s.h * 0.32;
-  const nx = s.w * 0.75 + noise2(s.t * params.speed, 0) * s.w * 0.18;   // neighbouring moments agree
-  const ny = s.h / 2 + noise2(0, s.t * params.speed + 10) * s.h * 0.32;
+  const nx = s.w * 0.75 + noise2(s.along, 0) * s.w * 0.18;    // neighbouring moments agree
+  const ny = s.h / 2 + noise2(0, s.along + 10) * s.h * 0.32;
   s.histR.push([s.r.x, s.r.y]); s.histN.push([nx, ny]);
   if (s.histR.length > 60) { s.histR.shift(); s.histN.shift(); }
 }
@@ -316,22 +348,23 @@ const LOOP = 120;
 
 function setup(w, h) { return { t: 0 }; }
 
-function update(s, dt) { s.t += dt; }
+function update(s, dt) { s.t += dt * params.speed; }   // speed runs the clock faster or slower
 
 function draw(ctx, s, w, h) {
   ctx.clearRect(0, 0, w, h);
-  const t = s.t * params.speed;
+  const t = s.t;
   const items = [
     { x: w * 0.22, name: "sine only", breathe: 1 + 0.04 * Math.sin(t * 2), sway: 0, tilt: 0 },
     { x: w * 0.5, name: "sines, uneven", breathe: 1 + 0.03 * Math.sin(t * 1.7) + 0.015 * Math.sin(t * 2.9 + 1), sway: 4 * Math.sin(t * 0.9), tilt: 0.03 * Math.sin(t * 1.3) },
     { x: w * 0.78, name: "noise", breathe: 1 + 0.045 * noise1(t * 0.6), sway: 8 * noise1(t * 0.35 + 20), tilt: 0.06 * noise1(t * 0.5 + 40) },
   ];
+  const r = Math.min(34, w * 0.1);                 // smaller on a narrow screen, so they never touch
   for (const it of items) {
     ctx.save();
     ctx.translate(it.x + it.sway, h / 2);
     ctx.rotate(it.tilt);
     ctx.scale(it.breathe, it.breathe);
-    ctx.beginPath(); ctx.ellipse(0, 0, 34, 30, 0, 0, TAU);
+    ctx.beginPath(); ctx.ellipse(0, 0, r, r * 0.88, 0, 0, TAU);
     ctx.fillStyle = pencils.red; ctx.fill();
     ctx.restore();
     label(ctx, it.name.toUpperCase(), it.x, h - 12, pencils.graphite, "center");

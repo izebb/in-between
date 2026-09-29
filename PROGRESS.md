@@ -51,7 +51,9 @@ node scripts/shoot.mjs --pages /,/system --out ./screenshots --themes light,dark
     compiles it to `src/styles/tokens.css`, `src/motion/tokens.ts`, `public/tokens.figma.json` (springs → CSS `linear()` via core).
   - `src/motion/` — the app's motion system, layered as ch. 24 teaches: `tokens` → `primitives.ts` → `orchestration.ts`
     → `patterns.ts` (page cut, figure reveal, token morph) → `policy.ts` (reduced motion, frequency budget, interruption
-    contract). `inspector.ts` = hold Alt over anything that moves. `boot.ts` runs per page.
+    contract). `inspector.ts` = hold Alt over anything that moves. `boot.ts` runs per page. `controls.ts` = motion for
+    every control: the segmented controls' sliding selection (one observer serves every `.seg`, CSS moves it on the
+    snappy spring) and the replay mark's turn on press.
   - `src/styles/` — `index.css` declares layer order: reset, tokens, base, type, layout, components, code, figures, lab, motion, utilities.
   - `src/lib/curriculum.ts` — outline: parts, 25 chapters (slug, summary, specimen, instruments, drill), 10 instruments.
   - `src/lib/vignettes.ts` — the index's chapter pictures: one small screen per chapter where a piece of UI acts out
@@ -86,7 +88,8 @@ node scripts/shoot.mjs --pages /,/system --out ./screenshots --themes light,dark
     expand, swap, tabs, badge, progress) animated with real WAAPI from a `MockMotion`.
   - Eye Trainer: `lib/drills/*` (DrillDef: make(rand, level) + score), `components/drills/*` (trial components,
     `DrillRunner` round/short, `Calibration` log-log scatter + error trend, `EyeTrainer` page component).
-    Built so far: what-it-says (ch 01), guess-duration, match-curve. `/lab/eye-trainer` (+ `?drill=`).
+    All 9 drills are built (listed under "Built for M5–M8"). `/lab/eye-trainer` (+ `?drill=`). Results are
+    `$state.raw`: a deep proxy holding a score's `meta` fails structured clone and never reaches IndexedDB.
 
 ## Decisions
 
@@ -131,7 +134,29 @@ node scripts/shoot.mjs --pages /,/system --out ./screenshots --themes light,dark
   load view-only with a notice.
 - `play()` (motion/primitives.ts) reads the element's computed style *before* cancelling the running animation, and
   only continues from it when the previous motion hasn't been cancelled (found while writing ch 24).
-- Data Stage marks render keyed by transition pair (`Mark.key`): with index keying the datum id flips mid-move.
+- Data Stage marks are keyed by datum id when bars are matched by key, by slot when matched by position; a change
+  mid-move starts from the bars' current geometry (`datastage.ts` `snapshot()`), so it retargets instead of snapping.
+- A stage is a window: `.instrument > .i-stage` and `SandboxStage` clip what they draw (`.fig svg` is `overflow:
+  visible`, so an unclipped ghost overlay once painted across the code column).
+- Figure marks ignore the pointer only inside the drawing: `.fig svg :is(.grid, .ax, .label, .ghost, …)`. Unscoped,
+  `.fig .ghost` caught `.btn.ghost` and made every Still toggle unclickable. Likewise the page frame's rule is
+  `.frame > .scroller`, so a component may use the class name.
+- Controls animate site-wide without per-component code: segmented controls (motion/controls.ts), checkboxes (drawn
+  tick) and ranges (bead swells on hover/hold, blue focus ring) are styled globally in components.css.
+- Shared marks: `ui/PencilArrow.astro` (the lab grid's arrow; ink at rest, redrawn in blue pencil on a
+  `.pencil-hover`'s hover) and `ui/ReplayIcon.svelte` (anticlockwise circle; drawn over on hover, turns on press).
+- The footer ruler's loop plays only while it is on screen (boot.ts `wireFootRule`): an endless custom-property
+  animation cost a style pass every frame, against ch 20/21.
+- Print: the frame lets go and the page flows onto paper (grid.css), every reveal shows its end state (motion.css),
+  and colours are always the light theme (emitted by build-tokens.mjs).
+- Export Desk tokens follow the W3C Design Tokens format 2025.10 (durations `{ value, unit }`, `cubicBezier` arrays;
+  a spring is a `number` group with its `linear()` in `$extensions`).
+- Codegen: GSAP and Canvas emit a CSS-exact `steps(n, position)` helper (GSAP's own `steps(n)` has n+1 levels);
+  `linear()` stops use a `linearEase` helper in Motion/GSAP/Canvas; the Canvas spring steps at a fixed 1ms.
+- The sandbox registers CSS/WAAPI animations before time advances (they used to start a frame late); the Frame
+  Stepper's CSS ⇄ JS switch translates the reader's code (`lib/sandbox/translate.ts`) rather than swapping in a demo.
+- Dev server gotcha: Vite can keep serving a stale `<style>` block for an `.astro` component after full reloads;
+  `touch` the file to invalidate it.
 - `pnpm build` runs the motion lint first, so a raw duration or curve in an app style fails the build.
 
 ## Deviations from CURRICULUM.md
@@ -167,6 +192,14 @@ node scripts/shoot.mjs --pages /,/system --out ./screenshots --themes light,dark
 `scripts/dev/` is git-ignored scratch: `overflow.mjs` (lists elements wider than a 375px viewport), `figs.mjs`
 (screenshots every `<figure>` on a page), `embed.mjs` (the first Lab embed), `cp.mjs` (drives the code panel),
 `drill.mjs` (plays drills and checks IndexedDB). Used by eye, not asserted.
+
+## Audit pass (2026-09-30)
+
+Every chapter, instrument, drill and control was reviewed for correctness (facts, maths, code, prose vs figure vs lab
+state) and smoothness (loop seams, interruption, Still, dark, reduced motion, phone), by six parallel reviewers each
+owning a set of files, then merged by the lead. Every snippet's code was parsed or run; every "Open in Lab" state was
+decoded and matched to its code; every codegen dialect was run in the sandbox and measured against the model (within
+0.4%). Their throwaway scripts are `scripts/dev/g*-*.mjs`, `lab-*.mts`, `lead-*.mjs`.
 
 ## Workflow for chapters
 

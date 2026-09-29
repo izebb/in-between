@@ -6,8 +6,10 @@
   import type { LiesSpec } from "~/lib/drills/transition-lies";
   import type { Scored } from "~/lib/drills/types";
   import { parseSpec } from "~/lib/spec";
+  import { easingFn } from "@inbetween/core";
   import { prefs } from "~/lib/prefs.svelte";
   import { resize } from "~/lib/actions";
+  import PlayLabel from "./PlayLabel.svelte";
 
   let { spec, result, onanswer }: { spec: LiesSpec; result: Scored | null; onanswer: (v: number) => void } = $props();
   let w = $state(320);
@@ -40,8 +42,10 @@
     if (!prefs.reduced) setTimeout(play, 400);
   });
   onDestroy(() => transport.destroy());
-  // The truncated axis only swaps in at the end state: show it as the new axis once past halfway.
-  const axisFor = (i: number) => (transport.time > transport.duration / 2 ? sides[i].axisMin : 0);
+  // The truncated axis slides in over the move, on the bars' own curve: quietly, the way a chart library
+  // tweens its domain. It ends where the bars end, on the lying baseline.
+  const inout = easingFn(honest.easing).ease;
+  const axisFor = (i: number) => sides[i].axisMin * inout(Math.min(1, Math.max(0, transport.time / sides[i].tr.total)));
 </script>
 
 <div class="trial fig">
@@ -55,7 +59,7 @@
       </div>
     {/each}
   </div>
-  <button class="btn ghost small" type="button" onclick={play}>{prefs.reduced ? "Play both" : "Replay both"}</button>
+  <button class="btn ghost small" type="button" onclick={play}><PlayLabel what="both" /></button>
 </div>
 
 <style>
@@ -63,7 +67,7 @@
   .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; width: 100%; }
   @media (max-width: 560px) { .pair { grid-template-columns: 1fr; } }
   .side { display: flex; flex-direction: column; gap: 0.5rem; }
-  .chart { border: 1px solid var(--rule); border-radius: 8px; padding: 0.6rem; background: var(--paper); }
+  .chart { border: 1px solid var(--rule); border-radius: 8px; padding: 0.6rem; background: var(--paper); transition: border-color var(--dur-quick) var(--ease-out); }
   .side.right .chart { border-color: var(--ink); }
-  .side.wrong .chart { border-style: dashed; }
+  .side.wrong .chart { border-style: dashed; border-color: var(--graphite); }
 </style>

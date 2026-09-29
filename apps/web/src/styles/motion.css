@@ -159,6 +159,10 @@
   @media (prefers-reduced-motion: no-preference) {
     :root:not([data-motion="reduce"]) .foot-rule { animation: ib-playhead calc(var(--dur-scene) * 25) linear infinite; }
   }
+  /* It only plays while it's on screen (motion/boot.ts sets data-playing): a loop nobody can see would
+     still cost a style pass every frame (ch. 20, 21). The head and its fade pause together, in step. */
+  html.js .foot-rule:not([data-playing]),
+  html.js .foot-rule:not([data-playing])::after { animation-play-state: paused; }
   /* Reduced motion: a still ruler, no head. */
   :root[data-motion="reduce"] .foot-rule::before,
   :root[data-motion="reduce"] .foot-rule::after { display: none; }
@@ -167,6 +171,23 @@
     :root:not([data-motion="full"]) .foot-rule::after { display: none; }
   }
   @keyframes ib-playhead { from { --ph: 0; } to { --ph: 1; } }
+
+  /* ---------- Policy: content never waits for motion, on paper either ----------
+     A printed page has no scroll to trigger its reveals: everything is shown as it ends, the titles
+     inked, the lines risen, the sheet flat, the playhead gone. (!important outranks a running
+     animation in the cascade, so WAAPI reveals give way too.) */
+  @media print {
+    [data-reveal-block], [data-reveal-lines], [data-lines], [data-reveal-lines] figcaption, .rl-line,
+    .reveal-ghosts, .reveal-key, [data-persp] > *, [data-persp-self] {
+      opacity: 1 !important;
+      translate: none !important;
+      transform: none !important;
+      animation: none !important;
+    }
+    .ink-g { animation: none !important; stroke-dashoffset: 0 !important; fill-opacity: 1 !important; stroke-opacity: 0 !important; }
+    .reveal-axes { stroke-dashoffset: 0 !important; }
+    .foot-rule::before, .foot-rule::after { display: none !important; }
+  }
   @keyframes ib-playhead-fade { 0% { opacity: 0; } 4% { opacity: 1; } 94% { opacity: 1; } 100% { opacity: 0; } }
 
   /* ---------- Pattern: the nav indicator slides along the bar's border to the new page ---------- */

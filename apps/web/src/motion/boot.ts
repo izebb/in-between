@@ -5,6 +5,7 @@
 import { applyPrefs, getMotionPref, getThemePref, getSoundPref, setMotionPref, setThemePref, setSoundPref } from "./policy";
 import { observeFigureReveals, observeInViewOnce } from "./patterns";
 import { installInspector } from "./inspector";
+import { installControls } from "./controls";
 
 let placement: AbortController | undefined;
 
@@ -89,6 +90,16 @@ function wirePrefs() {
   sync();
 }
 
+/** The footer ruler's playhead plays only while the ruler is on screen (motion.css .foot-rule). */
+let rulerSeen: IntersectionObserver | undefined;
+function wireFootRule() {
+  rulerSeen?.disconnect();
+  const rule = document.querySelector<HTMLElement>(".foot-rule");
+  if (!rule) return;
+  rulerSeen = new IntersectionObserver(([e]) => rule.toggleAttribute("data-playing", e.isIntersecting));
+  rulerSeen.observe(rule);
+}
+
 function boot() {
   document.documentElement.classList.add("js");
   applyPrefs();
@@ -97,6 +108,8 @@ function boot() {
   observeFigureReveals();
   observeInViewOnce();
   installInspector();
+  installControls();
+  wireFootRule();
 }
 
 document.addEventListener("astro:page-load", boot);

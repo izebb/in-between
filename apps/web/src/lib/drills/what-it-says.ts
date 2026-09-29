@@ -22,7 +22,7 @@ export const CLIPS: Clip[] = [
   { kind: "like", motion: { easing: "--ease-out", duration: 360 }, says: "feedback", why: "The heart squashes and pops back: your tap was received." },
   { kind: "progress", motion: { easing: "--ease-inout", duration: 1400 }, says: "feedback", why: "The bar fills as work happens: the system is answering your request." },
   { kind: "badge", motion: { easing: "spring(response .35 bounce .45)" }, says: "attention", why: "A count pops onto the bell: something new wants a look." },
-  { kind: "card", motion: { easing: "--ease-out", duration: 420, distance: 24 }, says: "attention", why: "A new card rises into place where your eye already is: look here." },
+  { kind: "card", motion: { easing: "--ease-out", duration: 420, distance: 24 }, says: "attention", why: "A new card rises into place: look here, this is new." },
 ];
 
 export interface WhatItSaysSpec {
@@ -42,6 +42,7 @@ export const whatItSays: DrillDef<WhatItSaysSpec, number> = {
     const clip = CLIPS[Math.floor(rand() * CLIPS.length)];
     return { clip, options: [...MEANINGS] };
   },
+  key: (spec) => spec.clip.kind,
   score(spec, answer) {
     const ok = spec.options[answer] === spec.clip.says;
     return {

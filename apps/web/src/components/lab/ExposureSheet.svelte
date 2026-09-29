@@ -70,7 +70,8 @@
       label: "Cascade",
       state: {
         layout: "cards", stagger: 50, order: "center", staggerProp: "scale",
-        scene: { title: "Cascade from the centre", moves: ["a", "b", "c", "d", "e", "f"].map((t, i) => row(t, "scale", 0.6, 1, 420, [100, 50, 100, 50, 0, 50][i], "spring(response .4 bounce .25)")) },
+        // A ripple from card e (the grid's lower middle): one step per card between, as centre out spaces it.
+        scene: { title: "Cascade: a ripple from one card", moves: ["a", "b", "c", "d", "e", "f"].map((t, i) => row(t, "scale", 0.6, 1, 420, [100, 50, 100, 50, 0, 50][i], "spring(response .4 bounce .25)")) },
       },
     },
   };
@@ -124,7 +125,18 @@
   function applyStagger() {
     const ts = targets;
     const n = ts.length;
-    const rank = (i: number) => (lab.order === "first" ? i : lab.order === "last" ? n - 1 - i : Math.abs(i - (n - 1) / 2));
+    // Centre out: a list spreads both ways from its middle; the cards (a grid of three columns) ripple
+    // from the card nearest the middle, one step per card between (on a tie, the later card leads).
+    const middle = (i: number) => Math.abs(i - (n - 1) / 2);
+    let ripple = (i: number) => middle(i);
+    if (lab.layout === "cards") {
+      const rows = Math.ceil(n / 3);
+      const cell = (i: number) => [i % 3, Math.floor(i / 3)];
+      const off = (i: number) => Math.hypot(cell(i)[0] - 1, cell(i)[1] - (rows - 1) / 2);
+      const origin = ts.reduce((best, _, i) => (off(i) <= off(best) ? i : best), 0);
+      ripple = (i) => Math.abs(cell(i)[0] - cell(origin)[0]) + Math.abs(cell(i)[1] - cell(origin)[1]);
+    }
+    const rank = (i: number) => (lab.order === "first" ? i : lab.order === "last" ? n - 1 - i : ripple(i));
     lab.scene.moves.forEach((m) => {
       const i = ts.indexOf(m.target);
       if (i >= 0 && (m.property === lab.staggerProp || lab.scene.moves.filter((x) => x.target === m.target).length > 1)) m.delay = Math.round(rank(i) * lab.stagger);

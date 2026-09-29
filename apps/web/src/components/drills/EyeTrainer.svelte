@@ -1,9 +1,10 @@
 <script lang="ts">
   /** L6 · Eye trainer: ear training for the eyes. Short scored rounds and a calibration graph. */
-  import { onMount } from "svelte";
+  import { onMount, tick } from "svelte";
   import { drills, drillOrder, drillNames } from "~/lib/drills";
   import { chapterByNumber, pad2, type DrillId } from "~/lib/curriculum";
   import { allSessions, chaptersRead, clearSessions, type DrillSession } from "~/lib/store";
+  import { prefersReducedMotion } from "~/motion/policy";
   import DrillRunner from "./DrillRunner.svelte";
   import Calibration from "./Calibration.svelte";
 
@@ -17,9 +18,14 @@
     loaded = true;
   }
   onMount(() => {
-    refresh();
     const q = new URLSearchParams(location.search).get("drill") as DrillId | null;
     if (q && drills[q]) active = q;
+    // This island renders in the browser only, so a link to #calibration (the drills' "over time" link)
+    // arrives before its target exists: go there once the history has loaded and drawn.
+    refresh().then(tick).then(() => {
+      const target = location.hash === "#calibration" || location.hash === "#bench" ? document.querySelector(location.hash) : null;
+      target?.scrollIntoView({ block: "start" });
+    });
   });
 
   const stats = (id: DrillId) => {
@@ -34,7 +40,7 @@
     const url = new URL(location.href);
     url.searchParams.set("drill", id);
     history.replaceState(history.state, "", url);
-    document.getElementById("bench")?.scrollIntoView({ block: "start" });
+    document.getElementById("bench")?.scrollIntoView({ block: "start", behavior: prefersReducedMotion() ? "auto" : "smooth" });
   }
 
   async function reset() {
@@ -50,25 +56,26 @@
       {@const d = drills[id]}
       {@const ch = d ? chapterByNumber(d.unlocksAfter) : null}
       {@const st = stats(id)}
-      <li>
-        <button type="button" class="drill" class:active={active === id} disabled={!d} onclick={() => choose(id)}>
+      <!-- The card is the button; its last line sits outside it, since it can hold a link (no link inside a button). -->
+      <li class="card" class:active={active === id} class:off={!d}>
+        <button type="button" class="drill" aria-pressed={active === id} disabled={!d} onclick={() => choose(id)}>
           <span class="smallcaps top">
             {#if !d}In preparation{:else if unlocked(d.unlocksAfter)}Unlocked{:else}After ch. {pad2(d.unlocksAfter)}{/if}
           </span>
           <span class="serif name">{d?.name ?? drillNames[id]}</span>
           {#if d}<span class="trains">{d.trains}</span>{/if}
-          <span class="meta mono">
-            {#if st.count}{st.count} round{st.count === 1 ? "" : "s"} · best {st.best}{:else if d && ch && !unlocked(d.unlocksAfter)}read <a href={`/chapters/${ch.slug}`} onclick={(e) => e.stopPropagation()}>{ch.title}</a> first, or try anyway{:else if d}not played yet{/if}
-          </span>
         </button>
+        <span class="meta mono">
+          {#if st.count}{st.count} round{st.count === 1 ? "" : "s"} · best {st.best}{:else if d && ch && !unlocked(d.unlocksAfter)}read <a href={`/chapters/${ch.slug}`}>{ch.title}</a> first, or try anyway{:else if d}not played yet{/if}
+        </span>
       </li>
     {/each}
   </ol>
 
-  <section id="bench" class="bench" aria-live="polite">
+  <section id="bench" class="bench">
     {#if active && drills[active]}
       {#key active}
-        <DrillRunner drill={active} mode="round" onfinish={refresh} />
+        <div data-motion="fade"><DrillRunner drill={active} mode="round" onfinish={refresh} /></div>
       {/key}
     {:else}
       <p class="pick serif">Pick a drill. A round lasts about a minute.</p>
@@ -84,9 +91,10 @@
       <p class="empty">Nothing yet. Play a round of <em>Guess the duration</em> and your first points will land here.</p>
     {/if}
     {#each withData as id (id)}
+      {@const mine = sessions.filter((s) => s.drill === id)}
       <div class="calib-item">
-        <span class="smallcaps">{drills[id]!.name} · {sessions.filter((s) => s.drill === id).length} rounds</span>
-        <Calibration def={drills[id]!} sessions={sessions.filter((s) => s.drill === id)} />
+        <span class="smallcaps">{drills[id]!.name} · {mine.length} round{mine.length === 1 ? "" : "s"}</span>
+        <Calibration def={drills[id]!} sessions={mine} />
       </div>
     {/each}
     {#if sessions.length}<button class="btn ghost small clear" type="button" onclick={reset}>Clear history</button>{/if}
@@ -96,14 +104,16 @@
 <style>
   .trainer { display: flex; flex-direction: column; gap: 2rem; }
   .drill-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr)); border-top: 1px solid var(--rule); border-left: 1px solid var(--rule); margin: 0; padding: 0; }
-  .drill { width: 100%; height: 100%; text-align: left; display: flex; flex-direction: column; gap: 0.3rem; padding: 0.9rem 1rem 1rem; border-right: 1px solid var(--rule); border-bottom: 1px solid var(--rule); background: var(--paper); color: var(--ink); transition: background-color var(--dur-quick) var(--ease-out); min-height: 8.5rem; }
-  .drill:hover:not(:disabled) { background: var(--paper-raised); }
-  .drill.active { background: var(--paper-raised); box-shadow: inset 0 -2px 0 var(--ink); }
-  .drill:disabled { opacity: 0.5; cursor: default; }
+  .card { display: flex; flex-direction: column; min-height: 8.5rem; border-right: 1px solid var(--rule); border-bottom: 1px solid var(--rule); background: var(--paper); transition: background-color var(--dur-quick) var(--ease-out), box-shadow var(--dur-quick) var(--ease-out); }
+  .card:has(.drill:hover:not(:disabled)) { background: var(--paper-raised); }
+  .card.active { background: var(--paper-raised); box-shadow: inset 0 -2px 0 var(--ink); }
+  .card.off { opacity: 0.5; }
+  .drill { flex: 1; width: 100%; text-align: left; display: flex; flex-direction: column; gap: 0.3rem; padding: 0.9rem 1rem 0.3rem; background: transparent; color: var(--ink); }
+  .drill:disabled { cursor: default; }
   .top { color: var(--graphite-strong); }
   .name { font-size: 1.35rem; line-height: 1.1; }
   .trains { font-size: var(--text-sm); color: var(--graphite-strong); }
-  .meta { margin-top: auto; font-size: var(--text-xs); color: var(--graphite-strong); }
+  .meta { padding: 0 1rem 1rem; font-size: var(--text-xs); color: var(--graphite-strong); }
   .bench { border: 1px solid var(--rule); border-radius: 8px; padding: clamp(1rem, 3vw, 1.75rem); background: var(--plate-bg); scroll-margin-top: 1rem; }
   .pick { font-size: 1.5rem; color: var(--graphite-strong); }
   .calib { display: flex; flex-direction: column; gap: 1.25rem; }

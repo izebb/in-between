@@ -9,6 +9,7 @@
   import type { TuneSpec, TuneAnswer } from "~/lib/drills/tune-to-match";
   import type { Scored } from "~/lib/drills/types";
   import { prefs } from "~/lib/prefs.svelte";
+  import PlayLabel from "./PlayLabel.svelte";
 
   let { spec, result, onanswer }: { spec: TuneSpec; result: Scored | null; onanswer: (v: TuneAnswer) => void } = $props();
 
@@ -42,7 +43,7 @@
       <Slider label="Bounce" bind:value={bounce} min={-0.4} max={0.8} step={0.01} onchange={play} />
     </div>
     <div class="actions">
-      <button class="btn ghost small" type="button" onclick={play}>Play both</button>
+      <button class="btn ghost small" type="button" onclick={play}><PlayLabel what="both" /></button>
       <button class="btn solid" type="button" onclick={() => onanswer({ response, bounce })}>Submit</button>
     </div>
   {:else}

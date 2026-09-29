@@ -13,6 +13,12 @@ export class ProgramTransport implements Transport {
   rate = $state(1);
   fps = $state(60);
   duration = $state(4000);
+  /** The width the current pass was laid out for (setup reads it once). */
+  width = 0;
+  /** Called at the end of a playing pass, just before it starts over (the last frame is still drawn). */
+  onwrap: (() => void) | null = null;
+  /** While this says so, a pass that has reached its end keeps running instead of starting over. */
+  holdWrap: (() => boolean) | null = null;
   private state: unknown = null;
   private acc = 0;
   private loop: Loop | null = null;
@@ -28,6 +34,7 @@ export class ProgramTransport implements Transport {
   reset() {
     const { program, w, h } = this.get();
     this.state = program?.setup ? program.setup(w, h) : {};
+    this.width = w;
     this.time = 0;
     this.acc = 0;
   }
@@ -60,12 +67,19 @@ export class ProgramTransport implements Transport {
       this.acc += dt * 1000 * this.rate;
       const ms = this.stepMs();
       let n = 0;
-      while (this.acc >= ms && n < 8) {
+      // Step when three-quarters of a step is owed, not a whole one. The display's frames wobble by a
+      // fraction of a millisecond; with the threshold at exactly one step, a frame that lands a hair early
+      // takes no step and the next takes two, and the motion judders. This keeps the owed time well
+      // away from the threshold at 60 and 120Hz (the simulation runs at most a quarter step ahead).
+      while (this.acc >= ms * 0.75 && n < 8) {
         this.acc -= ms;
         this.simulate(1);
         n++;
       }
-      if (this.duration && this.time >= this.duration) this.reset();
+      if (this.duration && this.time >= this.duration && !this.holdWrap?.()) {
+        this.onwrap?.();
+        this.reset();
+      }
       this.draw();
     });
   }

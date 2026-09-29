@@ -6,6 +6,7 @@
   import type { Scored } from "~/lib/drills/types";
   import { toMove } from "~/lib/spec";
   import { prefs } from "~/lib/prefs.svelte";
+  import PlayLabel from "./PlayLabel.svelte";
 
   let { spec, result, onanswer }: { spec: GuessDurationSpec; result: Scored | null; onanswer: (v: number) => void } = $props();
 
@@ -15,7 +16,10 @@
 
   onMount(() => {
     prefs.start();
-    if (!prefs.reduced) setTimeout(() => mock?.play(), 350);
+    if (prefs.reduced) return;
+    // It is about to play: hold its first frame, so the move starts clean instead of from its end state.
+    mock?.cue();
+    setTimeout(() => mock?.play(), 350);
   });
 
   const rows = $derived(
@@ -31,7 +35,7 @@
 <div class="trial">
   <div class="stage">
     <Mock bind:this={mock} kind={spec.kind} motion={{ easing: spec.easing, duration: spec.duration }} height={170} label="A move to time" />
-    <button class="btn small replay" type="button" onclick={() => mock.play()}>{prefs.reduced ? "Play" : "Replay"}</button>
+    <button class="btn small replay" type="button" onclick={() => mock.play()}><PlayLabel /></button>
   </div>
   {#if !result}
     <form class="answer" onsubmit={(e) => { e.preventDefault(); onanswer(guess); }}>
@@ -57,7 +61,7 @@
   .replay { position: absolute; right: 0.5rem; top: 0.5rem; background: var(--paper); }
   .answer { display: flex; flex-direction: column; gap: 0.6rem; }
   .bands { display: flex; flex-wrap: wrap; gap: 0.3rem; }
-  .bands .chip { cursor: pointer; }
+  .bands .chip { cursor: pointer; transition: color var(--dur-quick) var(--ease-out), border-color var(--dur-quick) var(--ease-out); }
   .bands .chip[aria-pressed="true"] { color: var(--ink); border-color: var(--ink); }
   .row { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
   .row input { flex: 1; min-width: 160px; accent-color: var(--ink); }

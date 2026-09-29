@@ -59,7 +59,7 @@ A particle's age also sets how it's drawn. Each dot in figure 17.1 starts red an
 The loop in chapter 14 clears the canvas every frame and draws everything again, like a flipbook. If you skip the clear, nothing is ever erased, and a moving dot leaves a solid line. Trails sit between the two. Erase only *part* of the last frame, and old marks fade a little every frame while the newest stay strong.
 
 <Figure n="17.4" caption="Trails from translucent clears">
-  <Canvas program="trails" ghostEvery={4} />
+  <Canvas program="trails" stillMode="last" />
 </Figure>
 
 Every sixtieth of a second, the figure erases 12% of whatever is on the canvas; that's the *Clear opacity* knob. So each mark keeps 88% of its strength per frame at 60Hz: 28% after 10 frames, and 8% after 20. At 60Hz that's a tail about a third of a second long, and it reads as speed. Drag the knob down to 0.02 and each mark keeps 98% a frame. It now takes more than half a second just to fade to half strength, and the tail becomes a drawing of the path. At 1 the canvas clears completely, and there is no trail.
@@ -88,13 +88,13 @@ The flock in figure 17.2 is Craig Reynolds' *boids*. Each arrow sees only the ne
 - **Alignment.** Steer toward the neighbours' average velocity, so you go where they go.
 - **Cohesion.** Steer toward the neighbours' average position, so you stay with them.
 
-Each rule is a small push on the arrow's velocity, scaled by its own weight, and speed is capped at 120px a second. That is the whole program. Nothing in it mentions a flock, a leader, or a path. Figure 17.3 runs the same program with the alignment and cohesion weights set to zero.
+Each rule is a small push on the arrow's velocity, scaled by its own weight. Speed is kept between 45 and 120px a second, because a bird can't hover. That is the whole program. Nothing in it mentions a flock, a leader, or a path. Figure 17.3 runs the same program with the alignment and cohesion weights set to zero.
 
 <Margin kind="def">
   <p><b>Emergence.</b> A pattern in the whole that no single part contains. No boid has a rule for "flock".</p>
 </Margin>
 
-Watch figure 17.2 from the start. For the first few seconds the arrows slow down, because each one is averaging its heading with neighbours that are going every which way. Then small groups agree, pick up speed, and meet other groups. It's choreography with no choreographer.
+Watch figure 17.2 from the start. For the first few seconds the arrows only turn, each toward the heading of whoever is near. Then small groups agree, pick up speed, and meet other groups, and groups that meet become one. It's choreography with no choreographer.
 
 Interfaces use the same idea at a small scale. A stagger is one rule applied to every row: start a beat after the one above. The rows never coordinate with each other, and the list still reads as one gesture. When many things move at once, give them a shared rule instead of timing each one by hand. The rule keeps them related, however many there are.
 
@@ -124,7 +124,7 @@ This is the flock from figure 17.2, with its knobs and its code. Change one rule
 
 - Set **Separation** to 0. Nothing keeps the arrows apart, and they pile up into knots.
 - Set **Alignment** to 0. No two agree on a heading, and each arrow goes its own way. It stops being a flock.
-- Set **Cohesion** to 0. The arrows still line up with their neighbours, but nothing draws the groups together, so they drift in loose streams. They also slow down: in this simple model, the pull toward the group is part of what keeps them moving.
+- Set **Cohesion** to 0. The arrows still line up with their neighbours, but nothing draws the groups together, so they drift in loose streams.
 - Raise **Cohesion** to about 2. The groups pull into tight clumps.
 
 <Lab id="canvas-sandbox" program="boids" />

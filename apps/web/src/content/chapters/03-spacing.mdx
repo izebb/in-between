@@ -71,7 +71,7 @@ Two more CSS spacings are worth knowing. `steps(n)` holds still and then jumps, 
 
 <Beat kind="tune">Drag the handles</Beat>
 
-Start from `ease-out` and pull the first handle down toward the corner. Watch the velocity peak shrink and the ghosts spread evenly. You're turning an arrival back into a machine. Then try B for comparison.
+Start from `ease-out`. Its first handle sits in the corner; its second lies flat along the top, and that flat handle is the settle. Pull the second handle straight down onto the dotted diagonal. Watch the velocity peak shrink to 1× and the ghosts spread evenly. You're turning an arrival back into a machine. B is `ease-in`: the same curve turned around, the spacing of an exit.
 
 <Lab id="curve-bench" easing="ease-out" duration={600} compare="ease-in" code={false} />
 
@@ -82,7 +82,7 @@ Start from `ease-out` and pull the first handle down toward the corner. Watch th
 <Beat kind="write">The notation</Beat>
 
 <div class="snippets">
-<Snippet title="03 · Spacing: arrive and settle" lab="curve-bench" easing="cubic-bezier(.2,.8,.2,1)" duration={280} distance={24} property="y">
+<Snippet title="03 · Spacing: arrive and settle" lab="curve-bench" easing="cubic-bezier(.2,.8,.2,1)" duration={280} from={16} to={0} property="y">
 
 ```css
 /* Enter: decelerate into place. Exit: accelerate away, faster. */
@@ -99,11 +99,12 @@ Start from `ease-out` and pull the first handle down toward the corner. Watch th
 
 </Snippet>
 
-<Snippet title="03 · Spacing: steps and linear()" lab="spacing-chart" easing="steps(8)" duration={800}>
+<Snippet title="03 · Spacing: steps and linear()" lab="spacing-chart" easing="steps(8)" duration={800} property="rotate" to={360}>
 
 ```css
 /* Hold, then jump: eight positions per turn. */
 .spinner { animation: spin 800ms steps(8) infinite; }
+@keyframes spin { to { rotate: 1turn; } }
 
 /* Any spacing you can draw, as stops: a small bounce. */
 .drop {
@@ -114,7 +115,7 @@ Start from `ease-out` and pull the first handle down toward the corner. Watch th
 
 </Snippet>
 
-<Snippet title="03 · Spacing: the same arrival in JS" lab="curve-bench" easing="cubic-bezier(.2,.8,.2,1)" duration={280} distance={24} property="y">
+<Snippet title="03 · Spacing: the same arrival in JS" lab="curve-bench" easing="cubic-bezier(.2,.8,.2,1)" duration={280} from={16} to={0} property="y">
 
 ```js
 card.animate(

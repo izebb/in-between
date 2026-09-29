@@ -359,7 +359,7 @@ card.addEventListener('pointercancel', release);
 <Snippet title="12 · Direct manipulation: release into a spring" lab="canvas-sandbox" source={dragLab}>
 
 ```js
-// Uses card, x, min, max, moveTo() and releaseVelocity() from the card above.
+// Uses card, x, min, max, moveTo(), sample() and releaseVelocity() from the card above.
 const lambda = -Math.log(0.998) * 1000;            // friction, to project (chapter 06)
 const response = 0.35, bounce = 0.1;               // the release spring (chapter 05)
 const k = ((2 * Math.PI) / response) ** 2;         // stiffness, for mass 1
@@ -374,6 +374,7 @@ function stop() {
 function release(e) {
   if (!card.hasPointerCapture(e.pointerId)) return;
   card.classList.remove('is-dragging');
+  sample(e.timeStamp);                       // held still before lifting? then no speed
   const v = releaseVelocity();               // px/s, from the last 100ms
   const landing = x + v / lambda;            // where the throw would stop
   const stops = [min, (min + max) / 2, max];

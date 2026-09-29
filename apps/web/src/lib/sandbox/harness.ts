@@ -3,8 +3,9 @@
  * virtual clock and reports every frame back to the host with postMessage.
  *
  * Protocol (host → frame):   { ib: 1, cmd: "play" | "pause" | "rate" | "step" | "ff" | "code" | "reset", value? }
- * Protocol (frame → host):   { ib: 1, type: "ready" | "frame" | "error" | "log", ... }
- *   frame: { t, s: { [target]: [x, y, scale, opacity, rotate] } }   (x/y = centre, px)
+ * Protocol (frame → host):   { ib: 1, type: "ready" | "frame" | "frames" | "error" | "log", ... }
+ *   frame: { t, s: { [target]: [x, y, scale, opacity, rotate, w, h] } }   (x/y = centre, px)
+ *   frames: { list: frame[] }   (everything a fast-forward ran, at once)
  */
 
 import { installClock } from "./clock";
@@ -57,8 +58,16 @@ function runtime(o: HarnessOptions) {
   var TARGETS = ${JSON.stringify(o.targets)};
   var DIALECT = ${JSON.stringify(o.dialect)};
   function post(m) { m.ib = 1; parent.postMessage(m, "*"); }
-  window.addEventListener("error", function (e) { post({ type: "error", message: String(e.message || e) }); });
-  window.addEventListener("unhandledrejection", function (e) { post({ type: "error", message: String(e.reason && e.reason.message || e.reason) }); });
+  // Errors name the line of *your* code they came from (the page wraps it in its own lines).
+  var LINE0 = __IB_LINE0__;
+  function describe(e, lineno) {
+    var line = e && e.stack && (DIALECT === "canvas" ? /<anonymous>:(\\d+):\\d+/ : /about:srcdoc:(\\d+):\\d+/).exec(e.stack);
+    var n = (line ? +line[1] : lineno || 0) - LINE0;
+    return String(e && e.message || e) + (n > 0 ? " (line " + n + ")" : "");
+  }
+  window.describeError = describe;
+  window.addEventListener("error", function (e) { post({ type: "error", message: e.error ? describe(e.error, e.lineno) : describe(e.message, e.lineno) }); });
+  window.addEventListener("unhandledrejection", function (e) { post({ type: "error", message: describe(e.reason) }); });
   ["log", "warn", "error"].forEach(function (k) {
     var orig = console[k];
     console[k] = function () {
@@ -93,7 +102,7 @@ function runtime(o: HarnessOptions) {
     if (type === "down") p.down = true;
     if (type === "up") p.down = false;
     if (canvasApi && canvasApi.onPointer) {
-      try { canvasApi.setup ? canvasApi.onPointer(canvasState, p, type) : canvasApi.onPointer(p, type); } catch (err) { post({ type: "error", message: String(err && err.message || err) }); }
+      try { canvasApi.setup ? canvasApi.onPointer(canvasState, p, type) : canvasApi.onPointer(p, type); } catch (err) { post({ type: "error", message: describe(err) }); }
     }
   }
   ["down", "move", "up"].forEach(function (k) { window.addEventListener("pointer" + k, function (e) { pointerFrom(e, k); }); });
@@ -117,13 +126,15 @@ function runtime(o: HarnessOptions) {
     var baseY = TARGETS.length === 1 ? H / 2 : H * (TARGETS.indexOf(name) + 1) / (TARGETS.length + 1);
     return [${o.originX ?? 60} + (subj.x || 0), baseY + (subj.y || 0), subj.scale == null ? 1 : subj.scale, subj.opacity == null ? 1 : subj.opacity, subj.rotate || 0];
   }
+  var batch = null; // frames run by a fast-forward are sent together, so the host's playhead lands once
   function sample(t) {
     var s = {};
     for (var i = 0; i < TARGETS.length; i++) {
       var v = DIALECT === "canvas" ? measureCanvas(TARGETS[i]) : measureDom(TARGETS[i]);
       if (v) s[TARGETS[i]] = v.map(function (n) { return Math.round(n * 1000) / 1000; });
     }
-    post({ type: "frame", t: t, s: s });
+    if (batch) batch.push({ t: t, s: s });
+    else post({ type: "frame", t: t, s: s });
   }
 
   function sizeCanvas() {
@@ -142,7 +153,7 @@ function runtime(o: HarnessOptions) {
         if (canvasApi.setup && canvasState == null) canvasState = canvasApi.setup(W, H);
         if (canvasApi.update) canvasApi.setup ? canvasApi.update(canvasState, dt / 1000) : canvasApi.update(dt / 1000);
         if (canvasApi.draw) canvasApi.setup ? canvasApi.draw(ctx, canvasState, W, H) : canvasApi.draw(ctx, W, H);
-      } catch (e) { post({ type: "error", message: String(e && e.message || e) }); canvasApi = null; }
+      } catch (e) { post({ type: "error", message: describe(e) }); canvasApi = null; }
     }
     sample(t);
   });
@@ -154,7 +165,12 @@ function runtime(o: HarnessOptions) {
     if (m.cmd === "pause") { userPaused = true; clock.pause(); }
     if (m.cmd === "rate") clock.setRate(m.value);
     if (m.cmd === "step") { userPaused = true; clock.step(m.value || 1, m.fps || 60); }
-    if (m.cmd === "ff") { userPaused = true; clock.pause(); clock.fastForward(m.value, m.fps || 60); }
+    if (m.cmd === "ff") {
+      userPaused = true; clock.pause();
+      batch = []; clock.fastForward(m.value, m.fps || 60);
+      var list = batch; batch = null;
+      post({ type: "frames", list: list });
+    }
     if (m.cmd === "code" && DIALECT === "canvas") { window.__ibLoad(m.value, true); }
     if (m.cmd === "reset" && DIALECT === "canvas") { canvasState = null; }
     if (m.cmd === "params") { Object.assign(window.__ibParams, m.value || {}); }
@@ -166,9 +182,15 @@ function runtime(o: HarnessOptions) {
     // Two real frames: the document is laid out and painted before time begins.
     realRAF(function () { realRAF(function () {
       if (DIALECT === "canvas") { sizeCanvas(); window.addEventListener("resize", sizeCanvas); }
-      sample(0);
       // Your JS runs only now: the page is laid out, so measurements (FLIP, getBoundingClientRect) are real.
-      if (window.__ibUser) window.__ibUser();
+      // Then t = 0 is sampled as your code set it up (a zero-length frame applies its first values).
+      if (window.__ibUser) {
+        window.__ibUser();
+        // GSAP writes a tween's first values lazily, on its next tick: take that tick now.
+        if (window.gsap && gsap.ticker) try { gsap.ticker.tick(); } catch (e) {}
+        clock.flush();
+      }
+      else sample(0);
       if (DIALECT === "css") {
         var stage = document.querySelector(".stage");
         TARGETS.forEach(function (n) { var el = document.querySelector("." + n); if (el) getComputedStyle(el).transform; });
@@ -199,6 +221,9 @@ window.__ibLoad = function (code, hot) {
 `;
 }
 
+/** Marks the line before the user's JS, so error lines can be counted from it. */
+const USER_MARK = "/*your code*/";
+
 const esc = (s: string) => s.replace(/<\/(script|style)/gi, "<\\/$1");
 
 export function buildSrcdoc(o: HarnessOptions): string {
@@ -228,9 +253,9 @@ export function buildSrcdoc(o: HarnessOptions): string {
       ? `<script>${canvasLoader(o)}</script><script>window.__ibStart();window.__ibLoad(${esc(JSON.stringify(o.code))}, false);</script>`
       : o.dialect === "css"
         ? `<script>window.__ibStart();</script>`
-        : `<script>window.__ibUser=function(){try{(function(){\n${esc(rewriteImports(o.code))}\n})();}catch(e){parent.postMessage({ib:1,type:"error",message:String(e&&e.message||e)},"*");}};</script><script>window.__ibStart();</script>`;
+        : `<script>window.__ibUser=function(){try{(function(){${USER_MARK}\n${esc(rewriteImports(o.code))}\n})();}catch(e){parent.postMessage({ib:1,type:"error",message:describeError(e)},"*");}};</script><script>window.__ibStart();</script>`;
 
-  return `<!doctype html><html><head><meta charset="utf-8">
+  const doc = `<!doctype html><html><head><meta charset="utf-8">
 <style>
 html,body{margin:0;height:100%;background:transparent;overflow:hidden;font:12px/1.4 ui-monospace,monospace;color:${colors.ink};}
 .stage{position:relative;height:100%;}
@@ -241,4 +266,10 @@ ${targetCss}
 ${libs}
 ${user}
 </head><body>${stage}${script}</body></html>`;
+  // Where line 1 of the user's code sits: in this document (JS), or in the canvas loader's Function.
+  const line0 =
+    o.dialect === "canvas"
+      ? (PRELUDE.match(/\n/g)?.length ?? 0) + 4
+      : doc.includes(USER_MARK) ? doc.slice(0, doc.indexOf(USER_MARK)).split("\n").length : 0;
+  return doc.replace("__IB_LINE0__", String(line0));
 }

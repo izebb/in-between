@@ -16,6 +16,24 @@ export const arcCss = `/* An arc: a curved track instead of a straight line. */
 }
 `;
 
+export const back = { type: "cubic", x1: 0.34, y1: 1.56, x2: 0.64, y2: 1 };
+export const followThrough = { // the follow-through snippet, for "Open in Lab"
+  layout: "list",
+  stagger: 40,
+  order: "first",
+  staggerProp: "x",
+  scene: {
+    title: "Follow-through: the panel, then its rows",
+    moves: [
+      { target: "panel", property: "x", from: 240, to: 0, duration: 360, delay: 0, easing: { type: "cubic", x1: 0.2, y1: 0.8, x2: 0.2, y2: 1 } },
+      ...["row 1", "row 2", "row 3"].flatMap((target, i) => [
+        { target, property: "x", from: 48, to: 0, duration: 420, delay: 120 + i * 40, easing: back },
+        { target, property: "opacity", from: 0, to: 1, duration: 420, delay: 120 + i * 40, easing: back },
+      ]),
+    ],
+  },
+};
+
 <Margin kind="read">
   <p>Frank Thomas and Ollie Johnston, <i>The Illusion of Life: Disney Animation</i> (1981). Both were among Disney's "Nine Old Men", the studio's core group of veteran animators.</p>
 </Margin>
@@ -175,7 +193,7 @@ A transition runs with the timing of the state it is heading to. So a press keep
 
 </Snippet>
 
-<Snippet title="07 · The twelve: anticipation on exit" lab="curve-bench" easing="cubic-bezier(.36,0,.66,-.56)" duration={360}>
+<Snippet title="07 · The twelve: anticipation on exit" lab="curve-bench" easing="cubic-bezier(.36,0,.66,-.56)" duration={360} property="y" to={120}>
 
 ```css
 /* Enter: ease out. It wasn't on screen, so there is nothing to wind up. */
@@ -196,7 +214,7 @@ A transition runs with the timing of the state it is heading to. So a press keep
 
 </Snippet>
 
-<Snippet title="07 · The twelve: squash on press" lab="curve-bench" easing="cubic-bezier(.34,1.56,.64,1)" duration={300}>
+<Snippet title="07 · The twelve: squash on press" lab="curve-bench" easing="cubic-bezier(.34,1.56,.64,1)" duration={300} property="scale" from={0.95} to={1}>
 
 ```css
 /* Squash toward the surface: pin the bottom edge.
@@ -214,7 +232,7 @@ A transition runs with the timing of the state it is heading to. So a press keep
 
 </Snippet>
 
-<Snippet title="07 · The twelve: follow-through in WAAPI" lab="exposure-sheet" source="overlap">
+<Snippet title="07 · The twelve: follow-through in WAAPI" lab="exposure-sheet" extra={followThrough}>
 
 ```js
 // The panel leads. Its rows start while it is still moving,

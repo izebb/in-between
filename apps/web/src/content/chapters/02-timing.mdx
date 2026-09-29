@@ -91,7 +91,7 @@ Drag the duration and watch the frame count. Find where the move stops feeling l
 Now the numbers. In CSS, duration is `transition-duration` or `animation-duration`, in `ms` or `s`. Keep durations in tokens, so a whole app shares one sense of time.
 
 <div class="snippets">
-<Snippet title="02 · Timing: durations as tokens" lab="spacing-chart" easing="--ease-out" duration={180} distance={240}>
+<Snippet title="02 · Timing: durations as tokens" lab="spacing-chart" easing="ease-out" duration={180} distance={240}>
 
 ```css
 :root {
@@ -109,11 +109,12 @@ Now the numbers. In CSS, duration is `transition-duration` or `animation-duratio
 
 </Snippet>
 
-<Snippet title="02 · Timing: duration grows with distance" lab="spacing-chart" easing="--ease-out" duration={380} distance={480}>
+<Snippet title="02 · Timing: duration grows with distance" lab="spacing-chart" easing="ease-out" duration={380} from={480} to={0}>
 
 ```js
-// Longer trips get more time, but not proportionally more.
-function durationFor(distance, base = 180, per100px = 45, max = 480) {
+// Longer trips get more time, but not proportionally more:
+// 80px takes 180ms and 480px takes 380ms, as in Fig. 2.2.
+function durationFor(distance, base = 140, per100px = 50, max = 480) {
   return Math.min(max, base + (distance / 100) * per100px);
 }
 

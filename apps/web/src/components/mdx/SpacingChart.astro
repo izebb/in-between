@@ -2,11 +2,14 @@
 /**
  * <SpacingChart curve="ease-out" frames={12} />                         one row, by frames
  * <SpacingChart rows={[{ label: "100ms", duration: 100 }, …]} />         several rows
+ * <SpacingChart rows={[…]} easing="--ease-out" />                        `easing` / `duration` = every row's default
  * Props pass through to figures/SpacingFigure.svelte.
  */
 import SpacingFigure from "../figures/SpacingFigure.svelte";
-const { curve, frames, duration, fps = 60, rows, distance, ...rest } = Astro.props;
+const { curve, frames, duration, fps = 60, rows, distance, easing, ...rest } = Astro.props;
 const dur = duration ?? (frames ? Math.round((frames / fps) * 1000) : 400);
-const r = rows ?? [{ easing: curve ?? "--ease-out", duration: dur, label: curve ?? "--ease-out", to: distance }];
+const r = rows
+  ? rows.map((row: Record<string, unknown>) => ({ easing, duration, ...row }))
+  : [{ easing: easing ?? curve ?? "--ease-out", duration: dur, label: curve ?? easing ?? "--ease-out", to: distance }];
 ---
 <SpacingFigure client:visible rows={r} {fps} distance={distance} {...rest} />

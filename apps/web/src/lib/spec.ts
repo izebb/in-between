@@ -35,7 +35,10 @@ export function parseSpec(s: string | EasingSpec | undefined): EasingSpec {
   }
   let m = low.match(/^cubic-bezier\(([^)]*)\)$/);
   if (m) {
-    const [x1, y1, x2, y2] = m[1].split(",").map((v) => parseFloat(v));
+    const n = m[1].split(",").map((v) => parseFloat(v));
+    if (n.length !== 4 || n.some((v) => !Number.isFinite(v))) throw new Error(`cubic-bezier() takes four numbers: ${s}`);
+    if (n[0] < 0 || n[0] > 1 || n[2] < 0 || n[2] > 1) throw new Error(`cubic-bezier() x values must be between 0 and 1: ${s}`);
+    const [x1, y1, x2, y2] = n;
     return { type: "cubic", x1, y1, x2, y2 };
   }
   m = low.match(/^steps\(\s*(\d+)\s*(?:,\s*([a-z-]+))?\s*\)$/);
@@ -49,8 +52,15 @@ export function parseSpec(s: string | EasingSpec | undefined): EasingSpec {
       const p = fromResponse(parseFloat(r[1]), b ? parseFloat(b[1]) : 0);
       return { type: "spring", ...p, velocity: 0 };
     }
-    const [k, c, mass] = body.split(/[\s,]+/).filter(Boolean).map(parseFloat);
-    return { type: "spring", stiffness: k, damping: c, mass: mass || 1, velocity: 0 };
+    // spring(170 26 1), or labelled: spring(k 170, c 26, m 1) · spring(stiffness 170 damping 26)
+    const named = (re: RegExp) => { const x = body.match(re); return x ? parseFloat(x[1]) : undefined; };
+    const nums = body.split(/[\s,]+/).filter((v) => /^-?[\d.]+$/.test(v)).map(parseFloat);
+    const labelled = /[a-z]/.test(body);
+    const k = labelled ? named(/(?:stiffness|\bk)\s*=?\s*([\d.]+)/) : nums[0];
+    const c = labelled ? named(/(?:damping|\bc)\s*=?\s*([\d.]+)/) : nums[1];
+    const mass = (labelled ? named(/(?:mass|\bm)\s*=?\s*([\d.]+)/) : nums[2]) || 1;
+    if (!(k! > 0) || !(c! >= 0)) throw new Error(`spring() needs a stiffness and a damping: ${s}`);
+    return { type: "spring", stiffness: k!, damping: c!, mass, velocity: 0 };
   }
   if (low.startsWith("linear(")) return { type: "points", stops: parseLinear(t) };
   throw new Error(`Unknown easing shorthand: ${s}`);
@@ -86,9 +96,26 @@ export function describeSpec(e: EasingSpec): string {
     case "spring":
       return `spring(k ${+e.stiffness.toFixed(0)}, c ${+e.damping.toFixed(1)}, m ${+e.mass.toFixed(1)})`;
     case "steps":
-      return `steps(${e.steps})`;
+      return e.position === "jump-end" || e.position === "end" ? `steps(${e.steps})` : `steps(${e.steps}, ${e.position})`;
     case "points":
       return "linear(…)";
+    default:
+      return "linear";
+  }
+}
+
+/** An easing spec as shorthand that parseSpec reads back exactly (for inputs prefilled with a spec). */
+export function specToString(e: EasingSpec): string {
+  const n = (v: number) => String(+v.toFixed(3));
+  switch (e.type) {
+    case "cubic":
+      return `cubic-bezier(${[e.x1, e.y1, e.x2, e.y2].map(n).join(", ")})`;
+    case "spring":
+      return `spring(${+e.stiffness.toFixed(2)} ${+e.damping.toFixed(2)} ${+e.mass.toFixed(2)})`;
+    case "steps":
+      return `steps(${e.steps}, ${e.position})`;
+    case "points":
+      return formatLinear(e.stops);
     default:
       return "linear";
   }

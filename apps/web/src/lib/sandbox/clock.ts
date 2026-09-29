@@ -20,6 +20,8 @@ export interface ClockHandle {
   step(n?: number, fps?: number): void;
   /** Run frames synchronously until virtual time reaches ms (fast-forward). */
   fastForward(ms: number, fps?: number): void;
+  /** A zero-length frame: callbacks and new animations catch up without time passing. */
+  flush(): void;
   /** Called after every virtual frame. */
   onFrame(cb: (t: number, dt: number) => void): void;
   /** Simulate a display refresh rate: frames of exactly 1000/hz ms. null = follow the real display. */
@@ -82,6 +84,9 @@ export function installClock(win: Window & typeof globalThis, opts: { playing?: 
   }
 
   function frame(dt: number) {
+    // Animations started since the last frame (a class toggled, a script, an event) began at the
+    // current time, not the next frame's: register them before time moves on, or they run a frame late.
+    driveAnimations();
     vt += dt;
     const cbs = [...pending.values()];
     pending = new Map();
@@ -136,10 +141,15 @@ export function installClock(win: Window & typeof globalThis, opts: { playing?: 
       isPlaying = false;
       for (let i = 0; i < n; i++) frame(1000 / (hz ?? fps));
     },
+    flush() {
+      frame(0);
+    },
     fastForward(ms: number, fps = 60) {
       const dt = 1000 / fps;
       let guard = 0;
       while (vt + dt <= ms && guard++ < 20000) frame(dt);
+      // Land on the time asked for, not the frame before it (a step back is one frame, not two).
+      if (ms - vt > 0.01 && guard < 20000) frame(ms - vt);
     },
     onFrame(cb) {
       listeners.push(cb);

@@ -52,7 +52,9 @@
   .fig .label.ink-label { fill: var(--ink); }
   .fig .muted { opacity: 0.4; }
   /* Decoration never steals the pointer from the marks you can hover or drag. */
-  .fig .grid, .fig .ax, .fig .label, .fig .ghost, .fig .cursor, .fig .reveal-key { pointer-events: none; }
+  /* The drawing's marks never take the pointer, so handles and stages under them can. Only the SVG's:
+     the same names on HTML inside a plate (the Still toggle is a .btn.ghost) are controls. */
+  .fig svg :is(.grid, .ax, .label, .ghost, .cursor, .reveal-key) { pointer-events: none; }
 
   /* Hover on any figure shows its onion skin. */
   .fig .onion { opacity: 0; transition: opacity var(--dur-quick) var(--ease-out); }

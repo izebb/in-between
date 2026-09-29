@@ -15,7 +15,7 @@ These are four moments from a finished system, made for an imaginary notes app. 
   <Specimens items={[
     { kind: "card", label: "New note", note: "Rises a little and settles. Leaves quicker than it came.", direction: "loop", motion: { easing: "cubic-bezier(.3, .6, .2, 1)", duration: 240, distance: 6, exitEasing: "cubic-bezier(.4, 0, 1, 1)", exitDuration: 168 } },
     { kind: "expand", label: "Open a note", note: "The card grows into the editor, and back into its card.", direction: "loop", motion: { easing: "cubic-bezier(.65, 0, .35, 1)", duration: 360, exitEasing: "cubic-bezier(.65, 0, .35, 1)", exitDuration: 360 } },
-    { kind: "toast", label: "Saved", note: "A receipt, from the edge it lives on.", direction: "loop", motion: { easing: "cubic-bezier(.3, .6, .2, 1)", duration: 240, distance: 8, exitEasing: "cubic-bezier(.4, 0, 1, 1)", exitDuration: 168 } },
+    { kind: "toast", label: "Saved", note: "A receipt, from the edge it lives on.", direction: "loop", motion: { easing: "cubic-bezier(.3, .6, .2, 1)", duration: 240, distance: 6, exitEasing: "cubic-bezier(.4, 0, 1, 1)", exitDuration: 168 } },
     { kind: "progress", label: "Day's goal", note: "Fills to its value and stops there.", direction: "enter", motion: { easing: "cubic-bezier(.65, 0, .35, 1)", duration: 360 } }
   ]} height={140} />
 </Figure>
@@ -66,7 +66,7 @@ The example is a notes app. Its words are **calm, clear, quiet**. The feeling to
 
 <Beat kind="more">2 · Tokens</Beat>
 
-Tokens are the only place a number may live. Every duration, curve, spring and distance in the product is one of them. Keep the scale small: if you can't tell two tokens apart by eye, you only need one of them. This site gets by on thirteen; they are on its [specimen sheet](/system).
+Tokens are the only place a number may live. Every duration, curve, spring and distance in the product is one of them. Keep the scale small: if you can't tell two tokens apart by eye, you only need one of them. This site gets by on fourteen; they are on its [specimen sheet](/system).
 
 The notes app has ten, and one rule.
 
@@ -80,7 +80,7 @@ The notes app has ten, and one rule.
 | `easing.inout` | `cubic-bezier(.65, 0, .35, 1)` | on-screen moves |
 | `spring.settle` | response `0.35`, bounce `0` | anything under a finger |
 | `distance.nudge` | `6px` | enters and exits |
-| `distance.travel` | `16px` | toasts, from the bottom edge |
+| `distance.travel` | `16px` | the *Archived* toast, from the bottom edge |
 | `stagger.step` | `24ms` | rows on launch |
 
 The rule is from chapter 09: an exit takes `0.7×` the time of its enter.
@@ -231,7 +231,7 @@ The whole example, written down: the token file, what it compiles to, one primit
   },
   "distance": {
     "nudge": { "value": 6, "use": "enters and exits" },
-    "travel": { "value": 16, "use": "toasts, from the bottom edge" }
+    "travel": { "value": 16, "use": "the Archived toast, from the bottom edge" }
   },
   "stagger": {
     "step": { "value": 24, "use": "rows on launch" }
@@ -271,7 +271,7 @@ The whole example, written down: the token file, what it compiles to, one primit
 
   /* Distances */
   --dist-nudge: 6px; /* enters and exits */
-  --dist-travel: 16px; /* toasts, from the bottom edge */
+  --dist-travel: 16px; /* the Archived toast, from the bottom edge */
 
   --stagger-step: 24ms;
 }
@@ -287,7 +287,7 @@ The whole example, written down: the token file, what it compiles to, one primit
 
 </Snippet>
 
-<Snippet title="25 · Your motion system: a primitive with its interruption rule" lab="curve-bench" easing="cubic-bezier(.3, .6, .2, 1)" duration={240} compare="token-in">
+<Snippet title="25 · Your motion system: a primitive with its interruption rule" lab="curve-bench" easing="cubic-bezier(.3, .6, .2, 1)" duration={240} compare="token-in" property="y" from={6} to={0}>
 
 ```js
 // appear.js. One motion, written only in tokens.
@@ -326,8 +326,8 @@ export function appear(el, dir = 'in', { dist = 'nudge', delay = 0 } = {}) {
   return anim;
 }
 
-// The toast rises from the bottom edge: same primitive, another token.
-// appear(toast, 'in', { dist: 'travel' });
+// The Archived toast rises from the bottom edge: same primitive, another token.
+// appear(archived, 'in', { dist: 'travel' });
 ```
 
 </Snippet>

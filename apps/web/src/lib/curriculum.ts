@@ -111,7 +111,7 @@ export const instruments: InstrumentMeta[] = [
   { id: "canvas-sandbox", code: "L7", name: "Canvas sandbox", does: "Live-code canvas with the rAF loop scaffolded, dt and fps readouts, pause and step.", trains: "Motion from scratch" },
   { id: "specimen-journal", code: "L8", name: "Specimen journal", does: "Save any lab state with feeling-words. Your personal motion vocabulary.", trains: "Taste" },
   { id: "export-desk", code: "L9", name: "Export desk", does: "Any lab state as CSS, Web Animations, Motion, GSAP, or Canvas code.", trains: "Notation" },
-  { id: "data-stage", code: "L10", name: "Data stage", does: "A chart that transitions between states. Swap interpolation, stagger, staging; SVG or Canvas.", trains: "Motion that explains" },
+  { id: "data-stage", code: "L10", name: "Data stage", does: "A chart that transitions between states. Match bars by key or position, stagger, staging; SVG or Canvas.", trains: "Motion that explains" },
 ];
 
 export const instrumentById = (id: InstrumentId) => instruments.find((i) => i.id === id)!;

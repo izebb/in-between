@@ -5,6 +5,7 @@
   import type { Scored } from "~/lib/drills/types";
   import type { MockMotion } from "../figures/Mock.svelte";
   import { prefs } from "~/lib/prefs.svelte";
+  import PlayLabel from "./PlayLabel.svelte";
 
   let { spec, result, onanswer }: { spec: FixSpec; result: Scored | null; onanswer: (v: FixAnswer) => void } = $props();
   const c = CASES[spec.index];
@@ -39,7 +40,9 @@
   }
   onMount(() => {
     prefs.start();
-    if (!prefs.reduced) setTimeout(() => mock?.play(), 350);
+    if (prefs.reduced) return;
+    mock?.cue();
+    setTimeout(() => mock?.play(), 350);
   });
 </script>
 
@@ -50,7 +53,7 @@
   </div>
   <div class="stage">
     <Mock bind:this={mock} kind={c.kind} {motion} direction={c.direction ?? "enter"} height={170} label="The broken animation" />
-    <button class="btn small replay" type="button" onclick={() => mock.play()}>{prefs.reduced ? "Play" : "Replay"}</button>
+    <button class="btn small replay" type="button" onclick={() => mock.play()}><PlayLabel /></button>
   </div>
   {#if !result}
     <div class="change">

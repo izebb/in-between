@@ -17,6 +17,7 @@ export const guessDuration: DrillDef<GuessDurationSpec, number> = {
   unlocksAfter: 2,
   kind: "estimate",
   unit: "ms",
+  quantity: "duration",
   make(rand, level) {
     // Early levels spread durations wide; later ones sit in the tricky middle band.
     const lo = level < 3 ? 80 : 150;
@@ -35,12 +36,13 @@ export const guessDuration: DrillDef<GuessDurationSpec, number> = {
     const points = Math.round(100 * Math.max(0, 1 - rel));
     const correct = rel <= 0.25;
     const frames = Math.round((spec.duration / 1000) * 60);
+    const off = err === 0 ? "exactly right" : `${answer > spec.duration ? "over" : "under"} by ${err}ms, ${Math.round(rel * 100)}%`;
     return {
       correct,
       points,
       truth: spec.duration,
       answer,
-      verdict: `It took ${spec.duration}ms (${frames} frames). You said ${answer}ms: ${answer > spec.duration ? "over" : "under"} by ${err}ms, ${Math.round(rel * 100)}%.`,
+      verdict: `It took ${spec.duration}ms (${frames} frames). You said ${answer}ms: ${off}.`,
     };
   },
 };

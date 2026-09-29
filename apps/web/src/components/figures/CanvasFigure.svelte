@@ -12,6 +12,7 @@
   import { prefs } from "~/lib/prefs.svelte";
   import { labUrl } from "~/lib/labstate";
   import { velocityTracker } from "@inbetween/core";
+  import { duration, exitDuration, easingCss } from "~/motion/tokens";
   import TimeBar from "../lab/TimeBar.svelte";
   import Slider from "../lab/controls/Slider.svelte";
 
@@ -26,8 +27,13 @@
     ghostEvery?: number;
     /** Show milliseconds on the time bar (hide before a chapter's FEEL beat). */
     readout?: boolean;
+    /**
+     * The still: "onion" composites frames of the pass as ghosts. "last" plays the whole pass onto one
+     * canvas and shows where it ends, for programs whose picture builds up over frames (trails).
+     */
+    stillMode?: "onion" | "last";
   }
-  let { program: id, height, params: overrides = {}, controls = true, stepper = true, ghostEvery, readout = true }: Props = $props();
+  let { program: id, height, params: overrides = {}, controls = true, stepper = true, ghostEvery, readout = true, stillMode = "onion" }: Props = $props();
 
   const def: ProgramDef = programs[id];
   const values = $state<Record<string, number>>({ ...Object.fromEntries((def.params ?? []).map((p) => [p.key, p.value])), ...overrides });
@@ -73,6 +79,23 @@
   );
   transport.duration = (prog?.loop ?? def.loop ?? 4) * 1000;
 
+  // A pass ends wherever its simulation happens to be, so the jump back to the first frame would be a cut.
+  // Cross-dissolve it instead, as the page cut does: the old frame fades out, the new pass fades in under it.
+  function dissolve() {
+    if (!canvas?.parentElement) return;
+    const seam = document.createElement("canvas"); // a copy of the last frame, laid over the canvas
+    seam.className = "seam";
+    seam.setAttribute("aria-hidden", "true");
+    seam.width = canvas.width;
+    seam.height = canvas.height;
+    seam.getContext("2d")?.drawImage(canvas, 0, 0);
+    canvas.after(seam);
+    const out = seam.animate([{ opacity: 1 }, { opacity: 0 }], { duration: exitDuration.base, easing: easingCss.in, fill: "forwards" });
+    out.finished.then(() => seam.remove(), () => seam.remove());
+    canvas.animate([{ opacity: 0 }, { opacity: 1 }], { duration: duration.base, easing: easingCss.out, delay: Math.round(exitDuration.base * 0.5), fill: "backwards" });
+  }
+  transport.onwrap = dissolve;
+
   function drawStill() {
     const c = ctx2d();
     if (!c || !prog?.draw) return;
@@ -83,6 +106,18 @@
     const oc = off.getContext("2d")!;
     oc.setTransform(dpr, 0, 0, dpr, 0, 0);
     c.clearRect(0, 0, w, h);
+    if (stillMode === "last") {
+      transport.offline(1, (st, i, total) => {
+        prog!.draw!(oc, st, w, h); // every frame, on the same canvas, as it would play
+        if (i === total) {
+          c.save();
+          c.setTransform(1, 0, 0, 1, 0, 0);
+          c.drawImage(off, 0, 0);
+          c.restore();
+        }
+      });
+      return;
+    }
     const every = ghostEvery ?? def.ghostEvery ?? 6;
     const realRed = pencils.red;
     transport.offline(every, (s, i, total) => {
@@ -104,6 +139,9 @@
   function redraw() {
     Object.assign(pencils, prefs.pencils);
     if (still) drawStill();
+    // setup() lays a pass out for one width. The first pass is set up before the layout is measured,
+    // and a resize changes the width again: start the pass over for the width the canvas really has.
+    else if (transport.width !== w) transport.restart();
     else transport.draw();
   }
 
@@ -114,23 +152,47 @@
     // The simulation reads and writes transport.time: never let the effect track it.
     untrack(redraw);
   });
-  // Parameter changes restart the pass so the effect is visible from the start.
+  // A change of parameter starts the pass over, so its effect shows from the start. A choice between options
+  // does it at once. A slider bends the motion live while it is dragged (restarting on every step of a drag
+  // would freeze the figure on its first frame), then starts over once it comes to rest.
+  let lastValues: Record<string, number> = {};
+  let settle: ReturnType<typeof setTimeout> | undefined;
+  function restartPass() {
+    clearTimeout(settle);
+    if (transport.playing) dissolve();
+    transport.restart();
+  }
   $effect(() => {
     void JSON.stringify(values);
     const isStill = still;
     untrack(() => {
+      const changed = Object.keys(values).filter((k) => values[k] !== lastValues[k]);
+      const first = !Object.keys(lastValues).length;
+      lastValues = { ...values };
       transport.duration = (prog?.loop ?? def.loop ?? 4) * 1000;
       if (isStill) drawStill();
-      else transport.restart();
+      else if (first || !changed.length) transport.restart();
+      else if (changed.some((k) => def.params?.find((p) => p.key === k)?.options)) restartPass();
+      else {
+        if (!transport.playing) transport.draw();
+        clearTimeout(settle);
+        settle = setTimeout(() => !still && transport.playing && restartPass(), duration.scene);
+      }
     });
   });
 
-  const tracker = velocityTracker(80);
+  // Release velocity from the last 100ms of the drag, as chapter 06 teaches.
+  const tracker = velocityTracker(100);
+  // Never start the pass over under the reader's hand: while they press, drag or have just let go (a throw
+  // in flight), the pass runs on past its end and starts over after.
+  let lastTouch = -Infinity;
+  transport.holdWrap = () => pointer.down || performance.now() - lastTouch < 1000;
   function pointerEvent(type: string) {
     return (e: PointerEvent) => {
       const r = canvas.getBoundingClientRect();
       pointer.x = e.clientX - r.left;
       pointer.y = e.clientY - r.top;
+      if (type !== "move" || pointer.down) lastTouch = performance.now();
       if (type === "down") {
         pointer.down = true;
         canvas.setPointerCapture(e.pointerId);
@@ -149,10 +211,14 @@
   onMount(() => {
     prefs.start();
     Object.assign(pencils, prefs.pencils);
+    return () => clearTimeout(settle);
   });
   onDestroy(() => transport.destroy());
 
-  const sandboxHref = $derived(labUrl("canvas-sandbox", { code: def.source, params: { ...values }, title: def.title }));
+  // The sandbox gets the knobs the program declares. Presentation overrides (labels: 0 before a FEEL) stay here.
+  const sandboxHref = $derived(
+    labUrl("canvas-sandbox", { code: def.source, params: Object.fromEntries(Object.entries(values).filter(([k]) => def.params?.some((p) => p.key === k))), title: def.title }),
+  );
 </script>
 
 <div class="canvas-figure" bind:this={wrap}>
@@ -200,6 +266,7 @@
   canvas { display: block; width: 100%; touch-action: none; }
   canvas.interactive { cursor: grab; }
   canvas.interactive:active { cursor: grabbing; }
+  .cv :global(.seam) { position: absolute; left: 0; top: 0; width: 100%; height: 100%; pointer-events: none; }
   .controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); gap: 0.75rem 1.25rem; }
   .opt { display: flex; flex-direction: column; gap: 0.35rem; }
   .foot { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; border-top: 1px solid var(--rule); padding-top: 0.6rem; }

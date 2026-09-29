@@ -25,7 +25,11 @@
     prefs.start();
     const plate = root.closest(".plate");
     still = plate?.classList.contains("is-still") ?? false;
-    plate?.addEventListener("ib:still", (e) => (still = (e as CustomEvent<boolean>).detail));
+    const onStill = (e: Event) => (still = (e as CustomEvent<boolean>).detail);
+    plate?.addEventListener("ib:still", onStill);
+    // They will play by themselves once in view: until then each waits on its first frame (as FeelAB's
+    // do), so the first thing you see move is the specimen itself, not a glide back to its start.
+    if (!prefs.reduced && !still) mocks.forEach((m) => m?.cue());
     let done = false;
     const io = new IntersectionObserver((es) => {
       if (!done && es.some((e) => e.isIntersecting) && !prefs.reduced && !still) {
@@ -34,7 +38,10 @@
       }
     }, { threshold: 0.4 });
     io.observe(root);
-    return () => io.disconnect();
+    return () => {
+      io.disconnect();
+      plate?.removeEventListener("ib:still", onStill);
+    };
   });
 
   /** Hover previews only when motion is welcome; a click or tap is a request, so it always plays. */

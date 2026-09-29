@@ -34,13 +34,14 @@ export const whichHeavier: DrillDef<WhichHeavierSpec, number> = {
   score(spec, answer) {
     const ok = answer === spec.heavy;
     const [a, b] = spec.balls;
-    const d = (x: Ball) => `gravity ${Math.round(x.g)}px/s², keeps ${Math.round(x.e * 100)}% per bounce`;
+    const d = (x: Ball) => `${Math.round(x.g)}px/s² and keeps ${Math.round(x.e * 100)}%`;
     return {
       correct: ok,
       points: ok ? 100 : 0,
       truth: spec.heavy,
       answer,
-      verdict: `${ok ? "Yes" : `The heavy one was ${spec.heavy === 0 ? "A" : "B"}`}: it falls faster and keeps less of its bounce. A: ${d(a)}. B: ${d(b)}.`,
+      // Air aside, everything falls alike (chapter 04). The light ball here is one the air holds up, a beach ball.
+      verdict: `${ok ? "Yes" : `The heavy one was ${spec.heavy === 0 ? "A" : "B"}`}: it comes straight down and stays down. The light one drifts, as if the air held it up, and keeps more of its speed at each bounce. A falls at ${d(a)}; B at ${d(b)}.`,
     };
   },
 };
@@ -50,7 +51,7 @@ export function simulateDrop(ball: Ball, seconds = 2.2, dt = 1 / 120, height = 1
   const out: number[] = [];
   let y = 0;
   let v = 0;
-  // Normalise so gravity reads in px/s² for a ~160px drop.
+  // Normalise so gravity reads in px/s² for the trial's 160px drop.
   const g = ball.g / (160 * height);
   for (let t = 0; t <= seconds; t += dt) {
     v += g * dt;

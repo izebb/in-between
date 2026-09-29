@@ -6,7 +6,8 @@
   import { onMount } from "svelte";
   import { duration, exitDuration, easingCss, spring, distance, stagger as staggerTok } from "~/motion/tokens";
   import { fade, rise, scaleIn, move, play, type Primitive } from "~/motion/primitives";
-  import { stagger, sequence, beat } from "~/motion/orchestration";
+  import { sequence, beat } from "~/motion/orchestration";
+  import { listEnter as listEnterPattern, panelOpen, panelClose } from "~/motion/patterns";
   import { prefersReducedMotion, MAX_CONCURRENT_UI, frequencyBudget } from "~/motion/policy";
   import { prefs } from "~/lib/prefs.svelte";
 
@@ -27,7 +28,8 @@
     say(`${name}: ${p.timing.duration}ms · ${String(p.timing.easing).startsWith("linear(") ? "spring (linear())" : p.timing.easing} · on interrupt: ${p.interrupt}`);
   }
   function listEnter() {
-    stagger(list.children, () => rise("in"));
+    // orchestration's stagger, as the listEnter pattern uses it: rise, one stagger step apart.
+    listEnterPattern(list);
     say(`stagger(rows, rise): ${staggerTok.step}ms apart, in reading order`);
   }
   async function seq() {
@@ -38,7 +40,7 @@
   }
   function togglePanel() {
     open = !open;
-    play(panel, open ? rise("in", "nudge") : rise("out", "nudge"));
+    (open ? panelOpen : panelClose)(panel);
     say(`panel ${open ? "open" : "close"}: interrupt → reverse from where it is (click fast)`);
   }
 
@@ -66,16 +68,17 @@
 
   <div class="detail">
     {#if layer === "tokens"}
-      <table class="tok mono">
+      <table class="tok mono" data-motion="fade">
         <tbody>
           {#each Object.entries(duration) as [k, v] (k)}<tr><td>--dur-{k}</td><td>{v}ms</td><td>exit {exitDuration[k as keyof typeof exitDuration]}ms</td></tr>{/each}
           {#each Object.entries(easingCss) as [k, v] (k)}<tr><td>--ease-{k}</td><td colspan="2">{v}</td></tr>{/each}
           {#each Object.entries(spring) as [k, v] (k)}<tr><td>spring.{k}</td><td>response {v.response} · bounce {v.bounce}</td><td>{v.duration}ms as linear()</td></tr>{/each}
           {#each Object.entries(distance) as [k, v] (k)}<tr><td>--dist-{k}</td><td colspan="2">{v}px</td></tr>{/each}
+          <tr><td>--stagger-step</td><td colspan="2">{staggerTok.step}ms</td></tr>
         </tbody>
       </table>
     {:else if layer === "primitives" || layer === "orchestration" || layer === "patterns"}
-      <div class="stage">
+      <div class="stage" data-motion="fade">
         {#if layer === "primitives"}
           <div class="buttons">
             <button class="btn small" type="button" onclick={() => prim("fade", fade("in"))}>fade</button>
@@ -101,7 +104,7 @@
         <ul class="log mono" role="list" aria-live="polite">{#each log as l, i (i)}<li class:faint={i > 0}>{l}</li>{/each}</ul>
       </div>
     {:else}
-      <ul class="policy" role="list">
+      <ul class="policy" role="list" data-motion="fade">
         <li><b>Reduced motion</b> · reduce, don't remove. Right now: <span class="mono">{prefs.reduced || prefersReducedMotion() ? "reduced" : "full"}</span>. Distances drop to 0px, so every rise becomes a fade.</li>
         <li><b>Frequency budget</b> · seen constantly → <span class="mono">{frequencyBudget.constant.maxDuration}</span>; frequent → <span class="mono">{frequencyBudget.frequent.maxDuration}</span>; occasional → <span class="mono">{frequencyBudget.occasional.maxDuration}</span>; rare → <span class="mono">{frequencyBudget.rare.maxDuration}</span>.</li>
         <li><b>Interruption contract</b> · every primitive declares retarget, reverse, finish or queue.</li>
@@ -122,7 +125,9 @@
   .n { font-size: var(--text-xs); color: var(--graphite); grid-row: span 2; padding-top: 0.2rem; }
   .name { font-size: 1.2rem; line-height: 1.1; }
   .file { font-size: 10.5px; color: var(--graphite-strong); }
-  .detail { border: 1px solid var(--rule); border-radius: 8px; padding: 0.9rem; background: var(--paper); min-height: 260px; }
+  /* Tall enough for the longest layer (the token table), so choosing a layer never moves the page. */
+  .detail { border: 1px solid var(--rule); border-radius: 8px; padding: 0.9rem; background: var(--paper); min-height: 26rem; }
+  @media (max-width: 760px) { .detail { min-height: 260px; } }
   .tok { width: 100%; font-size: 11.5px; border-collapse: collapse; }
   .tok td { padding: 0.25rem 0.5rem 0.25rem 0; border-bottom: 1px solid var(--rule); color: var(--graphite-strong); }
   .tok td:first-child { color: var(--ink); }

@@ -32,8 +32,8 @@
   .stage { position: relative; max-width: 420px; }
   .play { position: absolute; right: 0.5rem; top: 0.5rem; background: var(--paper); }
   .options { display: flex; flex-wrap: wrap; gap: 0.4rem; }
-  .opt { cursor: pointer; font-size: var(--text-sm); padding: 0.35em 0.8em; }
+  .opt { cursor: pointer; font-size: var(--text-sm); padding: 0.35em 0.8em; transition: color var(--dur-quick) var(--ease-out), border-color var(--dur-quick) var(--ease-out); }
   .opt:hover:not(:disabled) { color: var(--ink); border-color: var(--graphite); }
   .opt.right { color: var(--ink); border-color: var(--ink); }
-  .opt.wrong { color: var(--blue-pencil); border-style: dashed; }
+  .opt.wrong { color: var(--blue-pencil); border-style: dashed; border-color: currentColor; }
 </style>

@@ -193,7 +193,7 @@ An SVG chart is made of elements: each bar is a `<rect>` in the page. A canvas c
 | Crispness | vector, sharp at any zoom | a bitmap: scale it by `devicePixelRatio` or it blurs on sharp screens |
 | Text and access | real text; each mark can carry a label for screen readers | pixels only: add a table or a description |
 
-Try it in the Data stage below: set **Draw with** to *Canvas*. The chart looks the same. Now click a bar: nothing happens. The canvas doesn't know it has bars. In SVG the browser works out which bar you clicked; on a canvas, you do. For bars, invert the band scale and ask which band the pointer is in. For scattered points, keep them in a quadtree: `find()` in d3-quadtree returns the point nearest to a position.
+Try it in the Data stage below: set **Draw with** to *Canvas*. The chart looks the same. Now click a bar: nothing happens. The canvas doesn't know it has bars. In SVG the browser works out which bar you clicked; on a canvas, you do. For bars, turn the pointer's x back into a band: a band scale has no `invert()`, but its `step()` says how wide each band is. For scattered points, keep them in a quadtree: `find()` in d3-quadtree returns the point nearest to a position.
 
 A rough rule: SVG for hundreds of marks, Canvas for thousands that move. Many charts use both, with the marks on a canvas for speed and the axes and labels in SVG or HTML on top, where text stays crisp and readable. The maths doesn't change. The generators in d3-shape even draw straight onto a canvas: give one `.context(ctx)` and it calls the canvas's path methods, `moveTo`, `lineTo` and the rest, instead of returning a string.
 
@@ -201,9 +201,10 @@ A rough rule: SVG for hundreds of marks, Canvas for thousands that move. Many ch
 
 This Data stage stages its changes: exits first, then moves, then enters. It starts on the 2024 scores and filters them down to one group.
 
-- Press **By group**, then **North only**, then **2024**. Watch each change happen in three parts: leaving, moving, arriving.
-- Switch **Staging** to *Together* and do it again. The leaving bars now cross the moving ones, and the eye has to sort out which is which.
-- Set **Interpolate** to *Pixels (by index)*, go to **A–Z**, then **Sorted**, and follow the red bar. Set it back to *Data* when you've seen enough.
+- Press **By group**, then **North only**, then **2024**. Each change runs in steps, one kind of motion at a time: first what leaves, then what stays, then what arrives. A step with nothing in it is skipped.
+- Switch **Staging** to *Together* and do it again. The leaving bars now sink while the others slide past them, and the eye has to sort out which is which.
+- Set **Match bars by** to *Position (index)*, go to **A–Z**, then **Sorted**, and follow the red bar. Set it back to *Datum (key)* when you've seen enough.
+- Press a state, and press another before the move ends. The bars turn from wherever they are; nothing jumps back to where the last move started.
 - Set **Easing** to *bouncy spring* and go from **Sorted** to **2024**. Watch Hazel's bar pass its value and come back.
 - Drag **Stagger** all the way up. The change becomes a parade, and the frames in between rank the bars wrong.
 - Set **Draw with** to *Canvas* and try to click a bar.
@@ -453,7 +454,7 @@ morph([38, 45, 58, 66, 74, 79, 81, 77, 69, 60, 50, 41]);
 
 </Snippet>
 
-<Snippet title="23 · Animated infographics: a scrollytelling step" lab="data-stage" duration={600} easing="--ease-inout" extra={{ from: "by-value", to: "2024", keying: "data", staging: "staged", stagger: 30 }}>
+<Snippet title="23 · Animated infographics: a scrollytelling step" lab="data-stage" duration={600} easing="--ease-inout" extra={{ from: "by-value", to: "2024", keying: "data", staging: "staged", stagger: 0 }}>
 
 ```js
 // A sticky chart beside a column of steps. Each step names a state:

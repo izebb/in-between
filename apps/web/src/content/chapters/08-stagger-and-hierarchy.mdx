@@ -18,6 +18,21 @@ export const arrival = [
 
 export const row = { easing: "--ease-out", duration: 280, distance: 12 };
 
+export const easeOut = { type: "cubic", x1: 0.2, y1: 0.8, x2: 0.2, y2: 1 };
+export const snippetList = { // the snippets' list, for "Open in Lab": five rows, 12px, 280ms, 30ms apart
+  layout: "list",
+  stagger: 30,
+  order: "first",
+  staggerProp: "y",
+  scene: {
+    title: "Stagger: 30ms per row",
+    moves: ["a", "b", "c", "d", "e"].flatMap((target, i) => [
+      { target, property: "y", from: 12, to: 0, duration: 280, delay: i * 30, easing: easeOut },
+      { target, property: "opacity", from: 0, to: 1, duration: 280, delay: i * 30, easing: easeOut },
+    ]),
+  },
+};
+
 When several things arrive at once, the eye has to decide where to look first. Motion can decide for it. Start the same move on each item a moment after the one before, and the eye follows the wave: first, second, third. That offset is a stagger.
 
 A stagger is an instruction: read this, then this, then this. It also ranks things, because what moves first is seen first. Get the order right and a list reads as easily as a sentence. Make the gaps too long and people sit and wait for your list to finish arriving.
@@ -27,13 +42,13 @@ A stagger is an instruction: read this, then this, then this. It also ranks thin
 Five rows arrive together. Under them is their exposure sheet, the animator's timing chart: one line per track, time running across in frames. Each bar is one move, from the moment it starts to the moment it lands. Every row has two moves: it rises into place, and it fades in.
 
 <Figure n="8.1" caption="Five rows, all at once">
-  <Choreo tracks={rows} />
+  <Choreo tracks={rows} readout={false} />
 </Figure>
 
 Now the same five rows with one change. Each row starts a moment after the one above it.
 
 <Figure n="8.2" caption="The same five rows, one after another">
-  <Choreo tracks={rows} stagger={40} />
+  <Choreo tracks={rows} stagger={40} readout={false} />
 </Figure>
 
 Look at the sheets first. In figure 8.1 the bars stand in one column: everything starts on the same frame. In figure 8.2 they form a staircase, and the stage follows it. The first list lands as a single block, and your eye has to pick a place to start. The second has a direction. It starts at the top and runs down, and your eye goes with it, top row first, the way you would read the list anyway.
@@ -147,7 +162,7 @@ Or let the browser count. `sibling-index()` gives an element's position among it
 Two details matter in every version. Give the animation a fill of `both`, so each item holds its first frame while it waits for its turn; without it, a row sits there fully visible, then vanishes and fades back in. And keep the step small and limited, with a cap or a budget.
 
 <div class="snippets">
-<Snippet title="08 · Stagger: a delay per row" lab="exposure-sheet" source="list">
+<Snippet title="08 · Stagger: a delay per row" lab="exposure-sheet" extra={snippetList}>
 
 ```css
 /* Each row carries its index in the markup: <li style="--i: 3"> */
@@ -164,7 +179,7 @@ Two details matter in every version. Give the animation a fill of `both`, so eac
 
 </Snippet>
 
-<Snippet title="08 · Stagger: let the browser count" lab="exposure-sheet" source="list">
+<Snippet title="08 · Stagger: let the browser count" lab="exposure-sheet" extra={snippetList}>
 
 ```css
 /* sibling-index() is 1 for the first child. It is new: a browser
@@ -179,7 +194,7 @@ Two details matter in every version. Give the animation a fill of `both`, so eac
 
 </Snippet>
 
-<Snippet title="08 · Stagger: WAAPI, with a budget" lab="exposure-sheet" source="list">
+<Snippet title="08 · Stagger: WAAPI, with a budget" lab="exposure-sheet" extra={snippetList}>
 
 ```js
 const rows = [...document.querySelectorAll('.list li')];
@@ -206,7 +221,7 @@ rows.forEach((row, i) => {
 
 </Snippet>
 
-<Snippet title="08 · Stagger: Motion's stagger()" lab="exposure-sheet" source="list">
+<Snippet title="08 · Stagger: Motion's stagger()" lab="exposure-sheet" extra={snippetList}>
 
 ```js
 import { animate, stagger } from 'motion';

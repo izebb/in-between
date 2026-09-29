@@ -3,7 +3,7 @@
    * Runs a drill: a short timed round (60–90s) or a fixed number of trials in a chapter.
    * Scores, streaks, and every answer go to IndexedDB for the calibration graph.
    */
-  import { onDestroy } from "svelte";
+  import { onDestroy, tick } from "svelte";
   import { seededRandom } from "@inbetween/core";
   import { drills } from "~/lib/drills";
   import type { Scored } from "~/lib/drills/types";
@@ -30,7 +30,8 @@
   let phase = $state<"intro" | "trial" | "reveal" | "done">("intro");
   let spec = $state<unknown>(null);
   let result = $state<Scored | null>(null);
-  let results = $state<{ spec: unknown; scored: Scored }[]>([]);
+  // Raw, not a deep proxy: these objects go to IndexedDB, and a proxy can't be structured-cloned.
+  let results = $state.raw<{ spec: unknown; scored: Scored }[]>([]);
   let level = $state(0);
   let streak = $state(0);
   let best = $state(0);
@@ -39,6 +40,7 @@
   let trialKey = $state(0);
   let timer: ReturnType<typeof setInterval> | null = null;
   let rand = seededRandom(1);
+  let nextBtn = $state<HTMLButtonElement>();
 
   const total = $derived(results.reduce((s, r) => s + r.scored.points, 0));
   const accuracy = $derived(results.length ? Math.round((results.filter((r) => r.scored.correct).length / results.length) * 100) : 0);
@@ -55,17 +57,24 @@
     if (mode === "round") {
       timer = setInterval(() => {
         timeLeft = Math.max(0, timeLeft - 1);
+        // Out of time: the trial on screen can still be answered, and a verdict stays until it's read.
+        // The button then says "See results".
         if (timeLeft === 0 && timer) {
           clearInterval(timer);
           timer = null;
-          if (phase === "reveal") finish();
         }
       }, 1000);
     }
   }
 
+  const keyOf = (s: unknown) => (def!.key ? def!.key(s) : JSON.stringify(s));
+
   function next() {
-    spec = def!.make(rand, level, { topic });
+    // Don't show a trial that was just seen: draw again (a few times at most) if it's one of the last three.
+    const recent = results.slice(-3).map((r) => keyOf(r.spec));
+    let s = def!.make(rand, level, { topic });
+    for (let i = 0; i < 8 && recent.includes(keyOf(s)); i++) s = def!.make(rand, level, { topic });
+    spec = s;
     result = null;
     trialKey++;
     phase = "trial";
@@ -85,6 +94,8 @@
       level = Math.max(0, level - 1);
     }
     phase = "reveal";
+    // The verdict's button takes the focus, so Enter (or a tap on it) moves on.
+    tick().then(() => nextBtn?.focus({ preventScroll: true }));
   }
 
   async function finish() {
@@ -113,6 +124,9 @@
   }
 
   function key(e: KeyboardEvent) {
+    // A focused control handles its own keys (a focused Replay replays); anywhere else, Enter moves on.
+    const t = e.target as HTMLElement | null;
+    if (t?.closest?.("input, select, textarea, a") || (t?.closest?.("button") && !(t.closest("button") as HTMLButtonElement).disabled)) return;
     if (phase === "reveal" && (e.key === "Enter" || e.key === " ")) {
       e.preventDefault();
       proceed();
@@ -135,10 +149,11 @@
       <span class="serif">{def.name}</span>
     </div>
     {#if phase !== "intro"}
-      <div class="r-stats mono" aria-live="polite">
+      <div class="r-stats mono">
         {#if mode === "round"}<span title="Time left"><b>{mmss(timeLeft)}</b></span>{:else}<span><b>{Math.min(results.length + (phase === "trial" ? 1 : 0), trials)}</b>/{trials}</span>{/if}
-        <span title="Score">score <b>{total}</b></span>
-        <span title="Streak">streak <b>{streak}</b></span>
+        <!-- A changed score or streak fades in, so the eye catches that it changed. -->
+        <span title="Score">score {#key total}<b data-motion="fade">{total}</b>{/key}</span>
+        <span title="Streak">streak {#key streak}<b data-motion="fade">{streak}</b>{/key}</span>
       </div>
     {/if}
   </header>
@@ -152,15 +167,18 @@
   {:else if phase === "trial" || phase === "reveal"}
     <p class="prompt">{def.prompt}</p>
     {#key trialKey}
-      <Trial {spec} {result} onanswer={answer} />
+      <div class="trial-in" data-motion="fade"><Trial {spec} {result} onanswer={answer} /></div>
     {/key}
-    {#if phase === "reveal" && result}
-      <div class="verdict" data-motion="fade">
-        <span class="mark smallcaps" class:ok={result.correct}>{result.correct ? "Close" : "Not quite"} · +{result.points}</span>
-        <p>{result.verdict}</p>
-        <button class="btn solid" type="button" onclick={proceed}>{(mode === "round" && timeLeft === 0) || (mode === "short" && results.length >= trials) ? "See results" : "Next"} <kbd>↵</kbd></button>
-      </div>
-    {/if}
+    <!-- A live region that is there before the verdict is, so a screen reader reads the verdict out. -->
+    <div class="said" class:idle={!(phase === "reveal" && result)} aria-live="polite">
+      {#if phase === "reveal" && result}
+        <div class="verdict" data-motion="fade">
+          <span class="mark smallcaps" class:ok={result.correct}>{result.correct ? (def.kind === "estimate" ? "Close" : "Right") : "Not quite"} · +{result.points}</span>
+          <p>{result.verdict}</p>
+          <button class="btn solid" type="button" bind:this={nextBtn} onclick={proceed}>{(mode === "round" && timeLeft === 0) || (mode === "short" && results.length >= trials) ? "See results" : "Next"} <kbd>↵</kbd></button>
+        </div>
+      {/if}
+    </div>
   {:else if phase === "done" && session}
     <div class="r-done" data-motion="rise">
       <div class="figures">
@@ -193,6 +211,8 @@
   .trains { color: var(--graphite-strong); }
   .fine { font-size: var(--text-sm); color: var(--graphite-strong); }
   .prompt { font-family: var(--font-display); font-size: 1.25rem; }
+  /* Empty until a verdict comes: it takes no room (its gap is taken back) until then. */
+  .said.idle { margin-top: -0.9rem; }
   .verdict { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1rem; border-top: 1px solid var(--rule); padding-top: 0.8rem; }
   .verdict p { flex: 1; min-width: 14rem; font-size: var(--text-sm); }
   .mark { color: var(--graphite-strong); }

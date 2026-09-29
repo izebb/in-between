@@ -3,6 +3,22 @@ number: 24
 lede: "Decide once, in one place, and every motion in the product speaks the same language."
 ---
 
+export const listOf = (title, { dist, duration, easing, step }) => ({ // the exercise's two lists, for "Open in Lab"
+  layout: "list",
+  stagger: step,
+  order: "first",
+  staggerProp: "y",
+  scene: {
+    title,
+    moves: ["a", "b", "c", "d", "e"].flatMap((target, i) => [
+      { target, property: "y", from: dist, to: 0, duration, delay: i * step, easing },
+      { target, property: "opacity", from: 0, to: 1, duration, delay: i * step, easing },
+    ]),
+  },
+});
+export const beforeList = listOf("Before: 12px, 350ms, ease-out, 75ms apart", { dist: 12, duration: 350, easing: { type: "cubic", x1: 0, y1: 0, x2: 0.58, y2: 1 }, step: 75 });
+export const afterList = listOf("After: listEnter, a rise one --stagger-step apart", { dist: 4, duration: 280, easing: { type: "cubic", x1: 0.2, y1: 0.8, x2: 0.2, y2: 1 }, step: 30 });
+
 Most products don't design their motion. They collect it. A menu gets a transition the week it is built. A toast gets one a month later, from someone else. A dialog borrows a curve from a blog post. Each one looks fine on its own. Together they disagree: one thing bounces, the next one glides, a third takes longer to leave than it took to arrive. Nobody chose that. It arrived one pull request at a time.
 
 A motion system makes those choices once. It names a few durations and curves, builds a handful of reusable motions from them, composes those into the moments the product needs, and writes down the rules every motion obeys. This chapter takes one apart: the site you are reading. Apart from what the figures are teaching, everything that moves here comes from a single small file.
@@ -11,7 +27,7 @@ A motion system makes those choices once. It names a few durations and curves, b
 
 Figure 24.1 is this site's own motion system. The column on the left lists its layers. Choose one to see what it holds. The buttons play the real code: the same modules the rest of the site runs on.
 
-<Figure n="24.1" caption="This site's motion system, layer by layer, running the real modules">
+<Figure n="24.1" caption="This site's motion system, layer by layer, running the real modules" static>
   <Architecture />
 </Figure>
 
@@ -52,10 +68,10 @@ A motion system is built in layers, and each layer is made only from the ones be
 | Tokens | durations, curves, springs, distances | `--dur-base`, `--ease-out`, `spring.snappy`, `--dist-rise`, all from `src/motion/tokens.json` |
 | Primitives | one reusable motion each | `fade`, `rise`, `scaleIn`, `collapse`, `move` in `primitives.ts`; `data-motion="rise"` and friends in `motion.css` |
 | Orchestration | timing between motions | `stagger`, `sequence`, `onSettle`, `beat` in `orchestration.ts` |
-| Patterns | a named moment, composed | the page cut, the figure reveal, `listEnter`, `panelOpen`, `tokenMorph` in `patterns.ts` |
+| Patterns | a named moment, composed | the page cut, the figure reveal, the line reveal, `listEnter`, `panelOpen`, `tokenMorph` in `patterns.ts` |
 | Policy | rules every motion obeys | reduced motion, a frequency budget, the interruption contract, a concurrency budget, in `policy.ts` |
 
-**Tokens** are the vocabulary. This site has four durations, three curves, two springs, three distances and one stagger step. That is the whole list. Each duration also has an exit twin at `0.7×` the time, named with `-exit` on the end: `--dur-base-exit` is `196ms`.
+**Tokens** are the vocabulary. This site has four durations, four curves, two springs, three distances and one stagger step. That is the whole list. Each duration also has an exit twin at `0.7×` the time, named with `-exit` on the end: `--dur-base-exit` is `196ms`.
 
 | Token | Value | Used for |
 |---|---|---|
@@ -66,6 +82,7 @@ A motion system is built in layers, and each layer is made only from the ones be
 | `--ease-out` | `cubic-bezier(.2, .8, .2, 1)` | enter |
 | `--ease-in` | `cubic-bezier(.4, 0, 1, 1)` | exit |
 | `--ease-inout` | `cubic-bezier(.65, 0, .35, 1)` | on-screen moves |
+| `--ease-reveal` | `cubic-bezier(.16, 1, .3, 1)` | lines of text rising out of a mask |
 | `spring.snappy` | response `0.3`, bounce `0` | direct manipulation |
 | `spring.soft` | response `0.5`, bounce `0.15` | playful confirmations |
 | `--dist-rise` | `4px` | page cut, figure reveal |
@@ -79,7 +96,7 @@ Distances are tokens too. How far a thing travels says as much about it as how l
 
 **Orchestration** is timing between motions. `stagger` plays one primitive across a group of siblings, one `--stagger-step` apart, in reading order. `sequence` runs steps one after another, and each step waits for the last one's animations to finish. `onSettle` resolves when a group of animations has finished or been cancelled. `beat` is a pause measured in a duration token.
 
-**Patterns** are the moments a reader actually meets, with names. The page cut, when you change chapter. The figure reveal: as a figure scrolls into view, its axes draw, then its ghosts appear, then the red key lands. `listEnter` is `stagger` of `rise`. `panelOpen` is `rise` by the nudge distance. `tokenMorph` is the glide in a lab's code panel when you switch notation: numbers that both versions share travel from their old place to their new one.
+**Patterns** are the moments a reader actually meets, with names. The page cut, when you change chapter. The figure reveal: as a figure scrolls into view, its axes draw, then its ghosts appear, then the red key lands. The line reveal: a paragraph such as a chapter's lede rises into view one line at a time, each line out of its own mask. `listEnter` is `stagger` of `rise`. `panelOpen` is `rise` by the nudge distance. `tokenMorph` is the glide in a lab's code panel when you switch notation: numbers that both versions share travel from their old place to their new one.
 
 **Policy** is the rules. It sits beside the other layers rather than on top of them: each of them asks it before anything moves.
 
@@ -162,7 +179,7 @@ A good system offers both and leads with the declarative one. Most motion is com
   ]} layout="list" height={140} />
 </Figure>
 
-The old page fades out over `--dur-base-exit` on `--ease-in`. Halfway through, at `98ms`, the new page starts to fade in and rise `--dist-rise`, over `--dur-base` on `--ease-out`. The overlap is what makes it a dissolve and not a blink: for a moment, both pages are partly there. The header takes no part. It opts out with `transition:animate="none"`, so only the page body cuts.
+The old page fades out over `--dur-base-exit` on `--ease-in`. Halfway through, at `98ms`, the new page starts to fade in and rise `--dist-rise`, over `--dur-base` on `--ease-out`. The overlap is what makes it a dissolve and not a blink: for a moment, both pages are partly there. The header opts out with `transition:animate="none"`, so only the page body cuts. During the cut, the one thing in the header that moves is the short ink line under the current section's name: go from Contents to the Lab and it slides across to its new place.
 
 <Beat kind="more">Design and code, one source</Beat>
 
@@ -191,7 +208,7 @@ Three things make a motion handoff work:
 This is the site's motion vocabulary as a sheet of drawings. The enter crowds its frames at the end, where it settles. The exit crowds them at the start and is gone at full speed. The move crowds both ends. The two springs have no duration of their own. Theirs were measured from the physics: `474ms` for `spring.snappy`, `727ms` for `spring.soft`.
 
 <Margin kind="note">
-  <p>The W3C Design Tokens Community Group publishes a JSON format for passing tokens between tools. A token is an object with a <code>$value</code> and a <code>$type</code>, and the types include <code>duration</code> and <code>cubicBezier</code>. This course's Export desk writes its handoff tokens in that shape.</p>
+  <p>The W3C Design Tokens Community Group publishes a JSON format for passing tokens between tools. A token is an object with a <code>$value</code> and a <code>$type</code> (which a whole group can share), and the types include <code>duration</code> and <code>cubicBezier</code>. This course's Export desk writes its handoff tokens with the same two keys.</p>
 </Margin>
 
 What keeps all this true over time is **one source of truth**. Every token in this site lives in one JSON file, `src/motion/tokens.json`, and nobody edits anything else. A build script, `scripts/build-tokens.mjs`, compiles it into three notations each time the dev server or a build starts:
@@ -251,7 +268,7 @@ A motion system is also where performance gets decided, once, instead of motion 
 
 - **How many at once.** Every motion competes for the eye and for the frame. The concurrency budget caps the first, and that helps the second.
 - **Compositor-friendly by default.** The primitives animate opacity and transforms, which the browser can usually run on the compositor, with no layout or paint on each frame. The exception is `collapse`, which animates `height`, because a disclosure really does change the layout. That costs a layout on every frame, so keep it for small things. Chapter 20 walks through the pipeline.
-- **No ad-hoc values.** `scripts/check-motion-tokens.mjs` reads every stylesheet and style block in the app, and every `.animate()` call in its layouts, UI components, motion layer and pages. Put a raw duration, a `cubic-bezier()`, a `linear()` curve or an easing keyword where a token belongs, and it names the line and exits with an error. Run it with `pnpm lint:motion`; `pnpm build` runs it first, so a stray value fails the build. The token files are exempt, and so are the values a figure is teaching, which live in its props and not in its styles.
+- **No ad-hoc values.** `scripts/check-motion-tokens.mjs` reads every stylesheet and style block in the app, and every `.animate()` call in its layouts, UI components, motion layer and pages. Put a raw duration, a `cubic-bezier()`, a `linear()` curve or an easing keyword in a style, or a raw duration in one of those `.animate()` calls, and it names the line and exits with an error. Run it with `pnpm lint:motion`; `pnpm build` runs it first, so a stray value fails the build. The token files are exempt, and so are the values a figure is teaching, which live in its props and not in its styles.
 - **Frames, not just milliseconds.** At 60Hz a frame lasts `16.7ms`. At 120Hz it lasts `8.3ms`, and the browser needs part of that for its own style, layout, paint and composite. A tween written in milliseconds adapts by itself: it simply gets more frames. Code that runs on every frame gets half the time, and it must move by elapsed time, `dt`, never by frame count. Chapter 14 shows why.
 
 <Beat kind="more">Documenting motion</Beat>
@@ -271,7 +288,7 @@ Here is the whole path through this codebase, from a number in a file to a page.
 3. **`packages/core`**, the workspace package `@inbetween/core`, is the maths underneath, with no dependencies: cubic Bézier curves solved the way browsers solve them, springs solved in closed form, any curve sampled into `linear()`, a frame loop that runs on elapsed time. The token build uses it for springs, the inspector uses it to draw curves, and most of this course's figures and lab instruments are drawn with it.
 4. **`primitives.ts`** and **`motion.css`** hold single motions, in tokens only, each with its interruption rule.
 5. **`orchestration.ts`** holds stagger, sequence and settle.
-6. **`patterns.ts`** holds the page cut, the figure reveal, the list and panel enters, and the token morph.
+6. **`patterns.ts`** holds the page cut, the figure and line reveals, the list and panel enters, and the token morph.
 7. **The pages.** `Base.astro` puts the page cut on `<main>`. `boot.ts` runs on every page load: it applies the reader's preferences, starts the figure reveals, and installs the inspector. The code panel calls `tokenMorph` when you switch notation.
 
 `policy.ts` runs alongside all of it, and every layer asks it before anything moves.
@@ -366,7 +383,7 @@ The code here is the system itself. First the source, and what the build writes 
 Both are excerpts: the real files hold every token. Then a primitive, both ways. The CSS form is declarative and covers entrances. The script form carries the interruption rule, and reads where the element is before it cancels anything.
 
 <div class="snippets">
-<Snippet title="24 · Motion architecture: declarative primitives, motion.css" lab="curve-bench" easing="--ease-out" duration={280} compare="token-inout">
+<Snippet title="24 · Motion architecture: declarative primitives, motion.css" lab="curve-bench" easing="--ease-out" duration={280} property="y" from={4} to={0}>
 
 ```css
 /* The motion layer: no raw durations or curves, only tokens.
@@ -396,7 +413,7 @@ Both are excerpts: the real files hold every token. Then a primitive, both ways.
 
 </Snippet>
 
-<Snippet title="24 · Motion architecture: a primitive and its interruption rule" lab="curve-bench" easing="--ease-out" duration={280} compare="token-in">
+<Snippet title="24 · Motion architecture: a primitive and its interruption rule" lab="curve-bench" easing="--ease-out" duration={280} compare="token-in" property="y" from={4} to={0}>
 
 ```js
 // A primitive: keyframes, timing from tokens, and a rule for interruptions.
@@ -475,7 +492,7 @@ Here is a page the way most pages start. Every motion on it was written on the d
 
 </Snippet>
 
-<Snippet title="24 · Motion architecture: before, the script" lab="exposure-sheet" source="list" extra={{ stagger: 75 }}>
+<Snippet title="24 · Motion architecture: before, the script" lab="exposure-sheet" extra={beforeList}>
 
 ```js
 // Before: numbers typed inline, no reduced motion, no plan for interruptions.
@@ -513,7 +530,7 @@ The refactor takes three moves, one per layer:
 3. **Patterns.** Where script choreographs, call the pattern: `listEnter` for the list, `panelOpen` and `panelClose` for the panel. Reduced motion and the interruption rule come with them.
 
 <div class="snippets">
-<Snippet title="24 · Motion architecture: after, the CSS" lab="curve-bench" easing="--ease-out" duration={180} compare="token-in">
+<Snippet title="24 · Motion architecture: after, the CSS" lab="curve-bench" easing="--ease-out" duration={180} compare="token-in" property="y" from={-8} to={0}>
 
 ```css
 /* After: every value is a token, and common enters are primitives. */
@@ -542,7 +559,7 @@ The refactor takes three moves, one per layer:
 
 </Snippet>
 
-<Snippet title="24 · Motion architecture: after, the script" lab="exposure-sheet" source="list" extra={{ stagger: 30 }}>
+<Snippet title="24 · Motion architecture: after, the script" lab="exposure-sheet" extra={afterList}>
 
 ```js
 // After: a pattern for each moment. Patterns are made of primitives,

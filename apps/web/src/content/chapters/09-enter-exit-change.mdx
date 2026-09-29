@@ -138,7 +138,7 @@ For a long time, a CSS transition could not animate an element that is shown and
 
 Two features fix it. `@starting-style` gives an element a style to start from on the first frame it is shown; the browser transitions from there to its real style. `transition-behavior: allow-discrete`, usually written as `allow-discrete` inside the `transition` shorthand, lets `display` take part in the transition. When one end is `none`, the element stays displayed for the whole transition: it switches on at the very start of an enter and off at the very end of an exit.
 
-<Figure n="9.4" caption="A real hidden panel, @starting-style and allow-discrete" static>
+<Figure n="9.4" caption="A real hidden panel, @starting-style and allow-discrete">
   <Discrete />
 </Figure>
 
@@ -163,7 +163,7 @@ A is this site's exit curve, `--ease-in`, at 200ms. B, in blue, is the enter cur
 In CSS, put the enter's timing on the open state and the exit's on the closed state, and give the enter a start with `@starting-style`. In JavaScript, play the exit first and remove the element only when `animation.finished` resolves. Remove it straight away and the exit never shows.
 
 <div class="snippets">
-<Snippet title="09 · Enter, exit, change: a menu from its button" lab="curve-bench" easing="--ease-out" duration={180} compare="token-in">
+<Snippet title="09 · Enter, exit, change: a menu from its button" lab="curve-bench" easing="--ease-out" duration={180} compare="token-in" property="scale" from={0.95} to={1}>
 
 ```css
 /* <button popovertarget="sort">Sort</button>
@@ -206,7 +206,7 @@ In CSS, put the enter's timing on the open state and the exit's on the closed st
 
 </Snippet>
 
-<Snippet title="09 · Enter, exit, change: remove after the exit" lab="curve-bench" easing="--ease-in" duration={196} compare="token-out">
+<Snippet title="09 · Enter, exit, change: remove after the exit" lab="curve-bench" easing="--ease-in" duration={196} compare="token-out" property="y" to={16}>
 
 ```js
 // Enter on --ease-out. Exit on --ease-in, in 0.7× the time.

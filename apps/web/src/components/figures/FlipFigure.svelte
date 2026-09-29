@@ -32,23 +32,24 @@
   ];
   const lineFor = $derived([ -1, 0, 2, 3, 4 ][phase]);
 
+  // Boxes are kept relative to the grid, so scrolling the page between two beats changes nothing.
   const rel = (r: DOMRect) => {
     const g = grid.getBoundingClientRect();
     return new DOMRect(r.left - g.left, r.top - g.top, r.width, r.height);
   };
-  const measure = () => new Map([...els].map(([id, el]) => [id, el.getBoundingClientRect()]));
+  const measure = () => new Map([...els].map(([id, el]) => [id, rel(el.getBoundingClientRect())]));
 
   async function stepPhase() {
     if (busy) return;
     if (phase === 0) {
       first = measure();
-      ghosts = [...first].map(([id, r]) => ({ id, r: rel(r), kind: "first" }));
+      ghosts = [...first].map(([id, r]) => ({ id, r, kind: "first" }));
       phase = 1;
     } else if (phase === 1) {
       order = order.join() === A.join() ? [...B] : [...A];
       await tick();
       last = measure();
-      ghosts = [...ghosts, ...[...last].map(([id, r]) => ({ id, r: rel(r), kind: "last" as const }))];
+      ghosts = [...ghosts, ...[...last].map(([id, r]) => ({ id, r, kind: "last" as const }))];
       phase = 2;
     } else if (phase === 2) {
       for (const [id, el] of els) {
@@ -104,7 +105,7 @@
     </div>
   </div>
   <div class="stage">
-    <div class="grid" bind:this={grid}>
+    <div class="tiles" bind:this={grid}>
       {#each order as id (id)}
         <div class="tile" use:register={id}><span class="mono">{id}</span></div>
       {/each}
@@ -126,7 +127,7 @@
   .btns { display: flex; gap: 0.35rem; }
   .stage { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 1.25rem; align-items: start; }
   @media (max-width: 720px) { .stage { grid-template-columns: 1fr; } }
-  .grid { position: relative; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .tiles { position: relative; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
   .tile { aspect-ratio: 1.3; border-radius: 7px; background: var(--paper-raised); border: 1px solid var(--graphite); display: grid; place-items: center; will-change: transform; }
   .tile .mono { font-size: var(--text-sm); color: var(--ink); }
   .ghost { position: absolute; border-radius: 7px; pointer-events: none; }

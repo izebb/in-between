@@ -15,7 +15,7 @@ Care means motion costs nothing to the people it could hurt, distract, or slow d
 
 <Beat kind="see">What a figure keeps when it stops</Beat>
 
-Every figure in this course has a **Still** button beside its caption. Watch the figure below play, then press Still.
+Most figures in this course have a **Still** button beside their caption. Watch the figure below play, then press Still.
 
 <Figure n="21.1" caption="Arrive, leave, move across">
   <SpacingChart rows={[
@@ -143,7 +143,7 @@ In CSS it's one media query, written one of two ways. Take motion away under `re
 In JavaScript, ask `matchMedia` at the moment a motion starts; its `matches` is always current. Listen for `change` only for motion that is already running, like a loop, because the setting can change while it plays. If your site has its own switch, as this one does, check that first and fall back to the system setting.
 
 <div class="snippets">
-<Snippet title="21 · Care: every slide becomes a fade" lab="curve-bench" easing="cubic-bezier(.2,.8,.2,1)" duration={280} distance={24} property="y">
+<Snippet title="21 · Care: every slide becomes a fade" lab="curve-bench" easing="cubic-bezier(.2,.8,.2,1)" duration={280} from={24} to={0} property="y">
 
 ```css
 /* One distance token. Under reduced motion it drops to 0,
@@ -201,7 +201,7 @@ In JavaScript, ask `matchMedia` at the moment a motion starts; its `matches` is 
 
 </Snippet>
 
-<Snippet title="21 · Care: a fade instead of a slide" lab="curve-bench" easing="cubic-bezier(.2,.8,.2,1)" duration={280} distance={24}>
+<Snippet title="21 · Care: a fade instead of a slide" lab="curve-bench" easing="cubic-bezier(.2,.8,.2,1)" duration={280} from={24} to={0}>
 
 ```js
 const reduce = matchMedia('(prefers-reduced-motion: reduce)');
@@ -227,6 +227,7 @@ function enter(panel) {
 
 ```js
 // draw(time) paints one frame of an idle scene on the canvas.
+const canvas = document.querySelector('canvas');
 const reduce = matchMedia('(prefers-reduced-motion: reduce)');
 let onScreen = false;
 let frame = 0;

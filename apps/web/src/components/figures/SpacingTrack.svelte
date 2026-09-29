@@ -79,16 +79,26 @@
       const r = resolved[i];
       const times = frameTimes(r.end, fps);
       const xs = times.map((t) => xOf(i, t));
-      // Thin labels so they never collide where frames bunch up.
-      // Overshooting frames can sit past the last one, so check every accepted label, not just the previous.
-      let labels: { x: number; n: number }[] = [];
+      // Thin labels so they never collide where frames bunch up, and so they always count up in the
+      // direction of travel: a frame that turns back (an overshoot settling, a wind-up) gets a tick but no
+      // number, or "12 53 15 17" would read as nonsense. The last frame is labelled when it's the furthest
+      // point reached; when the move overshoots past it, its count is in the readout above.
+      const labels: { x: number; n: number }[] = [];
       const lastN = xs.length - 1;
-      labels.push({ x: xs[lastN], n: lastN });
+      const dir = Math.sign(xs[lastN] - xs[0]) || 1;
+      const along = (x: number) => x * dir;
+      const end = along(xs[lastN]);
+      const endIsFurthest = xs.every((x) => along(x) <= end + 0.5);
+      let reach = -Infinity;
       xs.forEach((x, n) => {
         if (n === lastN) return;
-        if (labels.every((l) => Math.abs(l.x - x) >= 16)) labels.push({ x, n });
+        const a = along(x);
+        if (a < reach + 16) return; // too close to the last number, or heading back
+        if (endIsFurthest && a > end - 16) return; // leave room for the last frame's number
+        labels.push({ x, n });
+        reach = a;
       });
-      labels = labels.sort((a, b) => a.n - b.n);
+      if (endIsFurthest || end >= reach + 16) labels.push({ x: xs[lastN], n: lastN });
       const scaleOf = (t: number) => (row.move.property === "scale" ? r.value(t) : 1);
       const opacityOf = (t: number) => (row.move.property === "opacity" ? Math.max(0, Math.min(1, r.value(t))) : 1);
       return { row, r, times, xs, labels, frames: times.length - 1, scaleOf, opacityOf };

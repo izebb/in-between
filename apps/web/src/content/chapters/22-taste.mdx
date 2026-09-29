@@ -100,7 +100,7 @@ A cut is a decision too, and often the calm one. Leave it still:
   <p>Hold <b>Alt</b> (⌥) over anything on this site that moves to see its duration and curve, named by token.</p>
 </Margin>
 
-This site chose calm. It is meant to read like a quiet book whose figures happen to be alive: numbered plates, wide margins, a page that stays still so that whatever moves means something. Its motion language is small: four durations, three curves, two springs.
+This site chose calm. It is meant to read like a quiet book whose figures happen to be alive: numbered plates, wide margins, and a page that holds still where you read, so that whatever moves there means something. Its motion language is small: four durations, four curves, two springs.
 
 | Token | Value | Meant for |
 |---|---|---|
@@ -111,6 +111,7 @@ This site chose calm. It is meant to read like a quiet book whose figures happen
 | `--ease-out` | `cubic-bezier(.2, .8, .2, 1)` | enters |
 | `--ease-in` | `cubic-bezier(.4, 0, 1, 1)` | exits, at 0.7× the enter's time |
 | `--ease-inout` | `cubic-bezier(.65, 0, .35, 1)` | on-screen moves |
+| `--ease-reveal` | `cubic-bezier(.16, 1, .3, 1)` | lines of text rising out of a mask |
 | `spring.snappy` | response `0.3`, bounce `0` | direct manipulation |
 | `spring.soft` | response `0.5`, bounce `0.15` | playful confirmations |
 
@@ -119,7 +120,7 @@ Add three distances (`4px`, `8px`, `24px`) and one stagger step (`30ms`), and th
 - **Hovering a link** strengthens its underline to full ink over `--dur-quick`. Nothing moves. You hover constantly, so hovering gets colour, not motion.
 - **Pressing a button** drops it `1px` over `--dur-instant`. Just enough to feel the press.
 - **Changing chapters** is a cut, not a slide. The table reserves `--dur-scene` for it, but the cut that shipped is shorter, which is what the frequency rule asks for: you turn pages often. The old page fades out over `196ms` (`--dur-base-exit`); halfway through, the new one fades in over `280ms` (`--dur-base`) while rising `4px`, the smallest distance the site has.
-- **A figure reveal** is the one place the chrome spends `--dur-scene`. The first time a figure scrolls into view, its axes draw over `480ms`, then its ghosts appear, then the red key lands on `spring.soft`. Each figure does it once, when you first reach it.
+- **Arriving** is where the chrome spends `--dur-scene`, because each arrival happens once. A chapter's title is written on in blue pencil and then inked, and its lede rises out of a mask, line by line. The first time a figure scrolls into view, its axes draw over `480ms`, then its ghosts appear, then the red key lands on `spring.soft`. Each plays once, when you first reach it.
 
 And the bounce? Of the two springs, only `spring.soft` bounces, at `0.15`, and in the chrome it is spent on that one moment: the red key landing. Nothing else in the chrome bounces. That restraint is the personality.
 
@@ -217,7 +218,7 @@ A personality is a set of tokens that every component reads. Components use the 
 
 </Snippet>
 
-<Snippet title="22 · Taste: duration by frequency" lab="curve-bench" easing="--ease-out" duration={280} distance={24} property="y">
+<Snippet title="22 · Taste: duration by frequency" lab="curve-bench" easing="--ease-out" duration={280} from={24} to={0} property="y">
 
 ```js
 // The more often it's seen, the less it may move.

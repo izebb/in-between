@@ -78,6 +78,22 @@
     }
   }
 
+  /* On paper it is always paper: printed pages take the light colours, whatever the screen's theme. */
+  @media print {
+    :root:root:root {
+      color-scheme: light;
+      --paper: #F5F3EE;
+      --paper-raised: #FAF9F5;
+      --ink: #16161A;
+      --graphite: #8A8880;
+      --graphite-strong: #5E5C56;
+      --rule: #E2DED5;
+      --blue-pencil: #3D6BFF;
+      --red-pencil: #FF3B1F;
+      --glow: rgba(255,248,230,0);
+    }
+  }
+
   /* Policy: reduce, don't remove. Movement stops; fades and ghosts stay. */
   :root[data-motion="reduce"] {
     --dist-rise: 0px;

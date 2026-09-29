@@ -31,9 +31,10 @@ const WORK = 4;
 // A stand-in for real work: it just waits.
 // (The lab replaces performance.now() with its
 // own clock, so this reads the wall clock.)
-// Capped, so the page stays usable.
+// Capped, so the page stays usable. (The lab counts
+// no frame as longer than 50ms.)
 function busy(ms) {
-  const end = new Date().getTime() + Math.min(ms, 100);
+  const end = new Date().getTime() + Math.min(ms, 40);
   while (new Date().getTime() < end) {}
 }
 
@@ -398,7 +399,7 @@ const stop = watchFrames();   // later: stop()
 </Snippet>
 </div>
 
-The monitor learns the display's beat from its first frames instead of assuming 60Hz, so it's right at 120Hz too. It watches the main thread only. A compositor animation can stay smooth while the monitor logs long frames; that's the compositor doing its job. In the Lab, the monitor runs beside a steady move with one long task in the middle, and its warning appears at the foot of the stage.
+The monitor learns the display's beat from its first frames instead of assuming 60Hz, so it's right at 120Hz too. It watches the main thread only. A compositor animation can stay smooth while the monitor logs long frames; that's the compositor doing its job. In the Lab, the monitor runs beside a steady move with one long task in the middle, and its warning appears at the top of the stage.
 
 <Beat kind="drill">Blind A/B</Beat>
 

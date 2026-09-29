@@ -4,17 +4,18 @@
    * plus a design handoff: tokens (W3C design-token JSON) and a spec sentence a designer can read.
    */
   import { onMount, onDestroy } from "svelte";
-  import { resolveMove, toResponse, type Move } from "@inbetween/core";
+  import { resolveMove, toResponse, springToLinear, type Move } from "@inbetween/core";
   import { DIALECTS, move as makeMove, type Scene } from "@inbetween/codegen";
   import SpacingTrack from "../figures/SpacingTrack.svelte";
   import TimeBar from "./TimeBar.svelte";
   import { PlayheadTransport } from "~/lib/transport.svelte";
   import { readUrlState } from "~/lib/labstate";
   import { allSpecimens, type JournalEntry } from "~/lib/store";
-  import { parseSpec, describeSpec } from "~/lib/spec";
+  import { parseSpec, describeSpec, specToString, waapiTiming } from "~/lib/spec";
   import { prefs } from "~/lib/prefs.svelte";
 
-  let { preset }: { preset?: { scene?: Scene } } = $props();
+  /** embedded: inside a chapter (it waits for Play rather than looping on its own). */
+  let { preset, embedded = false }: { preset?: { scene?: Scene }; embedded?: boolean } = $props();
 
   const fallback: Scene = { title: "Export", moves: [makeMove({ to: 240, duration: 280 })] };
   let scene = $state<Scene>(preset?.scene ?? readUrlState<{ scene?: Scene }>()?.scene ?? fallback);
@@ -26,11 +27,16 @@
   onMount(async () => {
     prefs.start();
     journal = (await allSpecimens()).filter((e) => (e.state as { scene?: Scene })?.scene);
-    const m = scene.moves[0];
-    easingInput = describeSpec(m.easing);
-    durationInput = m.duration;
-    if (!prefs.reduced) model.play();
+    syncInputs();
+    if (!prefs.reduced && !embedded) model.play();
   });
+
+  /** The inputs show the current motion in a form Convert reads back exactly. */
+  function syncInputs() {
+    const m = scene.moves[0];
+    easingInput = specToString(m.easing);
+    durationInput = Math.round(resolveMove(m).duration);
+  }
 
   function fromEasing() {
     try {
@@ -44,7 +50,10 @@
   function fromJournal(id: string) {
     const e = journal.find((j) => j.id === id);
     const s = (e?.state as { scene?: Scene })?.scene;
-    if (s) scene = JSON.parse(JSON.stringify(s));
+    if (s) {
+      scene = JSON.parse(JSON.stringify(s));
+      syncInputs();
+    }
   }
 
   const end = $derived(Math.max(...scene.moves.map((m) => resolveMove(m).end)));
@@ -54,21 +63,37 @@
 
   const outputs = $derived(DIALECTS.map((d) => ({ id: d.id, label: d.label, code: d.gen(scene).text, ext: d.id === "css" ? "css" : "js" })));
 
+  /**
+   * Design Tokens Format Module (W3C community group, 2025.10): durations are { value, unit },
+   * curves are cubicBezier. A spring has no token type: it's a group of numbers (both pairs), with
+   * its CSS in $extensions; steps() and linear() are described, with their CSS in $extensions too.
+   */
+  const ms = (v: number) => ({ $type: "duration", $value: { value: Math.round(v), unit: "ms" } });
+  const r3 = (v: number) => +v.toFixed(3);
   function tokenOf(m: Move) {
     const r = resolveMove(m);
+    const e = m.easing;
+    const css = { inbetween: { css: waapiTiming(e, r.duration).easing } };
     const easing =
-      m.easing.type === "cubic"
-        ? { $type: "cubicBezier", $value: [m.easing.x1, m.easing.y1, m.easing.x2, m.easing.y2] }
-        : m.easing.type === "spring"
-          ? { $type: "spring", $value: { stiffness: +m.easing.stiffness.toFixed(2), damping: +m.easing.damping.toFixed(2), mass: m.easing.mass, ...Object.fromEntries(Object.entries(toResponse(m.easing)).map(([k, v]) => [k, +v.toFixed(3)])) } }
-          : { $type: "string", $value: describeSpec(m.easing) };
-    return {
-      duration: { $type: "duration", $value: `${Math.round(r.duration)}ms` },
-      delay: { $type: "duration", $value: `${m.delay}ms` },
-      easing,
-      from: { $type: "number", $value: m.from },
-      to: { $type: "number", $value: m.to },
-    };
+      e.type === "cubic"
+        ? { $type: "cubicBezier", $value: [e.x1, e.y1, e.x2, e.y2].map(r3) }
+        : e.type === "linear"
+          ? { $type: "cubicBezier", $value: [0, 0, 1, 1] }
+          : e.type === "spring"
+            ? {
+                $description: "A spring. There is no spring token type: these are its numbers, response in seconds. As CSS it is linear() over the duration above.",
+                $type: "number",
+                stiffness: { $value: +e.stiffness.toFixed(2) },
+                damping: { $value: +e.damping.toFixed(2) },
+                mass: { $value: +e.mass.toFixed(2) },
+                response: { $value: r3(toResponse(e).response) },
+                bounce: { $value: r3(toResponse(e).bounce) },
+                $extensions: { inbetween: { css: springToLinear(e, { velocity: e.velocity }).easing } },
+              }
+            : { $description: `${describeSpec(e)}: no token type for this curve; its CSS is in $extensions.`, $extensions: css };
+    const px = m.property === "x" || m.property === "y";
+    const value = (v: number) => (px ? { $type: "dimension", $value: { value: v, unit: "px" } } : { $type: "number", $value: v });
+    return { duration: ms(r.duration), delay: ms(m.delay), easing, from: value(m.from), to: value(m.to) };
   }
   const tokens = $derived(
     JSON.stringify({ motion: Object.fromEntries(scene.moves.map((m) => [`${m.target}-${m.property}`, tokenOf(m)])) }, null, 2),
@@ -128,7 +153,7 @@
           <input class="mono dur" type="number" min="16" max="5000" step="1" bind:value={durationInput} aria-label="Duration in ms" />
           <button class="btn small" type="submit">Convert</button>
         </div>
-        {#if easingError}<span class="err mono">{easingError}</span>{/if}
+        {#if easingError}<span class="err mono" data-motion="fade" role="alert">{easingError}</span>{/if}
       </form>
       {#if journal.length}
         <label class="label" for="ex-journal">Or a specimen from your journal</label>
@@ -146,23 +171,29 @@
         <header>
           <span class="smallcaps">{o.label}</span>
           <span class="acts">
-            <button class="btn ghost small" type="button" onclick={() => copy(o.id, o.code)}>{copied === o.id ? "Copied" : "Copy"}</button>
+            <button class="btn ghost small" type="button" onclick={() => copy(o.id, o.code)}>{#key copied === o.id}<span data-motion="fade">{copied === o.id ? "Copied" : "Copy"}</span>{/key}</button>
             <button class="btn ghost small" type="button" onclick={() => download(`motion.${o.id}.${o.ext}`, o.code)}>Download</button>
           </span>
         </header>
-        <pre class="mono">{@html hl(o.code)}</pre>
+        <!-- A new motion writes itself in: the code fades in fresh rather than swapping in place. -->
+        {#key o.code}<pre class="mono" data-motion="fade">{@html hl(o.code)}</pre>{/key}
       </article>
     {/each}
     <article class="out handoff">
       <header>
         <span class="smallcaps">Design handoff · tokens + spec</span>
         <span class="acts">
-          <button class="btn ghost small" type="button" onclick={() => copy("tokens", tokens)}>{copied === "tokens" ? "Copied" : "Copy JSON"}</button>
+          <button class="btn ghost small" type="button" onclick={() => copy("tokens", tokens)}>{#key copied === "tokens"}<span data-motion="fade">{copied === "tokens" ? "Copied" : "Copy JSON"}</span>{/key}</button>
           <button class="btn ghost small" type="button" onclick={() => download("motion.tokens.json", tokens)}>Download</button>
         </span>
       </header>
-      <p class="spec">{spec}</p>
-      <pre class="mono">{@html hl(tokens)}</pre>
+      {#key spec}<p class="spec" data-motion="fade">{spec}</p>{/key}
+      <p class="token-note">
+        Tokens in the W3C Design Tokens format (2025.10): durations as a value and a unit, curves as <code>cubicBezier</code>.
+        {#if scene.moves.some((m) => m.easing.type === "spring")}A spring has no token type, so it is written as its numbers, and its CSS <code>linear()</code> travels in <code>$extensions</code>.{/if}
+        {#if scene.moves.some((m) => m.easing.type === "steps" || m.easing.type === "points")}<code>steps()</code> and <code>linear()</code> have no token type: their CSS travels in <code>$extensions</code>.{/if}
+      </p>
+      {#key tokens}<pre class="mono" data-motion="fade">{@html hl(tokens)}</pre>{/key}
     </article>
   </section>
 </div>
@@ -190,4 +221,6 @@
   .out :global(.t-n) { color: var(--code-number); }
   .handoff { grid-column: 1 / -1; }
   .spec { padding: 0.8rem 0.9rem 0; font-family: var(--font-display); font-size: 1.15rem; line-height: 1.35; white-space: pre-line; }
+  .token-note { padding: 0.5rem 0.9rem 0; font-size: var(--text-xs); line-height: 1.5; color: var(--graphite-strong); max-width: 80ch; }
+  .token-note code { font-size: inherit; }
 </style>

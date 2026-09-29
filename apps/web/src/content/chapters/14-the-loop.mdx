@@ -61,7 +61,7 @@ So motion on a canvas works like a flipbook. Wipe the page, draw everything wher
 Screens redraw at different rates. Here are three. The top one draws half as often as the middle one, and the bottom one twice as often. In each row, two dots run the same motion, written two ways. The blue dot takes a fixed step each time its screen draws. The red dot moves by how much time has passed. The ticks under the red dot mark each drawing.
 
 <Figure n="14.1" caption="The same motion at three refresh rates">
-  <Canvas program="loop-hz" readout={false} />
+  <Canvas program="loop-hz" readout={false} params={{ labels: 0 }} />
 </Figure>
 
 Which dots agree? The red ones stay in a column. On every screen they are in the same place at the same moment; the slow screen just shows fewer drawings, so its ticks sit further apart. The blue dots split up. On the slow screen blue crawls, and on the fast one it races to the end. The code is the same in every row. Only the screen changed.
@@ -92,7 +92,7 @@ Every canvas animation is one loop, run once per frame:
 The clear matters because a canvas keeps every pixel you paint. It has no idea there was a ball; it only has the colours the ball left behind. Skip the clear and the old pictures stay.
 
 <Figure n="14.2" caption="Old frames, partly erased">
-  <Canvas program="trails" />
+  <Canvas program="trails" stillMode="last" />
 </Figure>
 
 This program erases only part of the last picture before it draws the next one. Drag **Clear opacity** to `1`: each frame starts on a blank page, and there are only three dots. Drag it down toward `0.02` and the old pictures fade slowly instead of vanishing. Nobody drew those trails. They are what was never erased. Chapter 17 uses this on purpose.

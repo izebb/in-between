@@ -31,10 +31,17 @@ const href = lab ? labUrl(lab, labPreset(lab, { ...short, title })) : null;
       b.addEventListener("click", async () => {
         const pre = b.closest(".snippet")?.querySelector("pre");
         if (!pre) return;
+        // The label fades in anew (the house fade), rather than swapping in place.
+        const say = (text: string) => {
+          const s = document.createElement("span");
+          s.dataset.motion = "fade";
+          s.textContent = text;
+          b.replaceChildren(s);
+        };
         try {
           await navigator.clipboard.writeText(pre.innerText);
-          b.textContent = "Copied";
-          setTimeout(() => (b.textContent = "Copy"), 1400);
+          say("Copied");
+          setTimeout(() => say("Copy"), 1400);
         } catch {
           /* clipboard blocked */
         }

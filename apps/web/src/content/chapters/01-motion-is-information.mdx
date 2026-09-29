@@ -60,7 +60,7 @@ Watch the same change with motion and without it. Then ask yourself what the sec
 <Beat kind="more">Motion spends attention</Beat>
 
 <Margin kind="wild">
-  <p>When you minimise a window on macOS, the <b>Genie</b> effect pours it into its icon in the Dock. It tells you where the window went, so you know where to find it again.</p>
+  <p>When you minimise a window on macOS, the <b>Genie</b> effect pours it down into the Dock. It tells you where the window went, so you know where to find it again.</p>
 </Margin>
 
 The eye can't ignore movement. That's why motion works as a pointer, and it's also why it has a cost. Every moving thing makes a claim on your attention. Two things moving at once make two claims, and the eye has to choose.
@@ -100,13 +100,17 @@ There is no special code for "information". It lives in the choices you'll learn
 <Snippet title="01 · Feedback: a press that answers" lab="curve-bench" easing="ease-out" duration={90} property="scale" from={1} to={0.96}>
 
 ```js
-// Feedback: the button acknowledges the press immediately.
-button.addEventListener('pointerdown', () => {
+// Feedback: the button acknowledges the press at once, and lets go on release.
+// One keyframe: each press starts from wherever the button is now.
+const press = (scale) =>
   button.animate(
-    [{ transform: 'scale(1)' }, { transform: 'scale(0.96)' }],
+    { transform: `scale(${scale})` },
     { duration: 90, easing: 'ease-out', fill: 'forwards' },
   );
-});
+
+button.addEventListener('pointerdown', () => press(0.96));
+button.addEventListener('pointerup', () => press(1));
+button.addEventListener('pointerleave', () => press(1));
 ```
 
 </Snippet>
@@ -114,6 +118,6 @@ button.addEventListener('pointerdown', () => {
 
 <Beat kind="drill">Name what it says</Beat>
 
-Ten small UI clips. For each, name the one thing its motion tells you.
+Five small UI clips. For each, name the one thing its motion tells you.
 
 <Drill kind="what-it-says" trials={5} chapter={1} />

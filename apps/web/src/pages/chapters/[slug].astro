@@ -5,6 +5,8 @@ import { chapterBySlug, chapters, pad2, partOf, instrumentById } from "~/lib/cur
 import { mdxComponents } from "~/components/mdx";
 import LineTitle from "~/components/ui/LineTitle.astro";
 import LabButton from "~/components/ui/LabButton.astro";
+import OutlineNumber from "~/components/ui/OutlineNumber.astro";
+import PencilArrow from "~/components/ui/PencilArrow.astro";
 
 export async function getStaticPaths() {
   const entries = await getCollection("chapters");
@@ -19,6 +21,14 @@ const written = new Set((await getCollection("chapters")).map((c) => c.id));
 const idx = chapters.findIndex((c) => c.slug === meta.slug);
 const prev = chapters.slice(0, idx).reverse().find((c) => written.has(c.slug));
 const next = chapters.slice(idx + 1).find((c) => written.has(c.slug));
+const ways = [
+  prev
+    ? { side: "prev", href: `/chapters/${prev.slug}`, rel: "prev", n: pad2(prev.number), title: prev.title, label: "Previous" }
+    : { side: "prev", href: "/", word: "Contents", title: "All chapters", label: "Back" },
+  next
+    ? { side: "next", href: `/chapters/${next.slug}`, rel: "next", n: pad2(next.number), title: next.title, label: "Next" }
+    : { side: "next", href: "/lab", word: "Lab", title: "The instruments", label: "Onward" },
+] as const;
 ---
 <Base title={`${pad2(meta.number)} ${meta.title}`} description={meta.summary} crumb={{ number: pad2(meta.number), title: meta.title }}>
   <article class="page chapter" data-chapter={meta.number}>
@@ -42,19 +52,23 @@ const next = chapters.slice(idx + 1).find((c) => written.has(c.slug));
     <div class="prose chapter-body" data-reveal-block data-persp>
       <Content components={mdxComponents} />
     </div>
-    <nav class="pager prose" aria-label="Chapters">
-      {prev && (
-        <a class="prev" href={`/chapters/${prev.slug}`}>
-          <span class="smallcaps">← {pad2(prev.number)}</span>
-          <span class="serif">{prev.title}</span>
+    <!-- The way on: two boxes across the whole sheet, drawn as the lab grid's are, each with its
+         chapter's number in outline figures, its title, and the grid's arrow in ink, which the blue
+         pencil goes over on hover (PencilArrow). The first chapter leads back to the contents and the
+         last on to the lab, so neither end is a dead end. -->
+    <nav class="pager" aria-label="Chapters">
+      {ways.map((w) => (
+        <a class:list={["pg", `pg-${w.side}`, "pencil-hover"]} href={w.href} rel={w.rel}>
+          <svg class="ph-outline" aria-hidden="true"><rect x="0.5" y="0.5" width="100%" height="100%" pathLength="1" /></svg>
+          {w.n ? <OutlineNumber class="pg-n ph-n" text={w.n} /> : <span class="pg-n pg-n-word smallcaps">{w.word}</span>}
+          <span class="serif ph-title pg-title">{w.title}</span>
+          <span class="pg-foot smallcaps">
+            {w.side === "prev" && <PencilArrow dir="left" />}
+            <span>{w.label}</span>
+            {w.side === "next" && <PencilArrow dir="right" />}
+          </span>
         </a>
-      )}
-      {next && (
-        <a class="next" href={`/chapters/${next.slug}`}>
-          <span class="smallcaps">{pad2(next.number)} →</span>
-          <span class="serif">{next.title}</span>
-        </a>
-      )}
+      ))}
     </nav>
   </article>
 </Base>

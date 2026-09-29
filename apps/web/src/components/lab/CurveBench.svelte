@@ -41,7 +41,12 @@
     ...preset,
     ...((!embedded && readUrlState<CurveState>()) || {}),
   };
-  let lab = $state<CurveState>(clone(initial));
+  // This is a bézier bench: linear arrives as its bézier, cubic-bezier(0, 0, 1, 1), so its handles can be pulled.
+  function asBezier(st: CurveState): CurveState {
+    for (const mv of st.scene.moves) if (mv.easing.type === "linear") mv.easing = { type: "cubic", x1: 0, y1: 0, x2: 1, y2: 1 };
+    return st;
+  }
+  let lab = $state<CurveState>(asBezier(clone(initial)));
   let status = $state<"synced" | "edited" | "detached">("synced");
   let text = $state("");
   let running = $state(false);

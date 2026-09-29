@@ -29,10 +29,10 @@ export const CASES: FixCase[] = [
   { kind: "menu", broken: { easing: "--ease-out", duration: 900 }, word: "sluggish", culprit: "duration", ok: (m) => (m.duration ?? 0) <= 300, why: "A menu opens many times a day. At 900ms you wait for it; around 200ms it is simply there." },
   { kind: "card", broken: { easing: "--ease-in", duration: 320, distance: 24 }, word: "hits a wall", culprit: "easing", ok: (m) => ["--ease-out", "spring.snappy", "ease-in-out"].includes(m.easing ?? ""), why: "It's still speeding up when it arrives. Things arrive and settle: decelerate into place with ease-out." },
   { kind: "toast", broken: { easing: "ease-in-out", duration: 1100, distance: 16 }, word: "floaty", culprit: "duration", ok: (m) => (m.duration ?? 0) <= 400, why: "Over a second, a small toast drifts. The same curve at about 300ms lands." },
-  { kind: "dot", broken: { easing: "linear", duration: 520 }, word: "mechanical", culprit: "easing", ok: (m) => m.easing !== "linear", why: "Constant speed is how machines move. Any ease gives it a start and a finish." },
+  { kind: "dot", broken: { easing: "linear", duration: 520 }, word: "mechanical", culprit: "easing", ok: (m) => !["linear", "--ease-in"].includes(m.easing ?? ""), why: "Constant speed is how machines move. A curve that slows into the end gives it a finish: the dot lands instead of stopping dead." },
   { kind: "list", broken: { easing: "--ease-out", duration: 300, stagger: 160, distance: 12 }, word: "slow to arrive", culprit: "stagger", ok: (m) => (m.stagger ?? 0) <= 50, why: "At 160ms apart, the last row arrives long after the first. At 20–40ms the rows read as one gesture." },
   { kind: "card", broken: { easing: "--ease-out", duration: 300, distance: 160 }, word: "shouting", culprit: "distance", ok: (m) => (m.distance ?? 0) <= 40, why: "A routine card travelling 160px takes over the screen. A short rise says the same thing quietly." },
-  { kind: "modal", broken: { easing: "spring(response .45 bounce .55)" }, word: "nervous", culprit: "easing", ok: (m) => ["--ease-out", "spring.snappy"].includes(m.easing ?? ""), why: "A dialog that wobbles has no reason to: nothing threw it. A damped arrival is calm." },
+  { kind: "modal", broken: { easing: "spring(response .45 bounce .55)" }, word: "nervous", culprit: "easing", ok: (m) => ["--ease-out", "spring.snappy", "ease-in-out"].includes(m.easing ?? ""), why: "A dialog that wobbles has no reason to: nothing threw it. A damped arrival is calm." },
   { kind: "card", broken: { easing: "linear", duration: 70, distance: 24 }, word: "abrupt", culprit: "duration", ok: (m) => (m.duration ?? 0) >= 180 && (m.duration ?? 0) <= 450, why: "Four frames is barely a motion: it reads as a jump. Give it enough frames to show where it came from." },
   { kind: "drawer", direction: "exit", broken: { easing: "--ease-out", duration: 380, exitEasing: "--ease-in", exitDuration: 760 }, word: "lingering", culprit: "duration", ok: (m) => exitDur(m) <= 300, why: "The drawer is leaving your attention; it shouldn't take longer than it took to arrive. Exits run at about 0.7× the enter." },
 ];
@@ -65,7 +65,7 @@ export const fixFeeling: DrillDef<FixSpec, FixAnswer> = {
       points: fixed ? 100 : rightKnob ? 40 : 0,
       truth: ["duration", "easing", "distance", "stagger"].indexOf(c.culprit),
       answer: ["duration", "easing", "distance", "stagger"].indexOf(a.knob),
-      verdict: `${fixed ? "Fixed." : rightKnob ? `Right parameter, not far enough.` : `The cause was ${c.culprit}, not ${a.knob}.`} ${c.why}`,
+      verdict: `${fixed ? "Fixed." : rightKnob ? (a.knob === "easing" ? "Right parameter, but that curve doesn't fix it." : "Right parameter, not the right amount.") : `The cause was ${c.culprit}, not ${a.knob}.`} ${c.why}`,
       meta: { word: c.word, knob: a.knob, culprit: c.culprit },
     };
   },

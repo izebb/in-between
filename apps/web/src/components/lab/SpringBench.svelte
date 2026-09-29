@@ -174,7 +174,7 @@
         <div class="export">
           <span class="smallcaps">CSS · linear() · {css.easing.split(",").length} stops · {css.duration}ms</span>
           <code class="mono">{css.easing.length > 120 ? css.easing.slice(0, 118) + "…" : css.easing}</code>
-          <button class="btn ghost small" type="button" onclick={copyCss}>{copied ? "Copied" : "Copy"}</button>
+          <button class="btn ghost small" type="button" onclick={copyCss}>{#key copied}<span data-motion="fade">{copied ? "Copied" : "Copy"}</span>{/key}</button>
         </div>
       </div>
     {/if}

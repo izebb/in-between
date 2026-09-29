@@ -3,7 +3,7 @@
  * mark at any moment of a transition. Used by L10, the chapter 23 figures, and the
  * "Which transition lies?" drill.
  *
- * The data is invented for teaching: twelve products, two years, three groups.
+ * The data is invented for teaching: twelve kinds of tree, two years, three groups.
  */
 
 import { scaleBand, scaleLinear } from "d3-scale";
@@ -111,13 +111,14 @@ export function layout(state: ChartState, f: Frame, fixedMax?: number, axisMin =
 }
 
 export interface TransitionOptions {
+  /** ms for a move (and the base for exits and enters). */
   duration: number;
   /** ms between consecutive marks. */
   stagger: number;
   easing: EasingSpec;
   /** "data": marks keep their identity. "index": mark i morphs into whatever is i next (identity lost). */
   keying: "data" | "index";
-  /** "together": everything at once. "staged": exits, then moves, then enters. */
+  /** "together": everything at once. "staged": exits, then moves, then enters (an empty phase is skipped). */
   staging: "together" | "staged";
 }
 
@@ -126,6 +127,10 @@ export interface Transition {
   /** Marks at time t (ms). */
   at(t: number): Mark[];
 }
+
+/** Staged phases, as fractions of a move's duration: exits are quicker than enters. */
+export const EXIT_FRACTION = 0.4;
+export const ENTER_FRACTION = 0.8;
 
 const lerpMark = (a: Mark, b: Mark, p: number): Mark => ({
   // With index keying the identity flips halfway: a tracked bar jumps to another datum.
@@ -139,58 +144,79 @@ const lerpMark = (a: Mark, b: Mark, p: number): Mark => ({
   opacity: interpolateNumber(a.opacity, b.opacity)(p),
 });
 
+/**
+ * The marks on screen right now, as a Layout a new transition can start from: a change that
+ * arrives mid-move retargets from where every bar is, never from the last state's end.
+ * Marks that can't be seen (not yet entered, or already gone) are left out. With index keying
+ * the marks are keyed by slot, left to right, since an identity can show twice mid-flip.
+ */
+export function snapshot(marks: Mark[], keying: TransitionOptions["keying"]): Layout {
+  const seen = marks.filter((m) => m.opacity > 0.01).sort((a, b) => a.x - b.x);
+  const out = new Map<string, Mark>();
+  seen.forEach((m, i) => out.set(keying === "data" ? m.id : `s${i}`, { ...m, key: undefined }));
+  return { marks: out, order: [...out.keys()], max: 0 };
+}
+
 export function transition(from: Layout, to: Layout, f: Frame, o: TransitionOptions): Transition {
   const ease = easingFn(o.easing).ease;
   const baseY = f.height - f.padB;
   const flat = (m: Mark): Mark => ({ ...m, y: baseY, h: 0, opacity: 0 });
 
   // Pair up marks: by id (object constancy) or by position (what naive code does).
-  type Pair = { a: Mark; b: Mark; kind: "move" | "enter" | "exit"; rank: number };
+  type Pair = { a: Mark; b: Mark; kind: "move" | "enter" | "exit"; rank: number; key: string };
   const pairs: Pair[] = [];
   if (o.keying === "data") {
     const ids = new Set([...from.marks.keys(), ...to.marks.keys()]);
     for (const id of ids) {
       const a = from.marks.get(id);
       const b = to.marks.get(id);
-      if (a && b) pairs.push({ a, b, kind: "move", rank: to.order.indexOf(id) });
-      else if (b) pairs.push({ a: flat(b), b, kind: "enter", rank: to.order.indexOf(id) });
-      else if (a) pairs.push({ a, b: flat(a), kind: "exit", rank: from.order.indexOf(id) });
+      // Keyed by datum, a bar is the same element in every state.
+      if (a && b) pairs.push({ a, b, kind: "move", rank: to.order.indexOf(id), key: id });
+      else if (b) pairs.push({ a: flat(b), b, kind: "enter", rank: to.order.indexOf(id), key: id });
+      else if (a) pairs.push({ a, b: flat(a), kind: "exit", rank: from.order.indexOf(id), key: id });
     }
   } else {
     const n = Math.max(from.order.length, to.order.length);
     for (let i = 0; i < n; i++) {
       const a = from.marks.get(from.order[i]);
       const b = to.marks.get(to.order[i]);
-      if (a && b) pairs.push({ a, b, kind: "move", rank: i });
-      else if (b) pairs.push({ a: flat(b), b, kind: "enter", rank: i });
-      else if (a) pairs.push({ a, b: flat(a), kind: "exit", rank: i });
+      // Keyed by slot: the element stays, the datum it shows flips mid-move.
+      if (a && b) pairs.push({ a, b, kind: "move", rank: i, key: `p${i}` });
+      else if (b) pairs.push({ a: flat(b), b, kind: "enter", rank: i, key: `p${i}` });
+      else if (a) pairs.push({ a, b: flat(a), kind: "exit", rank: i, key: `p${i}` });
     }
   }
 
-  const n = Math.max(1, ...pairs.map((p) => p.rank + 1));
-  const span = o.duration + o.stagger * (n - 1);
-  const exitD = o.staging === "staged" ? Math.round(o.duration * 0.6) : 0;
-  const enterStart = o.staging === "staged" ? exitD + span : 0;
-  const total = o.staging === "staged" ? exitD + span + Math.round(o.duration * 0.8) : span;
+  const has = (k: Pair["kind"]) => pairs.some((p) => p.kind === k);
+  const spanOf = (ps: Pair[]) => o.duration + o.stagger * Math.max(0, ...ps.map((p) => p.rank));
+  const staged = o.staging === "staged";
+  const exitD = Math.round(o.duration * EXIT_FRACTION);
+  const enterD = Math.round(o.duration * ENTER_FRACTION);
+  // Staged: each phase starts when the one before it ends, and a phase with nothing in it takes no time.
+  const moveAt = staged && has("exit") ? exitD : 0;
+  const moveSpan = spanOf(pairs.filter((p) => p.kind === "move"));
+  const enterAt = staged ? moveAt + (has("move") ? moveSpan : 0) : 0;
+  const total = staged
+    ? Math.max(has("exit") ? exitD : 0, has("move") ? moveAt + moveSpan : 0, has("enter") ? enterAt + enterD : 0)
+    : spanOf(pairs);
 
   return {
     total,
     at(t: number) {
-      return pairs.map((p, k) => {
+      return pairs.map((p) => {
         let start: number;
         let dur = o.duration;
-        if (o.staging === "staged") {
+        if (staged) {
           if (p.kind === "exit") {
             start = 0;
             dur = exitD;
           } else if (p.kind === "enter") {
-            start = enterStart;
-            dur = Math.round(o.duration * 0.8);
-          } else start = exitD + p.rank * o.stagger;
+            start = enterAt;
+            dur = enterD;
+          } else start = moveAt + p.rank * o.stagger;
         } else start = p.rank * o.stagger;
         const local = Math.min(1, Math.max(0, (t - start) / dur));
-        const eased = p.kind === "move" ? ease(local) : local < 1 ? ease(local) : 1;
-        return { ...lerpMark(p.a, p.b, eased), key: `p${k}` };
+        return { ...lerpMark(p.a, p.b, local < 1 ? ease(local) : 1), key: p.key };
       });
     },
   };

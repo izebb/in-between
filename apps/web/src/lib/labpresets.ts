@@ -3,7 +3,8 @@
  * "Open in Lab" links, so a lesson can say easing="ease-in" duration={400} and nothing more.
  */
 import type { InstrumentId } from "./curriculum";
-import { toMove } from "./spec";
+import { parseSpec, toMove } from "./spec";
+import { cubicPresets, presetFor } from "./presets";
 import { fromResponse, type Property } from "@inbetween/core";
 import { programs } from "./canvas/programs";
 
@@ -56,13 +57,19 @@ export function labPreset(id: InstrumentId, s: LabShorthand): Record<string, unk
     case "curve-bench":
       return clean({
         scene: { title: s.title ?? "Curve bench", moves: [move()] },
-        compare: typeof s.compare === "string" ? s.compare : undefined,
+        compare: curveId(s.compare),
         dialect: s.dialect,
         ...s.extra,
       });
     case "spring-bench": {
       const physics = s.stiffness != null;
-      const p = physics ? { stiffness: s.stiffness!, damping: s.damping ?? 10, mass: s.mass ?? 1 } : fromResponse(s.response ?? 0.5, s.bounce ?? 0.15, s.mass ?? 1);
+      // A spring may also come as easing shorthand: easing="spring(response .4 bounce .3)" or "spring.snappy".
+      const given = s.easing && s.response == null && !physics ? parseSpec(s.easing) : null;
+      const p = physics
+        ? { stiffness: s.stiffness!, damping: s.damping ?? 10, mass: s.mass ?? 1 }
+        : given?.type === "spring"
+          ? { stiffness: given.stiffness, damping: given.damping, mass: given.mass }
+          : fromResponse(s.response ?? 0.5, s.bounce ?? 0.15, s.mass ?? 1);
       return clean({
         scene: { title: s.title ?? "Spring bench", moves: [toMove({ easing: { type: "spring", ...p, velocity: 0 }, to: s.to ?? s.distance ?? 320, property: s.property })] },
         mode: physics ? "physics" : "design",
@@ -94,6 +101,17 @@ export function labPreset(id: InstrumentId, s: LabShorthand): Record<string, unk
       return clean({ mode: s.source ? "code" : undefined, code: s.source, dialect: s.dialect, ...s.extra });
     default:
       return clean({ ...s, ...s.extra });
+  }
+}
+
+/** Curve bench's B: a preset id ("token-out") or any easing shorthand that names one ("--ease-out"). */
+function curveId(c: string | boolean | undefined): string | undefined {
+  if (typeof c !== "string") return undefined;
+  if (cubicPresets.some((p) => p.id === c)) return c;
+  try {
+    return presetFor(parseSpec(c))?.id;
+  } catch {
+    return undefined;
   }
 }
 

@@ -98,7 +98,7 @@
       {#if embedded}
         <a class="btn small" href={labUrl(id, JSON.parse(JSON.stringify(snapshot)))}>Open in Lab</a>
       {:else}
-        <button class="btn ghost small" type="button" onclick={share}>{shared ? "Link copied" : "Share"}</button>
+        <button class="btn ghost small" type="button" onclick={share}>{#key shared}<span data-motion="fade">{shared ? "Link copied" : "Share"}</span>{/key}</button>
       {/if}
     </div>
   </header>

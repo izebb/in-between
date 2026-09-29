@@ -28,7 +28,11 @@ export interface DrillDef<S = unknown, A = unknown> {
   /** "estimate" drills feed the calibration scatter; "choice" drills feed accuracy. */
   kind: "estimate" | "choice";
   unit?: string;
+  /** Estimate drills: what the calibration graph's axes measure, e.g. "duration" or "response". */
+  quantity?: string;
   make(rand: () => number, level: number, opts?: { topic?: string }): S;
+  /** What makes two trials "the same one", so a round doesn't repeat itself. Defaults to the whole spec. */
+  key?(spec: S): string;
   score(spec: S, answer: A): Scored;
 }
 

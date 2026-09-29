@@ -50,7 +50,7 @@ Two small functions answer it almost every time. One mixes a start and an end. T
 Each row is a screen that redraws at its own rate: a slow one at the top, a fast one at the bottom. In every row two dots chase the same target, which jumps to the far end and back. The blue dot runs the most common smoothing line there is: every frame, close a fixed share of the gap. The red dot closes a share for every moment of time that passes, however many frames that moment holds.
 
 <Figure n="15.1" caption="Smoothing per frame (blue) and per second (red), three refresh rates">
-  <Canvas program="smoothing-trap" readout={false} />
+  <Canvas program="smoothing-trap" readout={false} params={{ labels: 0 }} />
 </Figure>
 
 Look down the blue dots. The top one trails behind and the bottom one races ahead: the same code, three different feels. The red dots move as one. In the middle row, blue and red keep level, because the red dot was tuned to match the blue one on that screen.

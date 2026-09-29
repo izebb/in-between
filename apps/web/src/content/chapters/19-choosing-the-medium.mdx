@@ -39,6 +39,8 @@ export const stutter = (() => {
 export const manyDots = `// Many dots, one canvas. Everything is allocated once, in setup().
 // Each frame is arithmetic on typed arrays, one path and one fill:
 // no new objects, so nothing for the garbage collector to clean up.
+// Written for the Lab's Canvas sandbox: it calls setup(), update() and
+// draw(), and supplies TAU, seeded(), rand, random() and pencils.
 const N = 3000;
 
 function setup(w, h) {
@@ -158,7 +160,7 @@ Five media cover almost all motion on the web. *Cost* means two things here: wha
 | WAAPI | timelines controlled from JavaScript, scrubbing | low |
 | SVG | line drawing, morphing shapes, crisp diagrams | medium, and it grows with the number of shapes |
 | Canvas 2D | many objects, particles, procedural and generative motion | you own everything |
-| WebGL / WebGPU | thousands of things, shaders, 3D | the highest complexity |
+| WebGL / WebGPU | tens of thousands of things, shaders, 3D | the highest complexity |
 
 **CSS** describes a change: from here to there, over this long, on this curve. The browser has the whole animation before it starts, so none of your code runs while it plays. Use transitions between two states and keyframes when there are more. It is the cheapest to write and the easiest to get right, and for a few elements changing state it is nearly always the answer.
 
@@ -166,7 +168,7 @@ Five media cover almost all motion on the web. *Cost* means two things here: wha
   <p>CSS animations and transitions are Web Animations underneath. <code>document.getAnimations()</code> returns them as <code>Animation</code> objects, so a script can pause or scrub a motion that CSS started.</p>
 </Margin>
 
-**WAAPI**, the Web Animations API, is the same engine, reached from JavaScript. `element.animate()` returns an `Animation` you can pause, reverse, scrub, speed up, and wait for. Use it when code has to hold the motion: a slider scrubs it, a gesture interrupts it, a sequence needs to know when it ends. Libraries such as Motion and GSAP sit on top of these DOM media and add what the platform leaves out, like springs, timelines, and layout animation.
+**WAAPI**, the Web Animations API, is the same engine, reached from JavaScript. `element.animate()` returns an `Animation` you can pause, reverse, scrub, speed up, and wait for. Use it when code has to hold the motion: a slider scrubs it, a gesture interrupts it, a sequence needs to know when it ends. Libraries such as Motion and GSAP work on the same elements and add what the platform leaves out, like springs, timelines, and layout animation.
 
 **SVG** is vector drawing inside the DOM. Its shapes stay sharp at any zoom, and CSS and WAAPI animate them like any other element, so everything above still applies. It is the medium for line drawing (a stroke's dash offset, animated), shapes that change into other shapes, icons, and diagrams. But every shape is an element, so a thousand shapes cost what a thousand elements cost: the DOM curve from figure 19.3 again.
 
@@ -204,7 +206,7 @@ Choosing a canvas makes the frame budget yours. Three habits keep you inside it.
 
 The desk starts with this site's `--ease-out` over 280ms: a 240px move, written five ways. Read across the cards before you change anything. CSS and WAAPI say it in nearly the same words. Motion and GSAP count in seconds, not milliseconds. The canvas version has to bring its own clock and its own curve.
 
-Then change one thing. Type `spring.snappy` into *Any easing* and convert. CSS and WAAPI can only play the spring's shape, sampled into `linear()` over a fixed duration. Motion takes the spring's physics directly. GSAP needs a helper to sample it. On the canvas it becomes three lines of physics, run every frame.
+Then change one thing. Type `spring.snappy` into *Any easing* and convert. CSS and WAAPI can only play the spring's shape, sampled into `linear()` over a fixed duration. Motion takes the spring's physics directly. GSAP needs a helper to sample it. On the canvas it becomes three lines of physics, run in fixed 1ms steps through each frame.
 
 <Lab id="export-desk" easing="--ease-out" duration={280} />
 
@@ -260,6 +262,8 @@ button.addEventListener('click', () => move.reverse());
 // Many dots, one canvas. Everything is allocated once, in setup().
 // Each frame is arithmetic on typed arrays, one path and one fill:
 // no new objects, so nothing for the garbage collector to clean up.
+// Written for the Lab's Canvas sandbox: it calls setup(), update() and
+// draw(), and supplies TAU, seeded(), rand, random() and pencils.
 const N = 3000;
 
 function setup(w, h) {

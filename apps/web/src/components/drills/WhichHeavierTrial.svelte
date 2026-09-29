@@ -1,9 +1,10 @@
 <script lang="ts">
-  import { onMount, onDestroy } from "svelte";
+  import { onMount, onDestroy, untrack } from "svelte";
   import { createLoop, type Loop } from "@inbetween/core";
   import { simulateDrop, type WhichHeavierSpec } from "~/lib/drills/which-heavier";
   import type { Scored } from "~/lib/drills/types";
   import { prefs } from "~/lib/prefs.svelte";
+  import PlayLabel from "./PlayLabel.svelte";
 
   let { spec, result, onanswer }: { spec: WhichHeavierSpec; result: Scored | null; onanswer: (v: number) => void } = $props();
 
@@ -13,6 +14,8 @@
   let canvases: HTMLCanvasElement[] = $state([]);
   let loop: Loop | null = null;
   let t = $state(SECONDS);
+  /** What the canvases hold when nothing plays: the whole path (ghosts) or the ball at its start. */
+  let resting: "path" | "start" = "path";
 
   function draw(i: number, time: number, ghosts: boolean) {
     const cv = canvases[i];
@@ -66,20 +69,30 @@
       t = Math.min(SECONDS, time);
       drawAll(t, false);
       if (time >= SECONDS) {
+        resting = "path";
         drawAll(SECONDS, true);
+        loop = null;
         return false;
       }
     });
   }
 
+  const drawRest = () => (resting === "path" ? drawAll(SECONDS, true) : drawAll(0, false));
+
   onMount(() => {
     prefs.start();
-    drawAll(SECONDS, true);
+    // Under reduced motion the still is the whole path, drawn in ghosts: it teaches without moving.
+    // Otherwise the balls wait at the top for the drop that is about to start.
+    resting = prefs.reduced ? "path" : "start";
+    drawRest();
     if (!prefs.reduced) setTimeout(play, 350);
   });
   onDestroy(() => loop?.stop());
+  // Redraw a resting pair when the pencils change (the theme was switched) or the answer comes in.
   $effect(() => {
-    if (result) drawAll(SECONDS, true);
+    void prefs.pencils;
+    void result;
+    untrack(() => !loop && drawRest());
   });
 </script>
 
@@ -92,7 +105,7 @@
       </div>
     {/each}
   </div>
-  <button class="btn ghost small" type="button" onclick={play}>{prefs.reduced ? "Play" : "Replay both"}</button>
+  <button class="btn ghost small" type="button" onclick={play}><PlayLabel what="both" /></button>
 </div>
 
 <style>
@@ -100,7 +113,8 @@
   .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; width: 100%; }
   @media (max-width: 520px) { .pair { grid-template-columns: 1fr; } }
   .side { display: flex; flex-direction: column; gap: 0.5rem; }
-  canvas { width: 100%; height: 190px; border: 1px solid var(--rule); border-radius: 8px; background: var(--paper); }
+  /* 204px: the balls drop 160px (top 22 to floor 182), the height the drill's px/s² are quoted for. */
+  canvas { width: 100%; height: 204px; border: 1px solid var(--rule); border-radius: 8px; background: var(--paper); transition: border-color var(--dur-quick) var(--ease-out); }
   .side.right canvas { border-color: var(--ink); }
-  .side.wrong canvas { border-style: dashed; }
+  .side.wrong canvas { border-style: dashed; border-color: var(--graphite); }
 </style>

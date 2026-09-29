@@ -43,7 +43,8 @@ export class SandboxTransport implements Transport {
     this.playing = false;
     tick();
     if (n > 0) this.post({ cmd: "step", value: n, fps: this.fps });
-    else this.seek(this.time + (n * 1000) / this.fps);
+    // From the hold after the end, one frame back is one frame before the end, not the end again.
+    else this.seek(Math.min(this.time, this.duration) + (n * 1000) / this.fps);
   }
   seek(ms: number) {
     const target = Math.max(0, Math.min(ms, this.duration));

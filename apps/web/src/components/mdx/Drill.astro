@@ -2,6 +2,7 @@
 /** A short Eye trainer round inside a chapter. <Drill kind="guess-duration" trials={5} /> */
 import DrillRunner from "../drills/DrillRunner.svelte";
 import type { DrillId } from "~/lib/curriculum";
+import PencilArrow from "../ui/PencilArrow.astro";
 interface Props {
   kind: DrillId;
   trials?: number;
@@ -13,10 +14,11 @@ const { kind, trials = 5, chapter, topic } = Astro.props;
 ---
 <section class="drill-plate wide" aria-label="Drill">
   <DrillRunner client:visible drill={kind} mode="short" {trials} {topic} source={chapter ? `chapter-${chapter}` : "chapter"} />
-  <a class="more smallcaps" href={`/lab/eye-trainer?drill=${kind}`}>Full rounds and your calibration in the Eye trainer →</a>
+  <a class="more smallcaps pencil-hover" href={`/lab/eye-trainer?drill=${kind}`}>Full rounds and your calibration in the Eye trainer <PencilArrow /></a>
 </section>
 <style>
   .drill-plate { border: 1px solid var(--rule); border-radius: 8px; padding: clamp(1rem, 3vw, 1.5rem); background: var(--plate-bg); margin-block: 2.5rem !important; display: flex; flex-direction: column; gap: 1rem; }
-  .more { color: var(--graphite-strong); text-decoration: none; align-self: flex-end; }
-  .more:hover { color: var(--ink); }
+  /* The site's arrow (PencilArrow): in ink with the words; on hover both turn blue pencil and the arrow is drawn over. */
+  .more { display: inline-flex; align-items: center; gap: 0.5rem; color: var(--graphite-strong); text-decoration: none; align-self: flex-end; transition: color var(--dur-quick) var(--ease-out); }
+  .more:hover, .more:focus-visible { color: var(--blue-pencil); }
 </style>

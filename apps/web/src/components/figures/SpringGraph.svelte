@@ -28,7 +28,8 @@
   let { springs, time = null, height = 260, envelope = true, settle = true, span, index = 0, readout = true }: Props = $props();
 
   let w = $state(520);
-  const uid = Math.random().toString(36).slice(2, 8);
+  // The same id on the server and in the browser, so the hydrated clip path matches.
+  const uid = $props.id();
   const M = { l: 34, r: 18, t: 18, b: 30 };
   const solved = $derived(springs.map((s) => ({ ...s, sp: makeSpring(s.params, { from: 0, to: 1, velocity: s.velocity ?? 0 }) })));
   const T = $derived(span ?? Math.max(0.3, ...solved.map((s) => s.sp.settleTime() * 1.15)));

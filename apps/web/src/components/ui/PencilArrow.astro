@@ -1,0 +1,20 @@
+---
+/**
+ * The site's arrow, drawn as the lab grid draws it (BenchItem .bi-arrow): a shaft and a head in pencil.
+ * It rests in its link's ink; on the link's hover or focus (a .pencil-hover) the blue pencil goes over
+ * it, the shaft from the tail and then the head, while it leans a little the way it points. Leaving,
+ * the blue is taken back all at once, quicker (components.css .p-arrow).
+ */
+interface Props {
+  dir?: "left" | "right";
+  class?: string;
+}
+const { dir = "right", class: cls } = Astro.props;
+const shaft = dir === "right" ? "M1 6H20" : "M21 6H2";
+const head = dir === "right" ? "M15 1.5L20.5 6L15 10.5" : "M7 1.5L1.5 6L7 10.5";
+---
+<svg class:list={["p-arrow", `p-arrow-${dir}`, cls]} viewBox="0 0 22 12" aria-hidden="true">
+  <path class="pa-base" d={shaft + head} />
+  <path class="pa-ink pa-shaft" d={shaft} pathLength="1" />
+  <path class="pa-ink pa-head" d={head} pathLength="1" />
+</svg>

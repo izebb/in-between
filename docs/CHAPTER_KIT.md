@@ -73,7 +73,9 @@ Use `<Beat>` headings in this order. `kind="more"` makes a plain section heading
   — spring position over real time, settle marker, overshoot; first spring red, others blue.
   `readout={false}` hides every number (use it before FEEL). Big overshoots stay inside the track.
 - `<Canvas program="bouncing-ball" params={{ gravity: 1800 }} controls stepper readout />` (`readout={false}` hides ms
-  on the time bar; `controls={false}` hides knobs) — a live canvas program with its
+  on the time bar; `controls={false}` hides knobs; before the FEEL, also pass `params={{ labels: 0 }}` to programs that
+  label their rows, so the canvas says "slow / middle / fast" rather than Hz or px; `stillMode="last"` makes the Still
+  version play the whole pass onto one frame, for trails) — a live canvas program with its
   own knobs, time bar, and "Open in Canvas Sandbox". Programs live in `apps/web/src/lib/canvas/programs.ts`
   (existing: `bouncing-ball`, `heavy-light`, `interrupt`, `flick`, `spring-mass`, and in `programs2.ts`:
   `loop-hz` (30/60/120Hz, per-frame vs dt), `smoothing-trap` (x += (t−x)·k vs 1−e^(−λdt) at three rates),

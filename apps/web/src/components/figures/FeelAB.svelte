@@ -11,6 +11,7 @@
   import { parseSpec, describeSpec, toMove } from "~/lib/spec";
   import { prefs } from "~/lib/prefs.svelte";
   import { resolveMove } from "@inbetween/core";
+  import ReplayIcon from "../ui/ReplayIcon.svelte";
 
   interface Option {
     label?: string;
@@ -59,12 +60,19 @@
 
   onMount(() => {
     prefs.start();
+    // They will play by themselves once in view: until then each waits on its first frame, so the
+    // first thing you see move is the version itself, not a jump back to its start.
+    if (!prefs.reduced) (mode === "toggle" ? mocks.slice(0, 1) : mocks).forEach((m) => m?.cue());
+    // In view means half of it, or half the screen for one taller than that. (The island hydrates as its
+    // first pixel scrolls in: that's not yet a view.)
+    const inView = (e: IntersectionObserverEntry) =>
+      e.intersectionRatio >= 0.5 || (!!e.rootBounds && e.intersectionRect.height >= e.rootBounds.height * 0.5);
     const io = new IntersectionObserver((entries) => {
-      if (entries.some((e) => e.isIntersecting) && !playedOnce && !prefs.reduced) {
+      if (entries.some(inView) && !playedOnce && !prefs.reduced) {
         playedOnce = true;
         setTimeout(playAll, 400);
       }
-    }, { threshold: 0.5 });
+    }, { threshold: [0, 0.25, 0.5, 0.75, 1] });
     io.observe(root);
     return () => io.disconnect();
   });
@@ -82,6 +90,11 @@
   /** Toggle compares the first option with the second: a cut unless the second option says otherwise. */
   const toggleMotion = $derived<MockMotion>(motionOn ? options[0].motion : (options[1]?.motion ?? { none: true }));
 </script>
+
+<!-- A caption breaks between its " · " parts, never inside a token like --ease-out, and never before a dot. -->
+{#snippet nums(text: string)}
+  {#each text.split(" · ") as part, k (k)}{#if k}{"\u00a0· "}{/if}<span class:nb={part.length <= 32}>{part}</span>{/each}
+{/snippet}
 
 <div class="feel" bind:this={root}>
   <div class="q">
@@ -102,18 +115,18 @@
             <div class="still fig"><SpacingTrack rows={[stills[i]]} time={0} still chart={false} readout={false} ghosts="always" rowHeight={44} /></div>
           {/if}
           <div class="opt-foot">
-            <button class="btn small ghost" type="button" onclick={() => mocks[i]?.play()} aria-label={`Replay ${letters[i]}`}>↻ {letters[i]}</button>
+            <button class="btn small ghost" type="button" onclick={() => mocks[i]?.play()} aria-label={`Replay ${letters[i]}`}><ReplayIcon /> {letters[i]}</button>
             <button class="btn small" type="button" aria-pressed={picked === i} onclick={() => (picked = i)}>{o.label ?? `Pick ${letters[i]}`}</button>
           </div>
           {#if picked !== null}
-            <span class="numbers mono" data-motion="fade">{numbers(o)}</span>
+            <span class="numbers mono" data-motion="fade">{@render nums(numbers(o))}</span>
           {/if}
         </div>
       {/each}
     </div>
     {#if picked !== null}
       <p class="explain" data-motion="rise">
-        {#if answer !== undefined}<b>{picked === answer ? "Most eyes agree." : `Most eyes pick ${letters[answer]}.`}</b>{/if}
+        {#if answer !== undefined}{#key picked === answer}<b data-motion="fade">{picked === answer ? "Most eyes agree." : `Most eyes pick ${letters[answer]}.`}</b>{/key}{/if}
         {explain ?? ""}
       </p>
     {/if}
@@ -125,7 +138,7 @@
           <button type="button" aria-pressed={motionOn} onclick={() => { motionOn = true; toggledOnce = true; setTimeout(() => mocks[0]?.play(), 30); }}>{options[0].label ?? "With motion"}</button>
           <button type="button" aria-pressed={!motionOn} onclick={() => { motionOn = false; toggledOnce = true; setTimeout(() => mocks[0]?.play(), 30); }}>{options[1]?.label ?? "Without"}</button>
         </div>
-        {#if toggledOnce}<span class="numbers mono" data-motion="fade">{motionOn ? numbers(options[0]) : options[1]?.motion && !options[1].motion.none ? numbers(options[1]) : "0ms: the state just changes"}</span>{/if}
+        {#if toggledOnce}{#key motionOn}<span class="numbers mono" data-motion="fade">{@render nums(motionOn ? numbers(options[0]) : options[1]?.motion && !options[1].motion.none ? numbers(options[1]) : "0ms: the state just changes")}</span>{/key}{/if}
       </div>
     </div>
     {#if toggledOnce && explain}<p class="explain" data-motion="rise">{explain}</p>{/if}
@@ -134,16 +147,22 @@
 
 <style>
   .feel { display: flex; flex-direction: column; gap: 1rem; }
-  .q { display: flex; align-items: baseline; gap: 0.75rem; flex-wrap: wrap; }
-  .q .smallcaps { color: var(--graphite-strong); }
-  .question { font-family: var(--font-display); font-size: 1.35rem; line-height: 1.2; flex: 1; min-width: 12rem; }
+  /* The head reads as a figure's does: the beat's name and Play on one line, the question under them,
+     flush with the screens' left edge at a reading size, so a long question wraps back to that edge. */
+  .q { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 0.3rem 1rem; }
+  .q .smallcaps { grid-area: 1 / 1; color: var(--graphite-strong); }
+  .q .btn { grid-area: 1 / 2; }
+  .question { grid-area: 2 / 1 / 3 / -1; font-family: var(--font-body); font-size: var(--text-md); line-height: 1.5; color: var(--ink); max-width: 64ch; text-wrap: pretty; }
   .q .btn svg { width: 11px; height: 11px; }
   .grid { display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); gap: 1rem; }
   @media (max-width: 640px) { .grid { grid-template-columns: 1fr; } }
   .opt { display: flex; flex-direction: column; gap: 0.5rem; }
   .opt.chosen :global(.mock) { border-color: var(--ink); }
   .opt-foot { display: flex; justify-content: space-between; gap: 0.5rem; }
+  /* The ghost button's padding is only there for its hover tint: its mark sits on the screen's edge */
+  .opt-foot .btn.ghost { margin-left: -0.5rem; }
   .numbers { font-size: var(--text-xs); color: var(--graphite-strong); }
+  .nb { white-space: nowrap; }
   .explain { font-size: var(--text-md); max-width: 62ch; }
   .explain b { font-weight: 600; margin-right: 0.3em; }
   .toggle-stage { display: flex; flex-direction: column; gap: 0.6rem; max-width: 460px; }

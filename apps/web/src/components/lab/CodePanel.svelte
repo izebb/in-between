@@ -320,23 +320,26 @@
       {/each}
     </div>
     <div class="cp-actions">
-      <button class="btn ghost small" type="button" onclick={copy}>{copied ? "Copied" : "Copy"}</button>
+      <button class="btn ghost small" type="button" onclick={copy}>{#key copied}<span data-motion="fade">{copied ? "Copied" : "Copy"}</span>{/key}</button>
     </div>
   </div>
   <div class="cp-editor" bind:this={host}>
     <div class="morph-layer" bind:this={morphLayer} aria-hidden="true"></div>
   </div>
   <div class="cp-foot">
-    <span class="status smallcaps" data-status={status}>
-      {#if status === "synced"}Bound to the knobs · drag any number
-      {:else if status === "edited"}Edited · numbers still bound
-      {:else}Detached · runs as written{/if}
+    <!-- The panel's state is news: each change of it fades in, rather than swapping text in place. -->
+    <span class="status smallcaps" data-status={status} aria-live="polite">
+      {#key status}<span data-motion="fade">
+        {#if status === "synced"}Bound to the knobs · drag any number
+        {:else if status === "edited"}Edited · numbers still bound
+        {:else}Detached · runs as written{/if}
+      </span>{/key}
     </span>
     <span class="foot-actions">
-      {#if status !== "synced"}<button class="btn ghost small" type="button" onclick={reset}>Reset</button>{/if}
+      {#if status !== "synced"}<button class="btn ghost small" type="button" onclick={reset} data-motion="fade">Reset</button>{/if}
       {#if onrun}
         <button class="btn small" type="button" aria-pressed={running} onclick={onrun} title="Run this code in a sandboxed browser stage and measure it">
-          {running ? "Model" : "Run in browser"}
+          {#key running}<span data-motion="fade">{running ? "Model" : "Run in browser"}</span>{/key}
         </button>
       {/if}
     </span>
@@ -362,7 +365,7 @@
   }
   .morphing :global(.cm-bound) { color: transparent !important; }
   .cp-foot { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding: 0.45rem 0.6rem 0.45rem 0.75rem; border-top: 1px solid var(--rule); min-height: 38px; }
-  .status { color: var(--graphite-strong); }
+  .status { color: var(--graphite-strong); transition: color var(--dur-quick) var(--ease-out); }
   .status[data-status="edited"], .status[data-status="detached"] { color: var(--ink); }
   .foot-actions { display: flex; gap: 0.3rem; }
 </style>

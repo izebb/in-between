@@ -37,6 +37,8 @@
   const tx = (i: number) => 10 + (line.length <= 1 ? TW / 2 : (i / (line.length - 1)) * (TW - 20));
   const ty = (v: number) => 14 + (1 - v / tMax) * (TH - 34);
   const last = $derived(sorted.length - 1);
+  // What the axes measure: "duration" for Guess the duration, "response" for Tune to match.
+  const q = $derived(def.quantity ?? "value");
 </script>
 
 <div class="calibration fig" use:resize={(width) => (w = width)}>
@@ -49,8 +51,8 @@
         <text class="label" x={M.l - 6} y={Y(t) + 3} text-anchor="end">{t}</text>
       {/each}
       <line class="ax" x1={X(lo)} y1={Y(lo)} x2={X(hi)} y2={Y(hi)} stroke-dasharray="3 4" />
-      <text class="label upper" x={M.l + plot} y={M.t + plot + 30} text-anchor="end">truth ({def.unit}) →</text>
-      <text class="label upper" x={M.l} y={M.t - 4}>your estimate ↑</text>
+      <text class="label upper" x={M.l + plot} y={M.t + plot + 30} text-anchor="end">{q}, true ({def.unit}) →</text>
+      <text class="label upper" x={M.l} y={M.t - 4}>{q}, yours ↑</text>
       {#each pts as p, i (i)}
         {#if p.si === last}
           <circle class="key" cx={X(p.x)} cy={Y(p.y)} r="3.5" />
@@ -62,7 +64,7 @@
   {/if}
   {#if sorted.length > 1 || def.kind === "choice"}
     <svg class="trend" width={TW} height={TH} role="img" aria-label={def.kind === "estimate" ? "Average error per session" : "Accuracy per session"}>
-      <text class="label upper" x="10" y="10">{def.kind === "estimate" ? "average error, % · lower is better" : "accuracy, % · higher is better"}</text>
+      <text class="label upper" x="10" y="10">{def.kind === "estimate" ? `average ${q} error, % · lower is better` : "accuracy, % · higher is better"}</text>
       <line class="grid" x1="10" x2={TW - 10} y1={ty(0)} y2={ty(0)} />
       <path class="ink" d={line.map((v, i) => `${i ? "L" : "M"}${tx(i)},${ty(v)}`).join("")} />
       {#each line as v, i (i)}

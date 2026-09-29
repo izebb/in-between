@@ -71,7 +71,7 @@
     m.easing.type === "spring" ? `spring:${springPresets.find((p) => {
       const q = fromResponse(p.response, p.bounce);
       return m.easing.type === "spring" && Math.abs(q.stiffness - m.easing.stiffness) < 0.5 && Math.abs(q.damping - m.easing.damping) < 0.5;
-    })?.id ?? "custom"}` : m.easing.type === "steps" ? "steps" : m.easing.type === "linear" ? "linear" : (presetFor(m.easing)?.id ?? "custom"),
+    })?.id ?? "custom"}` : m.easing.type === "steps" ? "steps" : m.easing.type === "linear" ? "linear" : m.easing.type === "points" ? "points" : (presetFor(m.easing)?.id ?? "custom"),
   );
 
   function choose(id: string) {
@@ -79,13 +79,21 @@
     if (id.startsWith("spring:")) {
       const p = springPresets.find((x) => `spring:${x.id}` === id);
       if (p) e = { type: "spring", ...fromResponse(p.response, p.bounce), velocity: 0 };
-    } else if (id === "steps") e = { type: "steps", steps: 6, position: "jump-end" };
+    } else if (id === "steps") e = m.easing.type === "steps" ? null : { type: "steps", steps: 6, position: "jump-end" };
     else e = clone(cubicPresets.find((p) => p.id === id)?.spec ?? null) as EasingSpec | null;
     if (e) lab.scene.moves[0].easing = e;
   }
 
+  /** The distance keeps the move's direction; a move that lands on 0 keeps landing there. */
+  function setDistance(d: number) {
+    const mv = lab.scene.moves[0];
+    const dir = Math.sign(mv.to - mv.from) || 1;
+    if (mv.to === 0 && mv.from !== 0) mv.from = -dir * d;
+    else mv.to = mv.from + dir * d;
+  }
+
   const rows = $derived([
-    { move: m, label: m.easing.type === "spring" ? "spring" : m.easing.type === "steps" ? "steps" : (cubicPresets.find((p) => p.id === presetId)?.label ?? "custom") },
+    { move: m, label: m.easing.type === "spring" ? "spring" : m.easing.type === "steps" ? "steps" : m.easing.type === "points" ? "linear()" : (cubicPresets.find((p) => p.id === presetId)?.label ?? "custom") },
     ...(lab.compare ? [{ move: { ...m, easing: { type: "linear" as const } }, label: "linear", tone: "blue" as const }] : []),
   ]);
   const frames = $derived(frameCount(resolved.duration, lab.fps));
@@ -110,7 +118,8 @@
             {#if presetId === "spring:custom"}<option value="spring:custom">custom spring</option>{/if}
           </optgroup>
           <optgroup label="Other">
-            <option value="steps">steps(6)</option>
+            <option value="steps">{m.easing.type === "steps" ? `steps(${m.easing.steps})` : "steps(6)"}</option>
+            {#if presetId === "points"}<option value="points">linear() stops</option>{/if}
           </optgroup>
         </select>
       </Field>
@@ -119,7 +128,9 @@
       {:else}
         <span class="hint mono">Springs set their own duration: {Math.round(resolved.duration)}ms, {frames} frames.</span>
       {/if}
-      <Slider label="Distance" bind:value={lab.scene.moves[0].to} min={40} max={600} step={10} unit="px" link="0.to" />
+      {#if m.property === "x" || m.property === "y" || m.property === "rotate"}
+        <Slider label={m.property === "rotate" ? "Angle" : "Distance"} value={Math.abs(m.to - m.from)} min={40} max={m.property === "rotate" ? 720 : 600} step={10} unit={m.property === "rotate" ? "°" : "px"} link={m.to === 0 && m.from !== 0 ? "0.from" : "0.to"} onchange={setDistance} />
+      {/if}
     </div>
     <div class="param-group">
       <Field label="Frame rate">

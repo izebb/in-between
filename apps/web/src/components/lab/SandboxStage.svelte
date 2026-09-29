@@ -55,29 +55,43 @@
     graphs = true,
   }: Props = $props();
 
-  let iframe = $state<HTMLIFrameElement | null>(null);
+  /** The page's window: the iframe and the ghosts drawn over it share this box, and it clips them. */
   let box: HTMLDivElement;
-  let srcdoc = $state("");
   let error = $state<string | null>(null);
   let logs = $state<string[]>([]);
   let pending: { ff?: number } = {};
   let size = $state({ w: 0, h: 0 });
 
-  const post = (m: Record<string, unknown>) => iframe?.contentWindow?.postMessage({ ib: 1, ...m }, "*");
+  /**
+   * Pages, newest last. A reload (the loop restarting, a scrub back, new code) builds a new page under
+   * the one on show, and swaps only once it has drawn: the stage never blanks between the two.
+   */
+  let pages = $state<{ id: number; doc: string }[]>([]);
+  let shown = $state(-1);
+  let seq = 0;
+  const els: Record<number, HTMLIFrameElement> = {};
+  /** Each page's element, by id (a plain map: nothing renders from it). */
+  function register(node: HTMLIFrameElement, id: number) {
+    els[id] = node;
+    return {
+      destroy() {
+        if (els[id] === node) delete els[id];
+      },
+    };
+  }
+  const newest = () => (pages.length ? els[pages[pages.length - 1].id] : null) ?? null;
+  const post = (m: Record<string, unknown>) => newest()?.contentWindow?.postMessage({ ib: 1, ...m }, "*");
 
   let buf: Sample[] = [];
+  /** What the incoming page has said so far, shown when it takes over. */
+  let incoming: { buf: Sample[]; error: string | null; logs: string[] } = { buf: [], error: null, logs: [] };
   let loadedCode = "";
+  let swapTimer: ReturnType<typeof setTimeout> | null = null;
 
   function load(o: { playing: boolean; ff?: number }) {
-    buf = [];
-    samples = [];
-    error = null;
-    logs = [];
+    incoming = { buf: [], error: null, logs: [] };
     pending = { ff: o.ff };
-    if (transport) {
-      transport.time = 0;
-      transport.playing = o.playing;
-    }
+    if (transport) transport.playing = o.playing;
     const doc = buildSrcdoc({
       dialect,
       code,
@@ -89,30 +103,64 @@
       hz,
     });
     loadedCode = code;
-    // Force a reload even if the document is identical.
-    srcdoc = doc + `<!-- ${Math.random().toString(36).slice(2)} -->`;
+    const id = ++seq;
+    pages = [...pages.filter((p) => p.id === shown), { id, doc }];
+    // A page that never says it's ready (a script that hangs) still takes over.
+    if (swapTimer) clearTimeout(swapTimer);
+    swapTimer = setTimeout(() => swap(id), 1500);
+  }
+
+  /** The newest page goes on show; the one it replaces goes. */
+  function swap(id: number) {
+    if (shown === id || !pages.some((p) => p.id === id)) return;
+    if (swapTimer) clearTimeout(swapTimer);
+    shown = id;
+    pages = pages.filter((p) => p.id === id);
+    buf = incoming.buf;
+    samples = buf.slice();
+    error = incoming.error;
+    logs = incoming.logs;
   }
 
   transport = new SandboxTransport(post, load);
 
   function onMessage(e: MessageEvent) {
-    if (!iframe || e.source !== iframe.contentWindow) return;
+    const page = pages[pages.length - 1];
+    if (!page || e.source !== els[page.id]?.contentWindow) return;
     const m = e.data;
     if (!m || m.ib !== 1) return;
-    if (m.type === "ready" && pending.ff) {
-      post({ cmd: "ff", value: pending.ff, fps });
-      pending = {};
-    }
-    if (m.type === "frame") {
-      buf.push({ t: m.t, s: m.s });
-      if (buf.length > 1200) buf = buf.slice(-600);
+    const live = shown === page.id;
+    if (m.type === "frame" || m.type === "frames") {
+      const list: Sample[] = m.type === "frame" ? [{ t: m.t, s: m.s }] : m.list;
+      if (!list.length) return;
+      incoming.buf.push(...list);
+      if (incoming.buf.length > 1200) incoming.buf = incoming.buf.slice(-600);
+      // The first frame of a reload is t = 0; one that must fast-forward waits for the batch that lands it.
+      if (m.type === "frame" && pending.ff) return;
+      if (m.type === "frames") swap(page.id);
+      if (shown !== page.id) return;
+      buf = incoming.buf;
       samples = buf.slice();
-      transport?.onFrame(m.t);
-      onframe?.(m.t);
+      const t = list[list.length - 1].t;
+      transport?.onFrame(t);
+      onframe?.(t);
     }
-    if (m.type === "loaded") error = null;
-    if (m.type === "error") error = m.message;
-    if (m.type === "log") logs = [...logs.slice(-3), m.text];
+    if (m.type === "ready") {
+      if (pending.ff) {
+        post({ cmd: "ff", value: pending.ff, fps });
+        pending = {};
+      } else {
+        swap(page.id);
+        if (transport) transport.time = 0;
+      }
+    }
+    if (m.type === "loaded") incoming.error = null;
+    if (m.type === "error") incoming.error = m.message;
+    if (m.type === "log") incoming.logs = [...incoming.logs.slice(-3), m.text];
+    if (live || shown === page.id) {
+      error = incoming.error;
+      logs = incoming.logs;
+    }
   }
 
   // Reload whenever the dialect or theme changes, or the code (unless hot-swapping canvas code).
@@ -130,7 +178,7 @@
     const c = code;
     untrack(() => {
       if (c === loadedCode) return;
-      if (hot && dialect === "canvas" && srcdoc) {
+      if (hot && dialect === "canvas" && pages.length) {
         loadedCode = c;
         post({ cmd: "code", value: c });
       } else load({ playing: !prefs.reduced });
@@ -183,6 +231,8 @@
     const vMax = Math.max(1, ...vel.map((p) => Math.abs(p.v)));
     return { pos, vel, T, dMin, dMax, vMax };
   });
+  /** Measured graphs apply when there's something to measure (canvas programs in L7 have no targets). */
+  const hasGraphs = $derived(graphs && targets.length > 0);
   const GW = 220;
   const GH = 56;
   const path = (pts: { t: number; y: number }[], T: number, lo: number, hi: number) =>
@@ -208,17 +258,18 @@
   });
 </script>
 
-<div class="sandbox fig" bind:this={box} style={`height:${height}`}>
-  {#key srcdoc}
-    {#if srcdoc}
-      <iframe
-        bind:this={iframe}
-        title="Sandboxed stage running your code"
-        sandbox="allow-scripts"
-        {srcdoc}
-      ></iframe>
-    {/if}
-  {/key}
+<div class="sandbox fig" class:has-graphs={hasGraphs} style={`height:${height}`}>
+  <div class="view" bind:this={box}>
+  {#each pages as p (p.id)}
+    <!-- The srcdoc is set once, at creation (Chromium drops a srcdoc changed during the first load). -->
+    <iframe
+      use:register={p.id}
+      class:incoming={p.id !== shown}
+      title="Sandboxed stage running your code"
+      sandbox="allow-scripts"
+      srcdoc={p.doc}
+    ></iframe>
+  {/each}
   {#if showGhosts}
   <svg class="overlay" width={size.w} height={size.h} aria-hidden="true">
     {#each ghosts as g, i (i)}
@@ -235,36 +286,44 @@
     {/each}
   </svg>
   {/if}
+  </div>
   {#if showGhosts}<span class="badge smallcaps">Browser · measured</span>{/if}
-  {#if graphs && measured && !error}
+  {#if hasGraphs && !error}
+    <!-- Its own band under the page, drawn from the first frame, so nothing moves under it or jumps when it fills. -->
     <div class="graphs" aria-label="Measured position and velocity">
       <div class="g">
         <span class="smallcaps">position · measured</span>
         <svg viewBox={`0 0 ${GW} ${GH}`} preserveAspectRatio="none" height={GH} aria-hidden="true">
           <line class="grid" x1="0" x2={GW} y1={GH} y2={GH} />
-          <path class="ink" d={path(measured.pos.map((p) => ({ t: p.t, y: p.d })), measured.T, measured.dMin, measured.dMax)} />
+          {#if measured}<path class="ink" d={path(measured.pos.map((p) => ({ t: p.t, y: p.d })), measured.T, measured.dMin, measured.dMax)} />{/if}
         </svg>
       </div>
       <div class="g">
-        <span class="smallcaps">velocity · peak {Math.round(measured.vMax)} px/s</span>
+        <span class="smallcaps">velocity · peak <span class="num">{measured ? Math.round(measured.vMax) : "–"}</span> px/s</span>
         <svg viewBox={`0 0 ${GW} ${GH}`} preserveAspectRatio="none" height={GH} aria-hidden="true">
           <line class="grid" x1="0" x2={GW} y1={GH / 2} y2={GH / 2} />
-          <path class="path" d={path(measured.vel.map((p) => ({ t: p.t, y: p.v })), measured.T, -measured.vMax, measured.vMax)} />
+          {#if measured}<path class="path" d={path(measured.vel.map((p) => ({ t: p.t, y: p.v })), measured.T, -measured.vMax, measured.vMax)} />{/if}
         </svg>
       </div>
     </div>
   {/if}
   {#if error}
-    <div class="error mono" role="alert">{error}</div>
+    <div class="error mono" role="alert" data-motion="fade">{error}</div>
   {:else if logs.length}
-    <div class="logs mono" class:top={graphs && measured}>{#each logs as l}<div>{l}</div>{/each}</div>
+    <div class="logs mono" class:top={hasGraphs}>{#each logs as l}<div>{l}</div>{/each}</div>
   {/if}
 </div>
 
 <style>
-  .sandbox { position: relative; width: 100%; min-height: 200px; }
+  /* A stage is a window: nothing it runs or draws paints outside it. */
+  .sandbox { position: relative; width: 100%; min-height: 200px; overflow: clip; --graph-band: 0px; }
+  .sandbox.has-graphs { --graph-band: 7.25rem; }
+  .view { position: absolute; inset: 0 0 var(--graph-band) 0; overflow: clip; }
   iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: transparent; color-scheme: normal; }
-  .overlay { position: absolute; inset: 0; pointer-events: none; }
+  /* Laid out and painting (so its clock runs), but not seen until it takes over. */
+  iframe.incoming { opacity: 0; pointer-events: none; }
+  /* (.fig svg is overflow: visible; the ghosts stay inside the page they measure) */
+  .overlay { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
   .badge { position: absolute; top: 0.6rem; left: 0.75rem; color: var(--graphite-strong); }
   .error, .logs { position: absolute; left: 0.75rem; right: 0.75rem; bottom: 0.6rem; font-size: var(--text-xs); line-height: 1.4; }
   .error { color: var(--ink); background: var(--paper-raised); border: 1px solid var(--graphite); border-radius: 4px; padding: 0.35rem 0.5rem; }
@@ -278,5 +337,6 @@
   .g .smallcaps { color: var(--graphite-strong); font-size: 10px; line-height: 1.3; }
   .graphs svg { display: block; width: 100%; overflow: hidden; }
   .graphs svg :is(path, line) { vector-effect: non-scaling-stroke; }
-  @media (max-width: 640px) { .graphs { display: none; } }
+  .g .num { font-variant-numeric: tabular-nums; }
+  @media (max-width: 640px) { .graphs { display: none; } .sandbox.has-graphs { --graph-band: 0px; } }
 </style>

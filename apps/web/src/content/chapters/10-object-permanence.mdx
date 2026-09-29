@@ -218,6 +218,9 @@ function flip(el, change) {
 }
 
 // Move a card to the other list, and let it travel there.
+const todo = document.querySelector('.todo');
+const done = document.querySelector('.done');
+
 todo.addEventListener('click', (event) => {
   const card = event.target.closest('.card');
   if (card) flip(card, () => done.prepend(card));
