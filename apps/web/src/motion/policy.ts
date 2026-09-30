@@ -42,7 +42,7 @@ export const getModePref = (): ModePref => {
   const m = read(MODE_KEY);
   if (isMode(m)) return m;
   const old = read(THEME_KEY);
-  return isMode(old) ? old : "system";
+  return isMode(old) ? old : "light";
 };
 export const getThemePref = (): ThemeId => {
   const t = read(THEME_KEY);

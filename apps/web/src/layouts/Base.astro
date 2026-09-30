@@ -49,10 +49,10 @@ const themeIds = themes.map((t) => t.id);
             var m = localStorage.getItem("ib-motion");
             // Before themes, the mode was kept under ib-theme.
             if (!mo && (t === "light" || t === "dark")) mo = t;
-            if (mo === "light" || mo === "dark") r.setAttribute("data-mode", mo); else r.removeAttribute("data-mode");
+            if (mo === "system") r.removeAttribute("data-mode"); else r.setAttribute("data-mode", mo === "dark" ? "dark" : "light");
             if (t && t !== "pencil" && themeIds.indexOf(t) >= 0) r.setAttribute("data-theme", t); else r.removeAttribute("data-theme");
             if (m && m !== "system") r.setAttribute("data-motion", m); else r.removeAttribute("data-motion");
-          } catch (e) {}
+          } catch (e) { r.setAttribute("data-mode", "light"); }
           r.classList.add("js");
         }
         apply(document);
