@@ -101,7 +101,7 @@ function draw(ctx, s, width, height) {
   <div class="code-col">
     <div class="code-head">
       <span class="smallcaps">{lab.title ?? def?.title ?? "Your program"} · JS</span>
-      <span class="smallcaps hint">hot reload · state kept</span>
+      <span class="smallcaps hint">edits apply live · state kept</span>
     </div>
     <div class="code-body">
       <!-- Another program fades in; edits to this one don't. -->

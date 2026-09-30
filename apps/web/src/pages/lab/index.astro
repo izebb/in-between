@@ -9,7 +9,7 @@ import BenchItem from "~/components/ui/BenchItem.astro";
     <header class="chapter-head" data-reveal-section>
       <span class="smallcaps part">The Lab</span>
       <InkTitle as="h1" text="A bench of instruments" />
-      <p class="lede" data-reveal-lines data-lines>Every lesson opens one of these, pre-configured. Parameters on the left, stage in the centre, time underneath, code on the right.</p>
+      <p class="lede" data-reveal-lines data-lines>Chapters open these instruments already set up for the lesson, and you can open any of them here. Each has a stage to watch and controls to change what you see; several also show the code.</p>
     </header>
     <div class="bench-list" data-reveal-block data-persp>
       {instruments.map((i) => <BenchItem i={i} />)}

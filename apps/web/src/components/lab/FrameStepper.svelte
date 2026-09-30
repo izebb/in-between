@@ -210,7 +210,7 @@ box.animate(
         {#if trackedLabel}<span class="mono hint">tracking {trackedLabel}</span>{/if}
       {:else}
         <Slider label="Loop after" bind:value={lab.pass} min={200} max={4000} step={50} unit="ms" />
-        <p class="note">Edit the code: numbers drag. The stage measures every frame and draws its ghosts. Use 0.1× or the arrow keys on the scrubber to step.</p>
+        <p class="note">Edit the code; numbers in it can be dragged. The stage measures every frame and leaves a ghost at each. Play at 0.1×, or click the scrubber and use the arrow keys to step.</p>
       {/if}
     </div>
     <div class="param-group keys">

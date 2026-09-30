@@ -17,6 +17,8 @@
     --font-display: "Geist Variable", "Geist", "Helvetica Neue", Arial, sans-serif;
     --font-body: "Geist Mono Variable", "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
     --font-mono: "Geist Mono Variable", "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
+    /* The name is set in one face whatever the theme: no theme sets this. */
+    --font-brand: "Geist Variable", "Geist", "Helvetica Neue", Arial, sans-serif;
 
     /* Shape: what a theme reshapes. The outline of a control follows the rule unless a theme says. */
     --radius-s: 5px; /* buttons, inputs, small controls */
@@ -226,11 +228,11 @@
     }
   }
 
-  /* Theme: Cartoon (Fredoka + Nunito). Thick outlines, bold colour, a friendly round hand. */
+  /* Theme: Cartoon (Comic Neue). Thick outlines, bold colour, a comic-book hand. */
   :root[data-theme="cartoon"] {
     color-scheme: light;
-    --font-display: "Fredoka Variable", "Fredoka", system-ui, sans-serif;
-    --font-body: "Nunito Variable", "Nunito", system-ui, sans-serif;
+    --font-display: "Comic Neue", "Comic Sans MS", "Chalkboard SE", cursive;
+    --font-body: "Comic Neue", "Comic Sans MS", "Chalkboard SE", cursive;
     --font-mono: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, monospace;
     --radius-s: 12px;
     --radius-m: 16px;
@@ -250,8 +252,8 @@
     --outline: #1D1B2E;
     --shadow-float: 5px 5px 0 #1D1B2E;
     --shadow-card: 4px 4px 0 #1D1B2E;
-    --art: radial-gradient(circle at 2px 2px, rgba(29,27,46,.13) 1.5px, transparent 2px);
-    --art-size: 22px 22px;
+    --art: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240' fill='none' stroke='%231D1B2E' stroke-opacity='.16' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E %3Cpath d='M44 22q2 12 14 14q-12 2-14 14q-2-12-14-14q12-2 14-14z'/%3E %3Cpath d='M118 40q8-11 16 0t16 0t16 0'/%3E %3Cpath d='M206 94v18M197 103h18'/%3E %3Cpath d='M24 150l9-11l9 11l9-11l9 11'/%3E %3Cpath d='M128 150c-7-9-20-2-11 9l11 10l11-10c9-11-4-18-11-9z'/%3E %3Cpath d='M198 176l-9 14h10l-7 14'/%3E %3Cpath d='M84 214q1 6 7 7q-6 1-7 7q-1-6-7-7q6-1 7-7z'/%3E %3Cpath d='M62 90a9 9 0 1 1 9 9'/%3E %3C/svg%3E");
+    --art-size: 240px 240px;
   }
   :root[data-theme="cartoon"][data-mode="dark"] {
     color-scheme: dark;
@@ -268,8 +270,8 @@
     --outline: #0D0920;
     --shadow-float: 5px 5px 0 #0D0920;
     --shadow-card: 4px 4px 0 #0D0920;
-    --art: radial-gradient(circle at 2px 2px, rgba(255,244,214,.1) 1.5px, transparent 2px);
-    --art-size: 22px 22px;
+    --art: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240' fill='none' stroke='%23FFF4D6' stroke-opacity='.13' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E %3Cpath d='M44 22q2 12 14 14q-12 2-14 14q-2-12-14-14q12-2 14-14z'/%3E %3Cpath d='M118 40q8-11 16 0t16 0t16 0'/%3E %3Cpath d='M206 94v18M197 103h18'/%3E %3Cpath d='M24 150l9-11l9 11l9-11l9 11'/%3E %3Cpath d='M128 150c-7-9-20-2-11 9l11 10l11-10c9-11-4-18-11-9z'/%3E %3Cpath d='M198 176l-9 14h10l-7 14'/%3E %3Cpath d='M84 214q1 6 7 7q-6 1-7 7q-1-6-7-7q6-1 7-7z'/%3E %3Cpath d='M62 90a9 9 0 1 1 9 9'/%3E %3C/svg%3E");
+    --art-size: 240px 240px;
   }
   @media (prefers-color-scheme: dark) {
     :root[data-theme="cartoon"]:not([data-mode="light"]) {
@@ -287,10 +289,16 @@
       --outline: #0D0920;
       --shadow-float: 5px 5px 0 #0D0920;
       --shadow-card: 4px 4px 0 #0D0920;
-      --art: radial-gradient(circle at 2px 2px, rgba(255,244,214,.1) 1.5px, transparent 2px);
-      --art-size: 22px 22px;
+      --art: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240' fill='none' stroke='%23FFF4D6' stroke-opacity='.13' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E %3Cpath d='M44 22q2 12 14 14q-12 2-14 14q-2-12-14-14q12-2 14-14z'/%3E %3Cpath d='M118 40q8-11 16 0t16 0t16 0'/%3E %3Cpath d='M206 94v18M197 103h18'/%3E %3Cpath d='M24 150l9-11l9 11l9-11l9 11'/%3E %3Cpath d='M128 150c-7-9-20-2-11 9l11 10l11-10c9-11-4-18-11-9z'/%3E %3Cpath d='M198 176l-9 14h10l-7 14'/%3E %3Cpath d='M84 214q1 6 7 7q-6 1-7 7q-1-6-7-7q6-1 7-7z'/%3E %3Cpath d='M62 90a9 9 0 1 1 9 9'/%3E %3C/svg%3E");
+      --art-size: 240px 240px;
     }
   }
+
+  /* Drawn type: each theme shows the drawing in its own face (data-face, lib/outline.ts). */
+  :root:not([data-theme]) [data-face]:not([data-face="pencil"]),
+  :root[data-theme="glassy"] [data-face]:not([data-face="glassy"]),
+  :root[data-theme="mono"] [data-face]:not([data-face="mono"]),
+  :root[data-theme="cartoon"] [data-face]:not([data-face="cartoon"]) { display: none !important; }
 
   /* On paper it is always paper: printed pages take Pencil's light colours, whatever the screen's theme. */
   @media print {

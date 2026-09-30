@@ -140,16 +140,16 @@
         <Seg bind:value={lab.mode} options={[{ value: "design", label: "Response · bounce" }, { value: "physics", label: "k · c · m" }]} label="Parameters" />
       </Field>
       {#if lab.mode === "design"}
-        <Slider label="Response" value={+design.response.toFixed(3)} min={0.08} max={2} step={0.01} unit="s" link="0.easing" hint="≈ one oscillation; lower is snappier" onchange={(v) => setDesign("response", v)} />
-        <Slider label="Bounce" value={+design.bounce.toFixed(3)} min={-0.6} max={0.9} step={0.01} link="0.easing" hint="0 = no overshoot · < 0 = overdamped" onchange={(v) => setDesign("bounce", v)} />
+        <Slider label="Response" value={+design.response.toFixed(3)} min={0.08} max={2} step={0.01} unit="s" link="0.easing" hint="time of one swing; lower is snappier" onchange={(v) => setDesign("response", v)} />
+        <Slider label="Bounce" value={+design.bounce.toFixed(3)} min={-0.6} max={0.9} step={0.01} link="0.easing" hint="0 = no overshoot · above bounces · below 0 creeps in (overdamped)" onchange={(v) => setDesign("bounce", v)} />
       {:else}
-        <Slider label="Stiffness k" value={e.stiffness} min={1} max={1000} step={1} link="0.easing.stiffness" onchange={(v) => setPhysics("stiffness", v)} />
-        <Slider label="Damping c" value={e.damping} min={0} max={100} step={0.5} link="0.easing.damping" onchange={(v) => setPhysics("damping", v)} />
-        <Slider label="Mass m" value={e.mass} min={0.1} max={10} step={0.1} link="0.easing.mass" onchange={(v) => setPhysics("mass", v)} />
+        <Slider label="Stiffness k" value={e.stiffness} min={1} max={1000} step={1} link="0.easing.stiffness" hint="how hard it pulls toward the target; higher is faster" onchange={(v) => setPhysics("stiffness", v)} />
+        <Slider label="Damping c" value={e.damping} min={0} max={100} step={0.5} link="0.easing.damping" hint="drag that removes speed; lower bounces more" onchange={(v) => setPhysics("damping", v)} />
+        <Slider label="Mass m" value={e.mass} min={0.1} max={10} step={0.1} link="0.easing.mass" hint="inertia; heavier is slower to start and to stop" onchange={(v) => setPhysics("mass", v)} />
       {/if}
     </div>
     <div class="param-group readouts mono">
-      <span><span class="k">ζ</span> <b>{zeta.toFixed(2)}</b> · {character}</span>
+      <span><span class="k">ζ damping</span> <b>{zeta.toFixed(2)}</b> · {character}</span>
       <span><span class="k">k c m</span> {e.stiffness.toFixed(0)} · {e.damping.toFixed(1)} · {e.mass.toFixed(1)}</span>
       <span><span class="k">response</span> {design.response.toFixed(2)}s · <span class="k">bounce</span> {design.bounce.toFixed(2)}</span>
       <span><span class="k">settles in</span> <b>{Math.round(resolved.duration)}ms</b></span>

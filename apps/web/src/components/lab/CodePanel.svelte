@@ -339,14 +339,14 @@
          Bound to the knobs is how it starts, and says nothing; only a change from that is shown. -->
     <span class="status smallcaps" data-status={status} aria-live="polite">
       {#key status}<span data-motion="fade">
-        {#if status === "edited"}Edited · numbers still bound
-        {:else if status === "detached"}Detached · runs as written{/if}
+        {#if status === "edited"}Edited · sliders still drive numbers
+        {:else if status === "detached"}Detached · sliders off, runs as written{/if}
       </span>{/key}
     </span>
     <span class="foot-actions">
       {#if status !== "synced"}<button class="btn ghost small" type="button" onclick={reset} data-motion="fade">Reset</button>{/if}
       {#if onrun}
-        <button class="btn small" type="button" aria-pressed={running} onclick={onrun} title="Run this code in a sandboxed browser stage and measure it">
+        <button class="btn small" type="button" aria-pressed={running} onclick={onrun} title="Run this code in a real browser stage and measure it. Model returns to the drawn graph">
           {#key running}<span data-motion="fade">{running ? "Model" : "Run in browser"}</span>{/key}
         </button>
       {/if}

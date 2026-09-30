@@ -29,9 +29,9 @@ export const revealLab = {
   },
 };
 
-A chart that changes is really two charts: before and after. Cut from one to the other and the reader has to compare them from memory, bar by bar, to find out what happened. Animate the change and the eye does the comparing. It follows each bar to its new place and sees how far it went. Here motion isn't decoration. It's the explanation.
+A chart that changes is really two charts: before and after. Cut from one to the other and the reader has to compare them from memory, bar by bar, to find out what happened. Animate the change and the eye does the comparing. It follows each bar to its new place and sees how far it went. Here motion is not decoration. It is the explanation.
 
-That only works if the motion tells the truth. A bar that slides has to be the same datum it was before. A bar that grows has to stop at its value. The labels have to wait until there's something still enough to read. Every chart in this chapter uses one small dataset, and it is invented: twelve kinds of tree, each with a made-up score for 2023 and 2024, in three groups called North, South and West. No real claim hangs on it.
+In [chapter 10](/chapters/10-object-permanence) you kept one element recognisably the same element while it changed place (object permanence). A chart asks that of every bar, and adds a second demand: the motion has to tell the truth. A bar that slides has to be the same datum it was before. A bar that grows has to stop at its value. The labels have to wait until there's something still enough to read. Every chart in this chapter uses one small dataset, and it is invented: twelve kinds of tree, each with a made-up score for 2023 and 2024, in three groups called North, South and West. No real claim hangs on it.
 
 <Beat kind="see">A year passes</Beat>
 
@@ -43,11 +43,11 @@ The chart shows the twelve trees sorted by their 2023 score. Then a year passes:
 
 Hazel's bar grew and slid all the way to the front, past three others. You didn't have to compare two charts to see that. You watched it happen. Follow any other bar and it tells its own story: one climbs from the back half into the leaders, another slips back. Only when everything had stopped did the values appear on top.
 
-Now try **Go to**. *North only* drops every tree outside one group, and Hazel's bar leaves with them. *By group* brings them all back, gathered by group. Whatever the chart does, each bar stays one tree from start to end.
+Now try **Go to**, which picks the next state to move to. *North only* drops every tree outside one group, and Hazel's bar leaves with them. *By group* brings them all back, gathered by group. Notice the bars that leave sink and the ones that return rise: the next section explains why. Whatever the chart does, each bar stays one tree from start to end.
 
 <Beat kind="feel">Which chart kept it?</Beat>
 
-Here is the same change again: the same trees, the same two years, the same chart at the start and at the end. Only the code that moves between them is different. Follow the red bar here, at 0.25× if it helps, then scroll back and follow it in figure 23.1.
+Here is the same change again: the same trees, the same two years, the same chart at the start and at the end. Only the code that moves between them is different. Replay it and follow the red bar (Hazel) with your eyes, not the heights. Follow the red bar here, at 0.25× if it helps, then scroll back and follow it in figure 23.1.
 
 <Lab id="data-stage" extra={{ from: "by-value", to: "2024", keying: "index", staging: "together", stagger: 0 }} />
 
@@ -69,12 +69,12 @@ Both charts end right. Only one has an honest middle, and the middle is what the
   <p>Gapminder's bubble chart (gapminder.org/tools) plays decades of country data as motion. Each country stays one bubble, in its region's colour, as the years go by, so you can follow a single country through its history. Hans Rosling made it famous in his 2006 TED talk, <i>The best stats you've ever seen</i>.</p>
 </Margin>
 
-The difference is one decision: how each bar on screen is matched to a datum in the new state. Figure 23.1 matches by *key*: for each tree, find the bar that was that tree's, and move it. The other chart matches by *position*: the fourth bar becomes whatever is fourth now. Position is what naive code does by default. Loop over the new rows and reuse element *i*; write `key={index}` in React, or an `{#each}` block without a key in Svelte; call `selection.data(rows)` in D3 without a key function. The last frame is always right, so the bug only shows in the motion.
+The difference is one decision: how each bar on screen is matched to a datum in the new state. Figure 23.1 matches by *key*: for each tree, find the bar that was that tree's, and move it. The other chart matches by *position*: the fourth bar becomes whatever is fourth now. *Key* means a stable id that belongs to the datum (here the tree's name), not to its place on screen. Position is what naive code does by default. Loop over the new rows and reuse element *i*; write `key={index}` in React, or an `{#each}` block without a key in Svelte; call `selection.data(rows)` in D3 without a key function. The last frame is always right, so the bug only shows in the motion.
 
 In a chart of years, the rule reads: the bar for 2024 is the bar for 2024, in every state. Sort the chart and that bar moves to its rank. It's never replaced by whichever bar lands in its old slot.
 
 <Margin kind="read">
-  <p>Mike Bostock's essay <i>Object Constancy</i> (2012) makes this case for D3, with a bar chart whose bars are joined to their data by a key.</p>
+  <p>Mike Bostock's essay <i>Object Constancy</i> (2012) makes this case for D3: join elements to data with a key function, so a change moves the same element instead of reusing a slot.</p>
 </Margin>
 
 When two states don't hold the same data, each datum is in one of three cases, and each case needs its own motion:
@@ -116,19 +116,19 @@ A chart that appears all at once hands the reader everything at the same moment,
   <Choreo tracks={reveal} />
 </Figure>
 
-Each row on the stage stands for one layer of a chart. Read the sheet under them. The axis starts first, and the bars start before it has finished: the ruler only has to be mostly there. The bars rise together, as one track, not twelve. The values wait until the bars have landed. Then comes a gap where nothing moves, before the note. That gap is where the reader looks at the chart, so the note that follows confirms what they have just seen, instead of telling them what to see before they've seen it. The whole reveal takes under a second and a half, and it happens once per chart.
+Each row on the stage stands for one layer of a chart. Read the sheet under them. The axis starts first, and the bars start before it has finished: the ruler only has to be mostly there. The bars rise together, as one track, not twelve. The values wait until the bars have landed. Then comes a gap where nothing moves, before the note. That gap is where the reader looks at the chart, so the note that follows confirms what they have just seen, instead of telling them what to see before they've seen it. The whole reveal takes under a second and a half, and it happens once per chart. The numbers are choices you can change. The bars start at `200ms`, when the `280ms` axis is mostly drawn. They run `480ms`, this site's slowest duration, because a chart is seen once. The values wait until `760ms` (200 + 480 + a beat), and the note until `1100ms`. Without the gap, the note would land on top of the values while the eye is still reading them.
 
 This site stages its own plots the same way. As a curve plot scrolls into view ([figure 3.2](/chapters/03-spacing#fig-3-2) is one), its axes draw first, then the blue ghosts fade in, then the red key lands.
 
 <Margin kind="read">
-  <p>Jeffrey Heer and George Robertson's paper <i>Animated Transitions in Statistical Data Graphics</i> (2007) sets out design guidelines for chart transitions. Two of them: stage complex transitions, and make transitions as long as needed, but no longer.</p>
+  <p>Jeffrey Heer and George Robertson's paper <i>Animated Transitions in Statistical Data Graphics</i> (2007) proposes design principles for chart transitions and tests them with viewers. One of its findings: a complex transition is easier to follow when it is staged in steps.</p>
 </Margin>
 
 The same order works for a change. Figure 23.1 moved everything at once, which is fine while every bar stays. When bars leave and arrive as well, stage it like a scene change: clear what's leaving, then move what stays, then bring on what's new. Each step then has one kind of motion, and the eye can follow each in turn. The Data stage calls this *Exit · move · enter*, and you'll try it in the Tune beat below.
 
 <Beat kind="more">Labels land on the settle</Beat>
 
-The eye can't read a moving number. While a bar travels, the eye is busy tracking it, and a label riding along is a blur competing for the same attention. Reading starts when the motion stops, so that's where the words go.
+A moving number is hard to read. While a bar travels, the eye is busy tracking it, and a label riding along is a blur competing for the same attention. Reading starts when the motion stops, so that's where the words go.
 
 - **Values wait for the settle.** In figure 23.1 the numbers appear only after every bar has stopped, with a quick fade. When the next change begins, they go first. A label must never point at a place its bar has already left.
 - **Names can travel.** A name under a bar is how you follow it, so it moves with its bar. It identifies the mark; nobody needs to read it mid-flight.
@@ -139,13 +139,13 @@ In code this is one wait: gather a transition's animations, wait for every one o
 
 <Beat kind="more">Numbers that change</Beat>
 
-Numbers in an infographic change too: a total, a share, the score of the tree you picked. There are three ways to change one. Press **New value** a few times.
+Numbers in an infographic change too: a total, a share, the score of the tree you picked. There are three ways to change one: switch instantly, count through the numbers in between, or roll only the digits that changed. Press **New value** a few times and compare how quickly you can read the result in each.
 
 <Figure n="23.3" caption="One number, three ways to change it">
   <Count from={1184} values={[1171, 9806, 4580, 1184]} />
 </Figure>
 
-Now untick **Tabular numerals** and press it again. In most fonts the digits have different widths: a 1 is narrow, an 8 is wide. So a counting number keeps changing width, and anything beside it shuffles on every frame. *Tabular* figures give every digit the same width. In CSS it's `font-variant-numeric: tabular-nums`, if the font has them. Use them wherever a number changes in place: counters, timers, prices, table columns, axis ticks.
+Now untick **Tabular numerals** and press it again. In many fonts the digits have different widths: a 1 is narrow, an 8 is wide. So a counting number keeps changing width, and anything beside it shuffles on every frame. *Tabular* figures give every digit the same width. In CSS it's `font-variant-numeric: tabular-nums`, if the font has them. Use them wherever a number changes in place: counters, timers, prices, table columns, axis ticks.
 
 Which of the three to use:
 
@@ -159,8 +159,8 @@ Never let a count overshoot. A count that passes its target and comes back shows
 
 In a chart, motion is read as data. A bar's length is its value, so every frame's lengths had better be values too. Four common ways to break that:
 
-- **Overshoot.** Put a bouncy spring or a "back" curve on a bar and it grows past its value, then comes back. For a moment the chart shows a number that isn't in the data: Hazel's bar passes 88, then settles back. In [chapter 05](/chapters/05-springs) a bounce said a thing had momentum. Data has no momentum. Use curves that stay between the start and the end, like ease-in-out, or a spring with no bounce.
-- **Out of step.** If every bar shares one clock and one curve, every frame is the true chart, scaled, and the ratios between bars never change. Give each bar its own delay or its own duration and the frames in between rank them wrong: a short bar that started early stands taller than a long one that hasn't started yet. Worst is growing every bar at the same *speed*, so that bigger values take longer: until the shortest bar stops, every bar is the same height. Keep a stagger between bars to a frame or two ([chapter 08](/chapters/08-stagger-and-hierarchy)), or leave it out.
+- **Overshoot.** Put a bouncy spring or a "back" curve on a bar and it grows past its value, then comes back. For a moment the chart shows a number that isn't in the data: Hazel's bar passes 88, then settles back. In [chapter 5](/chapters/05-springs) a bounce said a thing had momentum. Data has no momentum. Use curves that stay between the start and the end, like ease-in-out, or a spring with no bounce.
+- **Out of step.** If every bar shares one clock and one curve, every frame is the true chart, scaled, and the ratios between bars never change. Give each bar its own delay or its own duration and the frames in between rank them wrong: a short bar that started early stands taller than a long one that hasn't started yet. Worst is growing every bar at the same *speed*, so that bigger values take longer: until the shortest bar stops, every bar is the same height. Keep a stagger between bars to a frame or two ([chapter 8](/chapters/08-stagger-and-hierarchy)), or leave it out.
 - **A moving ruler.** A bar's length is its value only if the axis starts at zero and stays put. Truncate the axis and small differences look huge. Change it during a move and every bar grows or shrinks, though no value did. The Data stage fixes its axis at the largest value in either year, so a bar changes length only when its value does. If the axis has to change, move its ticks on the same clock as the bars, so the reader sees the ruler change, not the data.
 - **Depth.** Perspective makes near things look bigger. Tilt a pie chart into 3D and the slices at the front look larger than their share. Spin it and every slice grows and shrinks as it comes round. Keep data flat and face-on.
 
@@ -172,7 +172,7 @@ A longer story can be told in steps. The chart stays pinned in view with `positi
 
 - **Trigger the changes.** When a step arrives, play its transition on the clock, at a speed that reads well. A chart scrubbed halfway between two states shows values nobody measured, and half a sort is a heap of overlapping bars. If the reader stops there, the chart in front of them is false.
 - **Scrub only a position in the data.** A line that draws itself along its time axis as you read can follow the scroll, because every frame shows part of the true line, up to a point in time. It's a progress bar made of data: a line-drawing animation on a scroll timeline instead of the clock.
-- **Tie each step to a state, not to an animation.** Scroll back up a step and the chart goes back to that step's state. Flick past three steps and it goes straight to the last one, from wherever its bars are, not through all three in a queue.
+- **Tie each step to a state, not to an animation.** Scroll back up a step and the chart goes back to that step's state. Flick past three steps and the chart heads for the last one from wherever its bars are, instead of queueing all three moves.
 - **Give each change room.** Space the steps so a transition has finished well before the next paragraph arrives, and don't pin the chart for longer than its story. The reader holds the scroll. Don't take it back.
 
 <Margin kind="read">
@@ -188,12 +188,12 @@ An SVG chart is made of elements: each bar is a `<rect>` in the page. A canvas c
 | | SVG | Canvas |
 |---|---|---|
 | A mark is | an element in the page | pixels in a picture |
-| Many marks | each costs memory, style and layout work; a thousand or so moving marks start to drop frames | cheap to repaint: thousands of marks per frame |
+| Many marks | each costs memory, style and layout work; many hundreds to a few thousand moving marks can start to drop frames, depending on the machine | cheap to repaint: thousands of marks per frame |
 | Hit-testing | free: every mark gets its own events and hover | yours: work out which mark is under the pointer |
 | Crispness | vector, sharp at any zoom | a bitmap: scale it by `devicePixelRatio` or it blurs on sharp screens |
 | Text and access | real text; each mark can carry a label for screen readers | pixels only: add a table or a description |
 
-Try it in the Data stage below: set **Draw with** to *Canvas*. The chart looks the same. Now click a bar: nothing happens. The canvas doesn't know it has bars. In SVG the browser works out which bar you clicked; on a canvas, you do. For bars, turn the pointer's x back into a band: a band scale has no `invert()`, but its `step()` says how wide each band is. For scattered points, keep them in a quadtree: `find()` in d3-quadtree returns the point nearest to a position.
+Try it in the Data stage below: set **Draw with** to *Canvas*. The chart looks the same. Now click a bar: nothing happens. The canvas doesn't know it has bars. In SVG the browser works out which bar you clicked; on a canvas, you do. For bars, turn the pointer's x back into a band: a band scale has no `invert()`, but its `step()` says how wide each band is, so `Math.floor(x / scale.step())` is the index of the bar under the pointer (close enough, ignoring the padding gap). For scattered points, keep them in a quadtree: `find()` in d3-quadtree returns the point nearest to a position.
 
 A rough rule: SVG for hundreds of marks, Canvas for thousands that move. Many charts use both, with the marks on a canvas for speed and the axes and labels in SVG or HTML on top, where text stays crisp and readable. The maths doesn't change. The generators in d3-shape even draw straight onto a canvas: give one `.context(ctx)` and it calls the canvas's path methods, `moveTo`, `lineTo` and the rest, instead of returning a string.
 
@@ -318,11 +318,12 @@ import { scaleBand, scaleLinear } from 'd3-scale';
 const chart = document.querySelector('.chart');
 const bars = new Map(); // datum id → its bar. The key is the datum, not the slot.
 
-// Reduced motion: every duration is 0, so each change is a cut.
+// Reduced motion: every duration is 0, so each move is a cut.
+// (The value labels still fade in; a fade in place is not travel.)
 const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
-const EXIT = still ? 0 : 240;
-const MOVE = still ? 0 : 600;
-const ENTER = still ? 0 : 480;
+const EXIT = still ? 0 : 240;   // ms: leaving needs the least attention
+const MOVE = still ? 0 : 600;   // ms: the longest step, the one the eye follows
+const ENTER = still ? 0 : 480;  // ms: arrivals get a little more time than exits
 
 // rows: the new state, in order. max: the same in every state,
 // so a bar changes length only when its value does.
@@ -350,12 +351,12 @@ async function update(rows, max) {
     }).finished.then(() => bar.remove());
   }
 
-  // First: where each remaining bar is now, even halfway through a move.
+  // This is FLIP (chapter 10). First: where each remaining bar is now, even halfway through a move.
   const first = new Map([...bars].map(([id, bar]) => [id, bar.getBoundingClientRect()]));
   const moveAt = exits ? EXIT : 0;
   const enterAt = moveAt + (first.size ? MOVE : 0);
 
-  // Last: every bar where its datum belongs. A new datum gets a new bar.
+  // Last: every bar at its new size and place. A new datum gets a new bar.
   for (const d of rows) {
     let bar = bars.get(d.id);
     if (!bar) {
@@ -383,6 +384,7 @@ async function update(rows, max) {
       });
     }
     const now = bar.getBoundingClientRect();
+    // Invert: draw the bar where it was (shift and scale it back)...
     const dx = was.left - now.left;
     const sx = was.width / now.width;
     const sy = was.height / (now.height || 1);
@@ -480,6 +482,7 @@ const io = new IntersectionObserver((entries) => {
   }
 }, {
   // A band across the middle of the view: a step is "on" while it's in it.
+  // -45% cuts 45% off the top and bottom, leaving a strip 10% tall.
   rootMargin: '-45% 0px -45% 0px',
 });
 
@@ -489,9 +492,11 @@ steps.forEach((step) => io.observe(step));
 </Snippet>
 </div>
 
-Three details carry the keyed bars. The `Map` from id to element is the object constancy: each datum finds its own bar, whatever slot it lands in. The moves measure every bar *before* touching anything, so a change that arrives mid-move starts from where the bars really are. And `fill: 'backwards'` holds each bar on its first frame while it waits for its turn; without it, a waiting bar would jump to its new place and then jump back to start the move.
+Three details carry the keyed bars, and the pause between the three steps (exit, move, enter) comes from the `delay` values, `moveAt` and `enterAt`. The `Map` from id to element is the object constancy: each datum finds its own bar, whatever slot it lands in. The moves measure every bar *before* touching anything, so a change that arrives mid-move starts from where the bars really are. And `fill: 'backwards'` holds each bar on its first frame while it waits for its turn; without it, a waiting bar would jump to its new place and then jump back to start the move.
 
 The line never tweens its `d` string. It tweens twelve numbers, and asks the same scales and the same `line()` for a new path every frame, so each frame is a real line chart of real in-between values.
+
+Everything above is a choice about duration, curve and order that you will want to make once and reuse. Chapter 24 is about where such choices live so that the next chart, and the next person, inherit them.
 
 <Beat kind="drill">Which transition lies?</Beat>
 

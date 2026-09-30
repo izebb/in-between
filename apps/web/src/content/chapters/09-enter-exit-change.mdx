@@ -3,9 +3,9 @@ number: 9
 lede: "An entrance asks for attention and an exit hands it back, so they are never the same motion run backwards."
 ---
 
-Most interface motion is one of three events. Something arrives: a menu, a toast, a dialog. Something leaves. Or something stays and changes: a switch flips, a tab is chosen, a card opens. Each is a different job, and each has its own shape.
+Chapter 8 ordered things that arrive together. This chapter takes one thing at a time. Most interface motion is one of three events. Something arrives: a menu, a toast, a dialog. Something leaves. Or something stays and changes: a switch flips, a tab is chosen, a card opens. Each is a different job, and each has its own shape.
 
-An arrival is news. It tells you something is here, and where, so it deserves a moment. A departure only confirms what you already asked for. You have moved on, so it should be quick. And both should say where the thing lives: it came from somewhere, and it goes back there.
+Chapter 3 gave you the two curves, ease-out for arrivals and ease-in for departures. Here is why. An arrival is news. It tells you something is here, and where, so it deserves a moment. A departure only confirms what you already asked for. You have moved on, so it should be quick. And both should say where the thing lives: it came from somewhere, and it goes back there.
 
 <Beat kind="see">Four arrivals, four departures</Beat>
 
@@ -45,7 +45,7 @@ Now the numbers. An entrance is news, and the eye needs a moment to find the new
 An exit is a receipt. The user closed the dialog or dismissed the toast, and their attention is already on what is underneath. So the exit is shorter, and it accelerates. It starts gently, so you can see which thing is leaving, and it is fastest at the moment it disappears. That is ease-in. It can travel less than the enter did, or only fade: a hint of direction is enough.
 
 <Margin kind="note">
-  <p>Material Design names the same pair: things entering the screen use <i>decelerated</i> easing, things leaving use <i>accelerated</i> easing. Its accelerated curve is <code>cubic-bezier(0.4, 0, 1, 1)</code>, the same curve as this site's <code>--ease-in</code>.</p>
+  <p>Material Design's original guidelines name the same pair: things entering the screen use <i>decelerated</i> easing, things leaving use <i>accelerated</i> easing. Its accelerated curve is <code>cubic-bezier(0.4, 0, 1, 1)</code>, the same curve as this site's <code>--ease-in</code>.</p>
 </Margin>
 
 This site's tokens are built on that asymmetry. Every duration has an exit twin at 0.7× the time, named with `-exit` on the end, and enters and exits get opposite curves.
@@ -60,7 +60,7 @@ This site's tokens are built on that asymmetry. Every duration has an exit twin 
 
 So a panel enters over `--dur-base`, 280ms, and leaves over `--dur-base-exit`, 196ms. It arrives on `--ease-out`, `cubic-bezier(.2, .8, .2, 1)`, and leaves on `--ease-in`, `cubic-bezier(.4, 0, 1, 1)`.
 
-There is nothing magic about 0.7. The rule is the direction: an exit is shorter than its enter, never longer.
+Nothing is special about 0.7. It is a rule of thumb that lands an exit visibly quicker without making it a blink; 0.6 or 0.8 would work. The rule is the direction: an exit is shorter than its enter, never longer.
 
 <Figure n="9.2" caption="An enter and two exits on one clock">
   <SpacingChart rows={[
@@ -146,7 +146,7 @@ The panel above really is toggled with the `hidden` attribute, and its CSS is be
 
 That works because a transition always takes its timing from the state it is going *to*. Opening moves toward the open rule, so the open rule holds the enter's timing. Closing moves toward the closed rule, so the closed rule holds the exit's. Asymmetry in CSS is just two rules with two timings.
 
-A popover or a modal `<dialog>` sits in the top layer, above the rest of the page, and closing it takes it out of the top layer at once. Add `overlay` to the transition, with `allow-discrete` too, and it stays on top until its exit has finished. This site's View menu, at the top right, is a popover built this way: open it and close it and you will see the asymmetry. Where these features are missing, the element still shows and hides. It just doesn't animate.
+A popover or a modal `<dialog>` sits in the top layer, above the rest of the page, and closing it takes it out of the top layer at once. Add `overlay` to the transition, with `allow-discrete` too, and it stays on top until its exit has finished. This site's View menu, at the top right, is a popover built this way: open it and close it and you will see the asymmetry. `@starting-style` and `allow-discrete` work in every current major browser; Firefox was the last to ship them, in 2024. `overlay` is newer and not yet in every browser. Without it the popover still fades, but it leaves the top layer at once and may slip behind other content mid-exit. In a browser with none of these, the element still shows and hides. It just doesn't animate.
 
 <Beat kind="tune">Design an exit</Beat>
 
@@ -179,7 +179,7 @@ In CSS, put the enter's timing on the open state and the exit's on the closed st
 .menu {
   transform-origin: top left;               /* the corner at the button */
   opacity: 0;
-  scale: 0.95;
+  scale: 0.95;  /* a small start: enough to read as growing, not a zoom */
   /* Closing: quick, accelerating away. */
   transition:
     opacity var(--dur-quick-exit) var(--ease-in),
@@ -224,6 +224,8 @@ function showToast(toast) {
 
 async function dismissToast(toast) {
   toast.inert = true; // it's leaving: no more clicks or focus
+  // fill: 'forwards' holds the last frame (invisible) until we remove it,
+  // so it can't flash back for a frame after the animation ends.
   const exit = toast.animate([inPlace, below], { ...EXIT, fill: 'forwards' });
   try {
     await exit.finished;
@@ -236,6 +238,8 @@ async function dismissToast(toast) {
 
 </Snippet>
 </div>
+
+Everything here brings one thing on, takes it off, or changes it where it stands. When a thing changes *place*, like a thumbnail that becomes a full page, the exit-then-enter lie comes back. [Chapter 10](/chapters/10-object-permanence) fixes it with FLIP and View Transitions.
 
 <Beat kind="drill">Blind A/B: enter and exit</Beat>
 

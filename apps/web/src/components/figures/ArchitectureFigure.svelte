@@ -108,7 +108,7 @@
         <li><b>Reduced motion</b> · reduce, don't remove. Right now: <span class="mono">{prefs.reduced || prefersReducedMotion() ? "reduced" : "full"}</span>. Distances drop to 0px, so every rise becomes a fade.</li>
         <li><b>Frequency budget</b> · seen constantly → <span class="mono">{frequencyBudget.constant.maxDuration}</span>; frequent → <span class="mono">{frequencyBudget.frequent.maxDuration}</span>; occasional → <span class="mono">{frequencyBudget.occasional.maxDuration}</span>; rare → <span class="mono">{frequencyBudget.rare.maxDuration}</span>.</li>
         <li><b>Interruption contract</b> · every primitive declares retarget, reverse, finish or queue.</li>
-        <li><b>Concurrency</b> · at most <span class="mono">{MAX_CONCURRENT_UI}</span> UI animations at once; figures are content and exempt.</li>
+        <li><b>Concurrency budget</b> · at most <span class="mono">{MAX_CONCURRENT_UI}</span> UI animations at once; figures are content and exempt.</li>
         <li><b>No ad-hoc values</b> · <span class="mono">scripts/check-motion-tokens.mjs</span> fails the build on a raw duration or curve in any style.</li>
       </ul>
     {/if}

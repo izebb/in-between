@@ -9,7 +9,7 @@
   import { drills, drillOrder, drillNames, sessionMeasure } from "~/lib/drills";
   import { chapterByNumber, pad2, type DrillId } from "~/lib/curriculum";
   import { allSessions, chaptersRead, clearSessions, type DrillSession } from "~/lib/store";
-  import type { Numeral } from "~/lib/outline";
+  import type { Face, Numeral } from "~/lib/outline";
   import { play, collapse } from "~/motion/primitives";
   import { duration } from "~/motion/tokens";
   import OutlineNum from "~/components/ui/OutlineNum.svelte";
@@ -17,7 +17,7 @@
   import Calibration from "./Calibration.svelte";
 
   /** Each drill's number, outlined by the page at build time. */
-  let { numerals }: { numerals: Record<string, Numeral> } = $props();
+  let { numerals }: { numerals: Record<string, Record<Face, Numeral>> } = $props();
 
   let sessions = $state<DrillSession[]>([]);
   let read = $state<number[]>([]);

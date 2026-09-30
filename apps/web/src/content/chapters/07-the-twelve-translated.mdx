@@ -40,17 +40,17 @@ export const followThrough = { // the follow-through snippet, for "Open in Lab"
 
 The animators at Disney's studio worked out, film by film, why some drawings seem alive and others merely move. Two of them, Frank Thomas and Ollie Johnston, set it down as twelve principles in *The Illusion of Life*.
 
-The principles were written for hand-drawn characters. An interface has none. But it is watched by the same eye, and the eye asks a button the questions it asks a bouncing ball: what is it made of, where is it going, where should I look? You have met some of the twelve already in this course. This chapter translates all of them.
+The principles were written for hand-drawn characters. An interface has none. But it is watched by the same eye, and the eye asks a button the questions it asks a bouncing ball: what is it made of, where is it going, where should I look? You have met several of the twelve already under other names: timing in chapter 2, slow in and slow out in chapter 3, the squash in chapter 4, the overshoot in chapter 5. This chapter translates all twelve. For each one it says what the animators meant in film, what that becomes in an interface, and what you write in code.
 
 <Beat kind="see">Twelve clips</Beat>
 
-One small interface clip per principle, in the book's order. Hover a clip, or focus it, to play it. Watch each one for what it tells you.
+One small interface clip per principle, in the book's order. Hover a clip, or focus it, to play it. Don't try to name them yet: watch what each clip makes you notice (a dip before a move, a lag, a shadow that grows), then check your guesses against the list below.
 
 <Figure n="7.1" caption="The twelve principles as interface clips">
   <Principles />
 </Figure>
 
-Two of them are old friends under new names. Slow in and slow out is easing. Timing is duration. The rest are things you have felt in good interfaces without naming them: rows that arrive just after their panel, a chevron that turns as a drawer opens, a card that pulls back before it flies.
+Two of them are old friends under new names: slow in and slow out is easing, and timing is duration. The rest are things you have felt in good interfaces without naming them: rows that arrive just after their panel, a chevron that turns as a drawer opens, a card that pulls back before it flies.
 
 <Beat kind="feel">Which list is alive?</Beat>
 
@@ -67,7 +67,7 @@ Two of them are old friends under new names. Slow in and slow out is easing. Tim
 
 <Beat kind="more">The twelve, one at a time</Beat>
 
-Each principle below starts with its job in an interface. Where a chapter covers it in depth, follow the link.
+Each principle below has the same three parts: what it is in film, what it does in an interface, and the code. Where a chapter covers it in depth, follow the link. A few need only a line or two of CSS, and those are given here. The four that need more are in the snippets at the end.
 
 <Margin kind="wild">
   <p>On iOS, drag a list past its top or bottom and it keeps following your finger, but more and more reluctantly. Let go and it springs back. The edge behaves like elastic.</p>
@@ -75,21 +75,38 @@ Each principle below starts with its job in an interface. Where a chapter covers
 
 ### 01 · Squash & stretch
 
-Press states and stretchy edges. A button that flattens a little under your finger says it is soft, and that it felt the press. Keep its volume: as it gets shorter it should get wider by about as much, or it reads as shrinking, not squashing. The ball in [chapter 04](/chapters/04-weight) squashes at the floor for the same reason: contact shows what a thing is made of.
+**In film:** a bouncing ball flattens where it hits the floor and stretches long while it is falling fast. A stiff ball changes little and a soft one changes a lot, so the drawing shows what it is made of. Its volume never changes: shorter means wider.
+
+**In an interface:** press states and stretchy edges. A button that flattens a little under your finger says it is soft, and that it felt the press. Keep the volume: if it gets 5% shorter it should get about 5% wider, or it reads as shrinking, not squashing. The ball in [chapter 4](/chapters/04-weight) squashes at the floor for the same reason.
+
+**In code:** `transform: scale(1.05, .95)` on `:active`. The snippet at the end has the full version.
 
 ### 02 · Anticipation
 
-A small move the other way before a big one: a card pulls back a little before it is thrown off the screen. The wind-up tells the eye where to look, so the move itself isn't missed. It needs the thing to be on screen already, so it belongs to exits and throws, never to entrances. Hover is anticipation too: a button that responds as the pointer arrives makes the click the end of a move already begun.
+**In film:** before a character jumps, it crouches. Before a punch, the arm goes back. The small move the other way tells the audience what is about to happen, so the big move is not missed.
+
+**In an interface:** a card pulls back a little before it is thrown off the screen. It needs the thing to be on screen already, so it belongs to exits and throws, not to entrances. Hover is anticipation too: a button that responds as the pointer arrives makes the click the end of a move already begun.
+
+**In code:** an easing curve whose progress dips below zero first, as in the next figure. The snippet at the end applies it to an exit.
 
 <Figure n="7.2" caption="Anticipation as a curve that dips below zero">
   <CurvePlot easing="cubic-bezier(.36,0,.66,-.56)" compare="ease-in" duration={500} label="wind-up" compareLabel="ease-in" />
 </Figure>
 
-The solid curve is `cubic-bezier(.36, 0, .66, -.56)`; the blue dashed one is plain ease-in. The solid curve's second handle sits below the floor, so progress dips to about −10% before it climbs: the object backs up first. It spends almost two-thirds of its time winding up and returning to the start. All of the forward travel happens in the last third, and it arrives at 4.6 times the speed of linear motion. That is the cost of anticipation. It takes time, so keep it small and save it for moves big enough to need a warning.
+The solid curve is `cubic-bezier(.36, 0, .66, -.56)`; the blue dashed one is plain ease-in. Its last number, `-.56`, is the second handle's height. It sits below the floor, so progress dips to about −10% before it climbs: the object backs up first. It spends almost two-thirds of its time winding up and returning to the start. All of the forward travel happens in the last third, and it arrives at 4.6 times the speed of linear motion (a steady pace over the same time). That is the cost of anticipation. It takes time, so keep it small and save it for moves big enough to need a warning.
 
 ### 03 · Staging
 
-One thing moves at a time, and everything else makes room for it. A dialog opens and the page behind it dims and holds still, so the eye has nowhere else to go. When two things must move together, let one lead and the other follow, so there is still one place to look. A screen where everything moves at once has no subject.
+**In film:** the frame is arranged so the audience looks at the one thing that matters. Everything else is quiet, dark or out of focus.
+
+**In an interface:** one thing moves at a time, and everything else makes room for it. A dialog opens and the page behind it dims and holds still, so the eye has nowhere else to go. When two things must move together, let one lead and the other follow, so there is still one place to look. A screen where everything moves at once has no subject.
+
+**In code:** dim and freeze what is not the subject.
+
+```css
+dialog::backdrop { background: rgb(0 0 0 / .4); } /* the dimmed page */
+/* dialog.showModal() also makes the rest of the page inert: no clicks, no focus. */
+```
 
 <Margin kind="def">
   <p><b>Inbetweens.</b> The drawings between two keys. In a studio, a lead animator drew the key poses and an assistant, the inbetweener, drew the frames between them.</p>
@@ -97,11 +114,19 @@ One thing moves at a time, and everything else makes room for it. A dialog opens
 
 ### 04 · Straight-ahead & pose-to-pose
 
-Keyframed or procedural. Pose to pose, you set the key poses and something else draws the frames between them: that is every CSS transition and keyframe, and the browser is the inbetweener. Straight ahead, each frame is worked out from the one before, the way a simulation on a canvas runs, which is why it can react to a finger mid-move. [Chapter 04](/chapters/04-weight) drew the same bounce both ways: a canvas ball, straight ahead, and a set of keyframes, pose to pose.
+**In film:** two ways to draw a scene. Pose to pose: draw the important poses first (the jump's start, top and landing), then fill in between. Straight ahead: draw frame 1, then frame 2 from frame 1, and so on to the end. The first gives control over the key moments, the second gives loose, lively motion.
+
+**In an interface:** the same choice, keyframed or procedural. Pose to pose, you set the key poses and something else draws the frames between them: that is every CSS transition and keyframe, and the browser is the inbetweener. Straight ahead, each frame is worked out from the one before, the way a simulation on a canvas runs, which is why it can react to a finger mid-move. [Chapter 4](/chapters/04-weight) drew the same bounce both ways: a canvas ball, straight ahead, and a set of keyframes, pose to pose.
+
+**In code:** pose to pose is `el.animate([from, to], timing)`. Straight ahead is a loop that updates the position each frame from its current value and elapsed time `dt`, as in chapters 5 and 6.
 
 ### 05 · Follow-through & overlap
 
-Children settle after their parents. A panel slides in and stops; its rows arrive a beat later and come to rest after it. These are two ideas. Follow-through: parts keep moving after the body has stopped. Overlap: parts start and stop at different times. You felt the second one in the list above.
+**In film:** a character stops running and its coat, hair or tail swings on for a moment. Parts that hang off the body are heavier or looser than the body, so they arrive late.
+
+**In an interface:** children settle after their parents. A panel slides in and stops; its rows arrive a beat later and come to rest after it. These are two ideas. Follow-through: parts keep moving after the body has stopped. Overlap: parts start and stop at different times. You felt the second one in the list above.
+
+**In code:** a delay per child, and a curve that overshoots a little. See the last snippet.
 
 <Figure n="7.3" caption="Follow-through: the panel stops, its rows settle after">
   <Choreo layout="list" stagger={50} tracks={[
@@ -112,11 +137,15 @@ Children settle after their parents. A panel slides in and stops; its rows arriv
   ]} />
 </Figure>
 
-Read the exposure sheet under the rows. The panel's bar ends first. Each row starts 50ms after the one above it, while the panel is still moving, and ends well after the panel has stopped, on a spring that passes its place a little and settles back. Nothing stops all at once.
+The chart under the rows is an exposure sheet, the animator's timing chart: one line per moving thing, time running left to right, each bar one move from start to landing. Look for the panel's bar ending first. Each row starts 50ms after the one above it, while the panel is still moving, and ends well after the panel has stopped, on a spring that passes its place a little and settles back. Nothing stops all at once.
 
 ### 06 · Slow in & slow out
 
-Easing. Things start gently, travel, and land gently. Animators got it by putting more drawings near the keys; in CSS it is a curve. [Chapter 03](/chapters/03-spacing) is this principle in full, and most interface moves need only half of it: ease-out to arrive, ease-in to leave.
+**In film:** a moving thing takes a few frames to get going and a few to stop. Animators drew more pictures close together near the start and the end of a move and fewer in the middle.
+
+**In an interface:** easing. Things start gently, travel, and land gently. Without it, a move looks mechanical. [Chapter 3](/chapters/03-spacing) is this principle in full, and most interface moves need only half of it: ease-out to arrive, ease-in to leave.
+
+**In code:** the `transition-timing-function`, for example `cubic-bezier(.2, .8, .2, 1)`.
 
 <Margin kind="wild">
   <p>macOS can minimise a window with the Genie effect: the window narrows and pours itself into the Dock, its sides bending along curves as it goes. The other setting, Scale, simply shrinks it.</p>
@@ -124,27 +153,64 @@ Easing. Things start gently, travel, and land gently. Animators got it by puttin
 
 ### 07 · Arcs
 
-Curved paths for natural travel. A thrown ball, a swinging arm and a turning head all travel on arcs. A card that flies to a new place along a slight curve reads as tossed; along a straight line, it reads as pushed by a machine. CSS draws arcs with `offset-path`, below.
+**In film:** living things move along curves. A thrown ball, a swinging arm and a turning head all travel on arcs, and a straight path looks robotic.
+
+**In an interface:** a card that flies to a new place along a slight curve reads as tossed; along a straight line, it reads as pushed by a machine.
+
+**In code:** `offset-path`, in the first snippet below.
 
 ### 08 · Secondary action
 
-An icon reacts while a panel moves: a chevron turns as its drawer opens, a tick draws itself as a checkbox fills. The second motion supports the first, so it stays smaller and quieter than it. If it finishes long after the main move, or catches the eye first, it is competing, not supporting.
+**In film:** a character walks and, at the same time, whistles or swings a hat. The small action adds character without taking over the scene.
+
+**In an interface:** an icon reacts while a panel moves: a chevron turns as its drawer opens, a tick draws itself as a checkbox fills. The second motion supports the first, so it stays smaller and quieter than it. If it finishes long after the main move, or catches the eye first, it is competing, not supporting.
+
+**In code:** two transitions on the same trigger, the second shorter and smaller.
+
+```css
+.drawer { transition: transform 280ms cubic-bezier(.2, .8, .2, 1); }
+.drawer .chevron { transition: rotate 180ms cubic-bezier(.2, .8, .2, 1); }
+.drawer.is-open { transform: none; }
+.drawer.is-open .chevron { rotate: 180deg; } /* finishes before the drawer does */
+```
 
 ### 09 · Timing
 
-Duration as weight and importance: the same path at two durations reads as two different objects. It is the whole of [chapter 02](/chapters/02-timing).
+**In film:** how many frames a move takes. The same swing in 6 frames is a slap, and in 24 it is a slow, heavy wave.
+
+**In an interface:** duration as weight and importance: the same path at two durations reads as two different objects. A small toggle is quick and a full-screen page is slower. It is the whole of [chapter 2](/chapters/02-timing).
+
+**In code:** the number in `transition: transform 180ms`.
 
 ### 10 · Exaggeration
 
-Overshoot for delight, used sparingly. A badge that pops a little past its size and settles, a heart that swells and shrinks back when you like something: moments that deserve a little extra. [Chapter 05](/chapters/05-springs) drew the line: an overshoot is honest when something had momentum, or when the moment is a celebration. Exaggeration wears out fast. On something people see every minute, it becomes noise.
+**In film:** make the action bigger than real life so the audience gets the point. A surprised character's eyes leap out of their head; a real face would only widen a little.
+
+**In an interface:** push past the plain fact, and ration it. That usually means overshoot: a badge that pops a little past its size and settles, a heart that swells and shrinks back when you like something. These are moments that deserve a little extra. [Chapter 5](/chapters/05-springs) drew the line: an overshoot is honest when something had momentum, or as a playful confirmation. Exaggeration wears out fast. On something people see every minute, it becomes noise.
+
+**In code:** an easing whose y-values go past 1, like the one in the follow-through snippet. Try `cubic-bezier(.34, 1.56, .64, 1)`. The 1.56 is the height of the first handle: raise it for more overshoot, lower it toward 1 for none.
 
 ### 11 · Solid drawing
 
-Depth that stays consistent: scale, shadow, perspective. A card lifting toward you grows slightly, and its shadow grows larger and softer at the same time. When the cues agree, it reads as a solid object moving in space; when only one changes, it reads as a picture being resized. The same holds for turning: put `perspective` on the parent so a group of cards shares one vanishing point, and turn each one around a sensible `transform-origin`, like a menu growing from the edge next to its button, not from its own centre.
+**In film:** drawings that look like solid objects with volume and weight, drawn from believable angles, not like flat shapes.
+
+**In an interface:** depth that stays consistent: scale, shadow, perspective. A card lifting toward you grows slightly, and its shadow grows larger and softer at the same time. When the cues agree, it reads as a solid object moving in space; when only one changes, it reads as a picture being resized. The same holds for turning: put `perspective` on the parent so a group of cards shares one vanishing point, and turn each one around a sensible `transform-origin`, like a menu growing from the edge next to its button, not from its own centre.
+
+**In code:** change scale and shadow together on the same transition.
+
+```css
+.card { box-shadow: 0 1px 3px rgb(0 0 0 / .2); transition: scale 180ms ease-out, box-shadow 180ms ease-out; }
+.card:hover { scale: 1.02; box-shadow: 0 8px 24px rgb(0 0 0 / .25); } /* closer: bigger, softer shadow */
+```
+Chapter 20 explains why animating `box-shadow` directly can be costly on large surfaces.
 
 ### 12 · Appeal
 
-Personality, consistency, restraint. Appeal isn't one motion. It is the same few choices made everywhere: one family of curves, one sense of time, one small gesture of play kept for the right moments. A charming motion used once is a trick; used consistently, it becomes a character.
+**In film:** the quality that makes a character interesting to look at. It comes from clear design and a consistent personality, not from decoration.
+
+**In an interface:** personality, consistency, restraint. Appeal isn't one motion. It is the same few choices made everywhere: one family of curves, one sense of time, one small gesture of play kept for the right moments. A charming motion used once is a trick; used consistently, it becomes a character.
+
+**In code:** custom properties that every transition reads, so the choices live in one place: `--ease-out`, `--dur-base` and the rest of this site's tokens, which chapter 25 builds into a system.
 
 <Beat kind="more">Turned down</Beat>
 
@@ -160,7 +226,7 @@ A useful test: if someone notices the principle, it is probably too strong. The 
 
 The bench opens on the anticipation curve from Figure 7.2. B is a plain ease-in, for comparison.
 
-- Drag `y2` toward 0. The dip gets shallower, and at 0 it is gone: a plain ease-in, no wind-up.
+- Drag `y2` toward 0. The dip gets shallower, and at 0 it is gone: an ordinary ease-in, no wind-up.
 - Drag it to −1. Now the object backs up a quarter of the way and doesn't pass its start again until three-quarters of the time is gone. That is no longer a wind-up; it is a stumble.
 - Look for the smallest dip you can still see. That is usually the right one.
 
@@ -168,11 +234,11 @@ The bench opens on the anticipation curve from Figure 7.2. B is a plain ease-in,
 
 <Beat kind="write">The notation</Beat>
 
-Four principles in code: an arc, a wind-up, a squash, and a follow-through. Each one is a property you already know, used for a new reason.
+Four principles get a full snippet: an arc, a wind-up, a squash, and a follow-through. The other eight need only the lines above. Each one is a property you already know, used for a new reason.
 
-`offset-path` gives an element a track to follow, written like an SVG path. `offset-distance` says how far along the track it is, from `0%` to `100%`, and the easing is now spacing along the curve. `offset-rotate` defaults to `auto`, which turns the element to face along the path, like a car on a road. For a card, set it to `0deg` so it stays upright.
+`offset-path` gives an element a track to follow, written like an SVG path. `offset-distance` says how far along the track it is, from `0%` to `100%`, and the easing is now spacing along the curve. `offset-rotate` defaults to `auto`, which turns the element to face along the path, like a car on a road. For a card, set it to `0deg` so it stays upright. All three properties have worked in every major browser since 2022.
 
-A transition runs with the timing of the state it is heading to. So a press keeps its timing on `:active` and the release keeps its timing on the button, and an exit keeps its wind-up on the leaving state, where it can't leak into the entrance.
+A transition uses the timing of the state it is heading to. So the press timing goes on `:active` (pressing moves toward that state) and the release timing on the button itself (releasing moves back to it), and an exit puts its wind-up on the leaving state, where it can't leak into the entrance.
 
 <div class="snippets">
 <Snippet title="07 · The twelve: an arc with offset-path" lab="frame-stepper" dialect="css" source={arcCss} extra={{ pass: 1000 }}>
@@ -218,7 +284,8 @@ A transition runs with the timing of the state it is heading to. So a press keep
 
 ```css
 /* Squash toward the surface: pin the bottom edge.
-   Shorter and wider by about as much, so it keeps its volume. */
+   scale(x, y): 5% wider, 5% shorter, so it keeps its volume.
+   The release uses the overshoot curve: it springs back a little past 1. */
 .button {
   transform-origin: 50% 100%;
   transition: transform 300ms cubic-bezier(.34, 1.56, .64, 1); /* release */
@@ -237,6 +304,7 @@ A transition runs with the timing of the state it is heading to. So a press keep
 ```js
 // The panel leads. Its rows start while it is still moving,
 // arrive after it stops, and overshoot a little as they settle.
+// Timings are in ms: the panel takes 360, row i starts at 120 + i * 40.
 const panel = document.querySelector('.panel');
 const rows = panel.querySelectorAll('.row');
 
@@ -264,7 +332,9 @@ rows.forEach((row, i) => {
 </Snippet>
 </div>
 
-In the follow-through, the panel stops at 360ms and the last row settles around 620ms. The rows' curve passes its target by about 10% and comes back, so each row travels about 5px too far and settles back, after its parent is already still.
+In the follow-through, the panel stops at 360ms and the last row, starting at 200ms and running 420ms, lands at 620ms. The rows' curve passes its target by about 10% and comes back, so each row goes about 5px too far (10% of 48px) and settles back, after its parent is already still. To see the difference, delete the `delay` line: the rows move as one slab with the panel and the overlap is gone.
+
+Every principle here moved one thing, or one thing and its parts. Chapter 8 takes overlap further: when many things arrive at once, which one moves first?
 
 <Beat kind="drill">Spot the principle</Beat>
 

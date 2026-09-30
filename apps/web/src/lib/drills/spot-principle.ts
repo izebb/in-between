@@ -24,12 +24,13 @@ export const spotPrinciple: DrillDef<SpotSpec, number> = {
   score(spec, answer) {
     const ok = spec.options[answer] === spec.id;
     const p = PRINCIPLES.find((x) => x.id === spec.id)!;
+    const chosen = PRINCIPLES.find((x) => x.id === spec.options[answer]);
     return {
       correct: ok,
       points: ok ? 100 : 0,
       truth: spec.options.indexOf(spec.id),
       answer,
-      verdict: `${ok ? "Yes" : `It's ${p.name}`}. ${p.why}`,
+      verdict: `${ok ? `Yes, ${p.name}` : `It's ${p.name} (${p.ui.toLowerCase()}), not ${chosen?.name ?? "that"}`}. ${p.why} (Chapter 7.)`,
       meta: { principle: spec.id },
     };
   },

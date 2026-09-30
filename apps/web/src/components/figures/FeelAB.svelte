@@ -126,7 +126,7 @@
     </div>
     {#if picked !== null}
       <p class="explain" data-motion="rise">
-        {#if answer !== undefined}{#key picked === answer}<b data-motion="fade">{picked === answer ? "Most eyes agree." : `Most eyes pick ${letters[answer]}.`}</b>{/key}{/if}
+        {#if answer !== undefined}{#key picked === answer}<b data-motion="fade">{picked === answer ? "That is the better one." : `The better one is ${letters[answer]}.`}</b>{/key}{/if}
         {explain ?? ""}
       </p>
     {/if}

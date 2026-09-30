@@ -13,7 +13,7 @@ export const guessDuration: DrillDef<GuessDurationSpec, number> = {
   id: "guess-duration",
   name: "Guess the duration",
   prompt: "Watch the move. How long did it take?",
-  trains: "Timing: hearing 200ms as 200ms",
+  trains: "Timing: seeing 200ms as 200ms",
   unlocksAfter: 2,
   kind: "estimate",
   unit: "ms",
@@ -42,7 +42,7 @@ export const guessDuration: DrillDef<GuessDurationSpec, number> = {
       points,
       truth: spec.duration,
       answer,
-      verdict: `It took ${spec.duration}ms (${frames} frames). You said ${answer}ms: ${off}.`,
+      verdict: `It took ${spec.duration}ms (${frames} frames at 60fps). You said ${answer}ms: ${off}. Try counting frames at 60 a second: 200ms is 12 (chapter 2).`,
     };
   },
 };

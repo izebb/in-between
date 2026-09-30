@@ -75,7 +75,7 @@
   <section class="vocab" aria-labelledby="vocab-h">
     <div class="head">
       <h2 id="vocab-h">Your motion vocabulary</h2>
-      <p>Each word, and what you meant by it in numbers. Click a word to see its specimens.</p>
+      <p>Each word, and what you meant by it in numbers: typical duration, curve, and ζ (damping) for springs. Click a word to see its specimens.</p>
     </div>
     {#if loaded && vocabulary.length === 0}
       <div class="empty">

@@ -5,12 +5,14 @@ lede: "Before motion is beautiful, it is useful. It tells you what happened."
 
 export const toastCss = `/* A toast arrives from below. */
 .box {
-  transform: translateY(40px);
-  opacity: 0;
-  transition: transform 280ms cubic-bezier(0.2, 0.8, 0.2, 1),
-              opacity 180ms linear;
+  transform: translateY(40px); /* starts 40px lower than its resting place */
+  opacity: 0;                  /* and invisible */
+  /* transition: <property> <time> <curve>. Two properties, each with its own. */
+  transition: transform 280ms cubic-bezier(0.2, 0.8, 0.2, 1), /* slides for 280ms, fast then settling */
+              opacity 180ms linear;                          /* fades in over 180ms, at a steady rate */
 }
 
+/* The stage adds the class is-on when you press play; the box then moves to these values. */
 .is-on .box {
   transform: none;
   opacity: 1;
@@ -18,13 +20,15 @@ export const toastCss = `/* A toast arrives from below. */
 `;
 
 
-When something on screen changes, the change is a fact: a menu opened, a message arrived, an item moved. Motion is how that fact is delivered. Without it, every change is a cut. One frame the menu is closed, the next it is open, and your eye has to work out what changed, where, and why.
+When something on screen changes, the change is a fact: a menu opened, a message arrived, an item moved. Motion is how that fact is delivered. Without it, every change is a cut. One frame (a single still image; the screen draws dozens of them every second) shows the menu closed, the next shows it open, and your eye has to work out what changed, where, and why.
 
-Motion does that work for the eye. It is information first and decoration second.
+Motion does that work for the eye. It is information first and decoration second. This chapter names what that information can be, so that from chapter 2 on you can ask how to say it well.
+
+Every chapter follows the same path. You *see* an example, *feel* the difference between two versions, read the ideas behind it, *tune* one thing in a lab instrument, read the code that *writes* it, and finish with a *drill* that trains your eye. Play everything: the figures are there to be touched, not just read. Each one tells you what to try and what to look for.
 
 <Beat kind="see">Five things motion says</Beat>
 
-Hover or click each specimen to play it. Each one is a single change of state, and each motion carries a different message.
+A specimen is a small piece of interface that plays one change. Hover or click each to play it, and for each ask what you learned from the movement alone, before reading the label. The five differ only in the message the motion carries.
 
 <Figure n="1.1" caption="Causality, continuity, attention, feedback, state">
   <Specimens items={[
@@ -63,23 +67,23 @@ Watch the same change with motion and without it. Then ask yourself what the sec
   <p>When you minimise a window on macOS, the <b>Genie</b> effect pours it down into the Dock. It tells you where the window went, so you know where to find it again.</p>
 </Margin>
 
-The eye can't ignore movement. That's why motion works as a pointer, and it's also why it has a cost. Every moving thing makes a claim on your attention. Two things moving at once make two claims, and the eye has to choose.
+The eye can't ignore movement. That is why motion works as a pointer, and why it has a cost. Every moving thing makes a claim on your attention. Two things moving at once make two claims, and the eye has to choose.
 
 So motion should say one thing at a time, and only things worth saying. A card sliding in says "new content, here". A background that drifts forever says nothing, but it keeps asking to be looked at. This app follows that rule: the page is still unless something is happening, so that when something moves, it means something.
 
-A useful test for any animation: **name what it says.** If you can't name it in one word from the five above, it's probably decoration.
+A useful test for any animation: **name what it says.** If you can't name it in one word from the five above, it is probably decoration.
 
 <Beat kind="tune">Watch it frame by frame</Beat>
 
-Here is a toast arriving from below. Play it at 0.1× or step through it with the arrow keys. Find the first frame where you can tell *where it came from*. That frame is where the information starts.
+This is your first lab instrument, the Frame stepper. The lab is a set of such tools, each built to isolate one part of motion; the code beside each one is live, so edit it and watch. A frame is one still image, and the screen shows a new one many times a second. Here a toast (a small message that slides in) arrives from below. Play it at 0.1×, a tenth of normal speed, or click the scrubber and step through with the arrow keys. Find the first frame where you can tell *where it came from*. That frame is where the information starts.
 
 <Lab id="frame-stepper" dialect="css" source={toastCss} />
 
-The direction reads in the first three or four frames. After that the motion is only settling. That's why good entrances front-load their movement: the message arrives early, and the rest is manners.
+The direction reads within the first three or four frames (at 60 frames a second, about 50 to 65ms), by which point the toast has covered well over half its distance. After that the motion is only settling. So a good entrance puts most of its movement at the start: the direction is delivered early, and the rest is the object coming to rest.
 
 <Beat kind="write">The notation</Beat>
 
-There is no special code for "information". It lives in the choices you'll learn next: how long, what spacing, from where. For now, two small patterns: a state that shows it changed, and a press that answers.
+There is no special code for "information". It lives in three choices: how long the motion takes, how the object is spread across its frames (the curve, such as the `cubic-bezier(...)` you have seen twice now), and where it starts. Chapter 2 starts with how long, and chapter 3 opens up the curve. For now, here are two small patterns: a state that shows it changed, and a press that answers. Read the comments, but don't worry about why each number was chosen yet. Those choices are explained over the next three chapters.
 
 <div class="snippets">
 <Snippet title="01 · State: the switch slides to on" lab="curve-bench" easing="--ease-out" duration={180} distance={22}>
@@ -87,9 +91,12 @@ There is no special code for "information". It lives in the choices you'll learn
 ```css
 .switch .knob {
   transform: translateX(0);
+  /* When `transform` changes, take 180ms to get there, using this curve. */
   transition: transform 180ms cubic-bezier(.2, .8, .2, 1);
 }
 
+/* When the switch turns on, the knob's target moves 22px right (however far your switch's track needs).
+   You write only the two end states; the browser draws every frame between them. */
 .switch[aria-checked="true"] .knob {
   transform: translateX(22px);
 }
@@ -101,12 +108,18 @@ There is no special code for "information". It lives in the choices you'll learn
 
 ```js
 // Feedback: the button acknowledges the press at once, and lets go on release.
-// One keyframe: each press starts from wherever the button is now.
-const press = (scale) =>
+// Start from wherever the button is now, so a quick release never jumps.
+// scale(0.96) shrinks the button to 96% of its size: enough to feel, too little to look broken.
+const press = (scale) => {
+  const from = getComputedStyle(button).transform; // the button's current transform, mid-motion or not
+  // element.animate(keyframes, options) is the Web Animations API: a list of
+  // keyframes to pass through, and how long (ms) and with what curve.
   button.animate(
-    { transform: `scale(${scale})` },
+    [{ transform: from }, { transform: `scale(${scale})` }],
+    // fill: 'forwards' keeps the last keyframe after the animation ends, so it doesn't snap back
     { duration: 90, easing: 'ease-out', fill: 'forwards' },
   );
+};
 
 button.addEventListener('pointerdown', () => press(0.96));
 button.addEventListener('pointerup', () => press(1));
@@ -118,6 +131,6 @@ button.addEventListener('pointerleave', () => press(1));
 
 <Beat kind="drill">Name what it says</Beat>
 
-Five small UI clips. For each, name the one thing its motion tells you.
+Five small UI clips. For each, name which of the five messages its motion carries: causality, continuity, attention, feedback or state. Once you can read what a motion says, the next question is how long it should take to say it.
 
 <Drill kind="what-it-says" trials={5} chapter={1} />

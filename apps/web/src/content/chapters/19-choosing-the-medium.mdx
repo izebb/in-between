@@ -82,13 +82,13 @@ function draw(ctx, s, w, h) {
 }
 `;
 
-Every motion in this book has been written down somewhere. The menus and cards are elements, animated by the browser's own animation engine. The bouncing ball is painted on a canvas by code, one frame at a time. The browser offers several ways to make things move, and they are not interchangeable. Each is cheap for some jobs and costly for others.
+Every motion in this book has been written down somewhere. The menus and cards are elements, animated by the browser's own animation engine. The particles and noise of chapters 14 to 18 are painted on a canvas by code, one frame at a time. The browser offers several ways to make things move, and they are not interchangeable. Each is cheap for some jobs and costly for others.
 
-Two questions decide which one to use: what is moving, and how many of it.
+Two questions decide which one to use: what is moving, and how many of it. By the end you will have a short list of questions that picks the medium for any motion you are asked to build.
 
 <Beat kind="see">A change, and a process</Beat>
 
-Four small pieces of interface. Hover or click one to play it again.
+Four small pieces of interface. Hover or click one to play it again, and notice that for each you could say the start and the end in a few words.
 
 <Figure n="19.1" caption="Four state changes: a start, an end, the frames between">
   <Specimens items={[
@@ -107,13 +107,13 @@ Now a flock.
   <Canvas program="boids" controls={false} stepper={false} />
 </Figure>
 
-Each bird steers by what its neighbours are doing, so where it goes next depends on where every other bird is now. There is no end state to write down. Code works out every bird, every frame, and paints the result. Nothing on this canvas is an element. The flock is pixels, redrawn from numbers.
+Watch it for a few seconds. Each bird steers by what its neighbours are doing, so where it goes next depends on where every other bird is now. There is no end state to write down. Code works out every bird, every frame, and paints the result. Nothing on this canvas is an element. The flock is pixels, redrawn from numbers.
 
 A state change is described once. A process is computed every frame. Most motion sits somewhere between the two, and where it sits, together with how many things are moving, picks the medium.
 
 <Beat kind="feel">Which one is falling behind?</Beat>
 
-Both dots make the same move. Don't count. Just look.
+Both dots make the same trip on the same curve, over the same time. Press play on each and watch the motion, not the clock. One of them is having trouble.
 
 <FeelAB
   question="Which one is the page struggling to draw?"
@@ -132,7 +132,7 @@ Both dots make the same move. Don't count. Just look.
   <p><b>Dropped frame.</b> A frame the screen was ready to show but the page hadn't finished drawing. The screen shows the old one again, so the motion stalls, then jumps.</p>
 </Margin>
 
-Now make a real one. This figure moves the same dots three ways: as elements moved with `transform`, as elements moved with `left` and `top`, and as circles painted on a single canvas. Pick a mode and drag the count up until the motion stutters like A. Then switch modes at that count and watch again. Judge by eye first, then read the numbers.
+Now make it happen for real. This figure moves the same dots three ways: as elements moved with `transform`, as elements moved with `left` and `top`, and as circles painted on a single canvas. Start on `left` and `top` and drag the count up until the motion stutters like A. Then switch modes at that same count. Look for which modes are still smooth, then read the numbers to see how far apart they are.
 
 <Figure n="19.3" caption="The same dots in three media, measured on your machine">
   <Medium initial={400} />
@@ -146,9 +146,9 @@ The three modes differ in how much work each frame asks for:
 - **DOM, `transform`.** Still one element and one style per dot, every frame. But a transform moves an element after layout is done, so the layout step is skipped. Chapter 20 opens up that pipeline.
 - **Canvas 2D.** One element. The dots are numbers in a loop, added to one path and filled once. The browser has a single element to update; the rest is your loop and the drawing, and each extra dot adds little.
 
-So `left` and `top` usually give out first, and the canvas last. Where each one gives out depends on your machine.
+So `left` and `top` usually give out first, and the canvas last. Where each one gives out depends on your machine: a few hundred moving elements can be too many on a phone, while a canvas can take thousands. Treat those as rough orders of size and measure yours.
 
-That doesn't make the canvas the better medium. A canvas is a picture: it knows nothing about what it drew. There is no hover, no focus, no text to select, nothing for a screen reader, no layout. For a handful of things the DOM does all of that already, and on a canvas you would build it yourself. The canvas wins when there are more things than elements can carry.
+That doesn't make the canvas the better medium. A canvas is a picture: it knows nothing about what it drew. There is no hover, no focus, no text to select, nothing for a screen reader, no layout. (Hit-testing, working out which drawn thing is under the pointer, is yours to write.) For a handful of things the DOM does all of that already, and on a canvas you would build it yourself. The canvas wins when there are more things than elements can carry.
 
 <Beat kind="more">Five media</Beat>
 
@@ -162,7 +162,7 @@ Five media cover almost all motion on the web. *Cost* means two things here: wha
 | Canvas 2D | many objects, particles, procedural and generative motion | you own everything |
 | WebGL / WebGPU | tens of thousands of things, shaders, 3D | the highest complexity |
 
-**CSS** describes a change: from here to there, over this long, on this curve. The browser has the whole animation before it starts, so none of your code runs while it plays. Use transitions between two states and keyframes when there are more. It is the cheapest to write and the easiest to get right, and for a few elements changing state it is nearly always the answer.
+**CSS** describes a change: from here to there, over this long, on this curve. The browser has the whole animation before it starts, so no code of yours has to run on each frame, and for `transform` and `opacity` the browser can even run it off the main thread (chapter 20). Use transitions between two states and keyframes when there are more. It is the cheapest to write and the easiest to get right, and for a few elements changing state it is nearly always the answer. In practice most of your motion will be CSS.
 
 <Margin kind="note">
   <p>CSS animations and transitions are Web Animations underneath. <code>document.getAnimations()</code> returns them as <code>Animation</code> objects, so a script can pause or scrub a motion that CSS started.</p>
@@ -186,6 +186,8 @@ To choose, ask these in order and stop at the first yes:
 
 Each step down gives you more control and hands you more work. Go no further than the motion needs.
 
+Two cases to try it on. A dropdown menu opening: one element, two states, so question 1, CSS. A progress ring that fills as a file uploads, with a Cancel button that must reverse it: a drawing, but code has to hold it, so question 2 comes first and you would drive an SVG stroke with WAAPI. The order matters: the first yes wins, and a later question only matters when the earlier ones say no.
+
 <Margin kind="wild">
   <p>Figma splits its window this way. The design canvas, with its thousands of shapes to pan and zoom, is drawn by Figma's own renderer on the GPU. The toolbars and panels around it are ordinary DOM.</p>
 </Margin>
@@ -194,9 +196,9 @@ One page can mix them. A chart can draw its axes and labels in SVG, where they s
 
 <Beat kind="more">When you own the loop</Beat>
 
-Choosing a canvas makes the frame budget yours. Three habits keep you inside it.
+Choosing a canvas makes the frame budget yours (chapter 20 measures it). Three habits keep you inside it.
 
-**Batch.** Every drawing call has a cost of its own, apart from the pixels it fills. Put shapes that share a style into one path and fill it once. The canvas in figure 19.3 draws every dot this way: one `beginPath()`, one circle per dot, one `fill()`. A single fill has a single colour, so group shapes by colour: one path per colour, not one per shape.
+**Batch.** Every drawing call has a cost of its own, apart from the pixels it fills, so 3,000 separate `fill()` calls cost far more than one call that fills 3,000 circles. Put shapes that share a style into one path and fill it once. The canvas in figure 19.3 draws every dot this way: one `beginPath()`, one circle per dot, one `fill()`. A single fill has a single colour, so group shapes by colour: one path per colour, not one per shape.
 
 **Make no garbage per frame.** An object literal, an array from `map()` or `filter()`, a new closure: anything created inside the loop is garbage a frame later. The engine collects it when it chooses to, and part of that work pauses your code. Make enough garbage every frame and sooner or later a pause costs you a frame. So allocate once, before the loop. Keep positions and velocities in typed arrays such as `Float32Array`, update objects in place, and when a particle dies, keep its slot for the next one to be born.
 
@@ -204,9 +206,9 @@ Choosing a canvas makes the frame budget yours. Three habits keep you inside it.
 
 <Beat kind="tune">One motion, five notations</Beat>
 
-The desk starts with this site's `--ease-out` over 280ms: a 240px move, written five ways. Read across the cards before you change anything. CSS and WAAPI say it in nearly the same words. Motion and GSAP count in seconds, not milliseconds. The canvas version has to bring its own clock and its own curve.
+The desk starts with this site's `--ease-out` over 280ms: a 240px move, written five ways. Read across the cards before you change anything, and find the same three numbers (240, 280, and the curve) in each. CSS and WAAPI say it in nearly the same words. Motion and GSAP count in seconds, not milliseconds. The canvas version has to bring its own clock and its own curve.
 
-Then change one thing. Type `spring.snappy` into *Any easing* and convert. CSS and WAAPI can only play the spring's shape, sampled into `linear()` over a fixed duration. Motion takes the spring's physics directly. GSAP needs a helper to sample it. On the canvas it becomes three lines of physics, run in fixed 1ms steps through each frame.
+Then change one thing. Type `spring.snappy` into *Any easing* and convert. CSS and WAAPI can only play the spring's shape, sampled into `linear()` over a fixed duration. Motion takes the spring's physics directly. GSAP needs a helper to sample it. On the canvas it becomes three lines of physics, run in fixed 1ms steps through each frame. Notice which notations stay short and which grow: that growth is what each medium asks you to own.
 
 <Lab id="export-desk" easing="--ease-out" duration={280} />
 
@@ -241,6 +243,8 @@ const button = document.querySelector('button');
 
 const move = box.animate(
   [{ transform: 'translateX(0)' }, { transform: 'translateX(240px)' }],
+  // fill: 'both' keeps the start and end poses when it is not running,
+  // so scrubbing to 0 or 280 shows the right picture.
   { duration: 280, easing: 'cubic-bezier(.2, .8, .2, 1)', fill: 'both' },
 );
 
@@ -312,6 +316,7 @@ function draw(ctx, s, w, h) {
 ```js
 // main.js: size the canvas, then give it away.
 const canvas = document.querySelector('canvas');
+// dpr: device pixels per CSS pixel. Capped at 2 so the bitmap stays affordable.
 const dpr = Math.min(2, devicePixelRatio);
 canvas.width = Math.round(canvas.clientWidth * dpr);
 canvas.height = Math.round(canvas.clientHeight * dpr);
@@ -355,11 +360,13 @@ function frame(now) {
   last = now;
 
   // Ease toward the pointer, the same at any frame rate (chapter 15).
+  // 12 is the stiffness: higher catches up faster (about two thirds of the gap
+  // closes in 1/12 s, 83ms). k is the fraction of the gap to close this frame.
   const k = 1 - Math.exp(-12 * dt);
   dot.x += (pointer.x - dot.x) * k;
   dot.y += (pointer.y - dot.y) * k;
 
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0); // draw in CSS pixels; the canvas has dpr times more
   ctx.clearRect(0, 0, ctx.canvas.width / dpr, ctx.canvas.height / dpr);
   ctx.fillStyle = '#FF3B1F';
   ctx.beginPath();
@@ -374,6 +381,8 @@ function frame(now) {
 </div>
 
 The worker's loop is the same `requestAnimationFrame` loop as in chapter 14, because dedicated workers have `requestAnimationFrame` too. Only the input arrives differently, as messages.
+
+On Monday: start with CSS, reach for WAAPI when a script must hold the motion, and move to canvas only when you have measured that elements can't carry the count. Whichever medium you pick, each frame still has to be finished before the screen asks for it. How do you find out whether yours is? Chapter 20 shows where to click in DevTools to measure it.
 
 <Beat kind="drill">Judge the motion</Beat>
 

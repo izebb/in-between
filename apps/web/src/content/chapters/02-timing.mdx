@@ -3,11 +3,11 @@ number: 2
 lede: "Duration is weight, mood, and importance. Learn to see it in frames."
 ---
 
-Timing is how long a motion takes. It is the first thing the eye reads, and it reads it before it reads anything else. A slow move feels heavy or important. A fast one feels light or trivial. Nothing else about the motion has to change.
+Chapter 1 gave motion a message. Timing is how long that message takes to deliver, and the eye reads it almost at once. A slow move feels heavy or important. A fast one feels light or trivial. Nothing else about the motion has to change.
 
 <Beat kind="see">One move, four lengths</Beat>
 
-The same dot crosses the same distance four times. Only the time it takes changes. Watch each row and notice what it seems to *be*.
+The same dot crosses the same distance four times, with the same easing (easing is the pattern of fast and slow within a move; chapter 3 is about it, so ignore it for now). Only the time it takes changes. Watch a few loops of each row and notice what it seems to *be*: not how fast it is, but what kind of event.
 
 <Figure n="2.1" caption="Same distance, four durations, same curve">
   <SpacingChart rows={[
@@ -18,11 +18,11 @@ The same dot crosses the same distance four times. Only the time it takes change
   ]} readout={false} chart={false} />
 </Figure>
 
-The top row is a flick. The bottom row is a decision. Each row below it reads heavier, calmer, and more important, although the path and the curve never changed.
+The top row is a flick. The bottom row is a decision. Each row below it reads heavier, calmer, and more important, although the path and the easing never changed.
 
 <Beat kind="feel">Which is heavier?</Beat>
 
-Don't count. Just look.
+Don't count and don't measure. Watch both drops once or twice, then go with your first impression.
 
 <FeelAB
   question="Two balls drop onto the floor. Which one is heavier?"
@@ -32,27 +32,27 @@ Don't count. Just look.
     { motion: { easing: "ease-in", duration: 560 } }
   ]}
   answer={1}
-  explain="Longer reads as heavier. A heavy thing takes longer to start and longer to stop, so more time on screen says 'this has mass'. (A real falling object would actually take the same time; your eye is reading weight from timing, not physics. Chapter 04 separates the two.)"
+  explain="Longer reads as heavier. A heavy thing takes longer to start and longer to stop, so more time on screen says 'this has mass'. (In a vacuum, a heavy and a light object fall in the same time. Your eye is reading weight from timing, not from physics. Chapter 4 separates the two.)"
 />
 
 <Beat kind="more">The bands</Beat>
 
 <Margin kind="history">
-  <p>Jakob Nielsen's response-time limits (1993): about <b>0.1s</b> feels instantaneous, about <b>1s</b> keeps the flow of thought, <b>10s</b> loses attention. They still hold.</p>
+  <p>Jakob Nielsen's response-time limits (<i>Usability Engineering</i>, 1993): about <b>0.1s</b> feels instantaneous, about <b>1s</b> keeps the flow of thought, <b>10s</b> loses attention. They are still the usual reference.</p>
 </Margin>
 
 Most interface motion lives in four bands. Learn how each one *feels*, not just its number.
 
-- **About 100ms: instant.** Press states, toggles, checkboxes. Faster than this and the motion isn't seen at all; slower and the control feels laggy.
+- **About 100ms: instant.** Press states, toggles, checkboxes. Much faster and the motion is barely seen; much slower and the control feels laggy, because the eye expects an answer to a press within about a tenth of a second.
 - **About 200ms: quick.** Hovers, tooltips, small reveals, menus. Seen, but never waited for.
 - **About 300ms: considered.** Panels, cards, dialogs. Enough time to show where something came from.
-- **About 500ms: deliberate.** Big scene changes, onboarding, a page turning. Use it rarely. If people see it every minute, it will start to feel slow.
+- **About 500ms: deliberate.** Big scene changes, onboarding, a page turning. Use it rarely: anything people see every minute will start to feel slow.
 
-This app uses exactly these bands as its tokens: `--dur-instant` 90ms, `--dur-quick` 180ms, `--dur-base` 280ms, `--dur-scene` 480ms.
+The bands are ranges, not exact values: taste decides where in a band you land, so treat 80 to 120ms as "about 100". This app turns each band into a token, a named value it reuses everywhere (in CSS, a custom property written `--name`): `--dur-instant` `90ms`, `--dur-quick` `180ms`, `--dur-base` `280ms`, `--dur-scene` `480ms`. They sit a little under the round numbers because this app prefers to err on the quick side.
 
 <Beat kind="more">See in frames</Beat>
 
-The web measures time in milliseconds. The screen shows it in frames. A 60Hz display draws a new frame every 16.7ms, so:
+The web measures time in milliseconds. The screen shows it in frames. A 60Hz display redraws 60 times a second, so a new frame appears every 16.7ms (1000 ÷ 60). A 120Hz display redraws twice as often. So:
 
 | Duration | Frames at 60Hz | Frames at 120Hz |
 |---|---|---|
@@ -61,7 +61,7 @@ The web measures time in milliseconds. The screen shows it in frames. A 60Hz dis
 | 300ms | 18 | 36 |
 | 500ms | 30 | 60 |
 
-Animators think in frames because frames are what you actually see. A 100ms move is six drawings. That's why it barely registers: there aren't enough drawings to show a path. When a motion feels "jumpy", count its frames. It usually has too few for the distance it covers.
+Animators think in frames because frames are what you actually see. A 100ms move is six drawings. That's why it barely registers: there aren't enough drawings to show a path. (This is also why the same `300ms` can look slightly smoother on a 120Hz screen: twice the drawings, same time.) When a motion feels "jumpy", count its frames. It usually has too few for the distance it covers.
 
 <Figure n="2.2" caption="Distance changes the right duration">
   <SpacingChart rows={[
@@ -72,35 +72,38 @@ Animators think in frames because frames are what you actually see. A 100ms move
   ]} easing="--ease-out" />
 </Figure>
 
-A duration is not "right" on its own. The top two rows share 300ms. The short move dawdles; the long one rushes, with gaps so wide the eye loses the object between frames. The blue rows fix both: shorter for the short trip, longer for the long one. Duration should grow with distance, but more slowly than distance does.
+A duration is not "right" on its own. Hover the figure to see the ghosts: each one is the object on a single frame, and the distance between neighbouring ghosts is the **spacing**. The top two rows share `300ms`, which is 18 frames at 60Hz. The short move covers 80px in 18 frames, so it creeps along about 4px a frame, with ghosts almost touching, and dawdles. The long one covers 480px, about 27px a frame, with gaps so wide the eye loses the object between frames, and rushes. The blue rows fix both: `180ms` for the short trip, `380ms` for the long one. Duration should grow with distance, but more slowly than distance does. Six times the distance here gets about twice the time.
 
 Size works the same way. A large panel sliding in needs more time than a small chip, because more of the screen changes.
 
 <Beat kind="tune">Change one thing: duration</Beat>
 
-Drag the duration and watch the frame count. Find where the move stops feeling like a *flick* and starts feeling like a *journey*. Then change the frame rate to 12: this is "animating on twos", the way hand-drawn films save drawings.
+Drag the duration and watch the frame count. Try 100ms, 300ms and 800ms, and find where the move stops feeling like a *flick* and starts feeling like a *journey*. Then set the frame rate to 12, so the object is redrawn only 12 times a second. Animators call this "animating on twos": each drawing is held for two frames of a 24-frame film, which halves the drawings and saves work. Look at the ghosts: how far does the object jump between drawings, and what does the motion lose?
 
 <Lab id="spacing-chart" easing="--ease-out" duration={300} distance={360} code={false} />
 
 <Margin kind="wild">
-  <p>Chrome and Firefox DevTools both have an <b>Animations</b> panel that replays any CSS or Web Animation on the page at 25% or 10% speed. It is a Frame stepper built into your browser.</p>
+  <p>Chrome and Firefox DevTools both have an <b>Animations</b> panel that replays any CSS or Web Animation on the page at 25% or 10% speed. It does in your browser what the Frame stepper did in chapter 1.</p>
 </Margin>
 
 <Beat kind="write">The notation</Beat>
 
-Now the numbers. In CSS, duration is `transition-duration` or `animation-duration`, in `ms` or `s`. Keep durations in tokens, so a whole app shares one sense of time.
+Now the numbers. In CSS, duration is `transition-duration` or `animation-duration`, in `ms` or `s`. Keep durations in tokens, so a whole app shares one sense of time: change one line and every menu in the app speeds up. `ease-out` below is the CSS keyword for a fast start and a slow finish; chapter 3 explains what it draws.
 
 <div class="snippets">
 <Snippet title="02 · Timing: durations as tokens" lab="spacing-chart" easing="ease-out" duration={180} distance={240}>
 
 ```css
 :root {
+  /* Custom properties: named values, read back later with var(--name). */
   --dur-instant: 90ms;   /* press, toggle */
   --dur-quick:  180ms;   /* hover, tooltip, menu */
   --dur-base:   280ms;   /* panel, card, dialog */
   --dur-scene:  480ms;   /* page, onboarding */
 }
 
+/* A menu is a small reveal, so it takes the quick token.
+   Each comma-separated item is: property, duration, curve. */
 .menu {
   transition: opacity var(--dur-quick) ease-out,
               transform var(--dur-quick) ease-out;
@@ -113,11 +116,17 @@ Now the numbers. In CSS, duration is `transition-duration` or `animation-duratio
 
 ```js
 // Longer trips get more time, but not proportionally more:
-// 80px takes 180ms and 480px takes 380ms, as in Fig. 2.2.
+// 80px takes 180ms and 480px takes 380ms, as in Figure 2.2.
+// distance is in px and the result is in ms. Every trip costs `base` (140ms) plus
+// 50ms for each 100px, capped at `max` (480ms, the scene token). These three numbers
+// were fitted to the two examples above; treat them as a starting point to tune by eye.
 function durationFor(distance, base = 140, per100px = 50, max = 480) {
   return Math.min(max, base + (distance / 100) * per100px);
 }
 
+// translateX(100%) means "one full panel-width to the right", so the panel starts
+// off to the side and slides to its resting place ('none' = no transform).
+// offsetWidth is the panel's width in px, so a wider panel gets a longer duration.
 panel.animate(
   [{ transform: 'translateX(100%)' }, { transform: 'none' }],
   { duration: durationFor(panel.offsetWidth), easing: 'ease-out' },
@@ -129,6 +138,6 @@ panel.animate(
 
 <Beat kind="drill">Guess the duration</Beat>
 
-Watch a move and estimate its length. At first you'll be off by 50% or more. After a few rounds, you'll hear 200ms as 200ms.
+Watch a move and estimate its length. At first you'll be off by 50% or more. After a few rounds, you'll see `200ms` as `200ms`. Use the frame counts from the table: a move that is over in about a dozen frames is 200ms. The next chapter looks inside a duration: the same time can be spent in very different ways.
 
 <Drill kind="guess-duration" trials={5} chapter={2} />

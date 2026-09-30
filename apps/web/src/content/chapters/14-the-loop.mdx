@@ -11,7 +11,7 @@ function setup(w, h) {
 }
 
 function update(s, dt) {
-  s.blue += 4;        // px per frame
+  s.blue += 4;        // px per frame: 4 × 60 = 240px/s at 60Hz
   s.red += 240 * dt;  // px per second
 }
 
@@ -52,24 +52,28 @@ function draw(ctx, ball, w, h) {
 }
 `;
 
-The DOM animates properties. You tell an element where to be, and the browser moves it and paints it for you. A canvas has only pixels. There is nothing on it to move, only a picture, and the picture stays exactly as you left it until you paint over it.
+So far every animation in this course has been handed to the browser: a transition, keyframes, a spring, a scroll timeline. You said where things should end up, and it ran the clock. From here to chapter 19 you write the clock yourself, on a `<canvas>`. Chapter 19 weighs when that is worth it; first you need to know how it works.
+
+The DOM animates properties. You tell an element where to be, and the browser moves it and paints it for you. A canvas has only pixels. There is nothing on it to move, only a picture, and the picture stays exactly as you left it until you paint over it. You paint with a 2D context, `canvas.getContext('2d')`, and its calls: `arc` and `fill` for a circle, `fillRect` for a box, `clearRect` to wipe.
 
 So motion on a canvas works like a flipbook. Wipe the page, draw everything where it is now, then do it again for the next page, many times a second. Nothing moves between the pages. Your eye does the moving.
 
+Who turns the pages? You never draw on your own schedule. You give the browser a function with `requestAnimationFrame(frame)`, and it calls `frame` once, just before it next paints the screen. The call carries one argument, a timestamp: milliseconds on the browser's clock. Subtract the previous call's timestamp and you have `dt`: how long it has been since the last drawing. Anything you move has to be moved by that much time, not by one fixed step. The next sections show why, and figure 14.1 shows it happening.
+
 <Beat kind="see">One motion, three screens</Beat>
 
-Screens redraw at different rates. Here are three. The top one draws half as often as the middle one, and the bottom one twice as often. In each row, two dots run the same motion, written two ways. The blue dot takes a fixed step each time its screen draws. The red dot moves by how much time has passed. The ticks under the red dot mark each drawing.
+Screens redraw at different rates. Here are three. The top one draws half as often as the middle one, and the bottom one twice as often. In each row, two dots run the same motion, written two ways. The blue dot takes a fixed step each time its screen draws. The red dot moves by `dt`, how much time has passed since its screen last drew. The ticks under the red dot mark each drawing.
 
 <Figure n="14.1" caption="The same motion at three refresh rates">
   <Canvas program="loop-hz" readout={false} params={{ labels: 0 }} />
 </Figure>
 
-Which dots agree? The red ones stay in a column. On every screen they are in the same place at the same moment; the slow screen just shows fewer drawings, so its ticks sit further apart. The blue dots split up. On the slow screen blue crawls, and on the fast one it races to the end. The code is the same in every row. Only the screen changed.
+Watch the dots in each column as they cross the track. Which dots agree? The red ones stay in a column. On every screen they are in the same place at the same moment; the slow screen just shows fewer drawings, so its ticks sit further apart. The blue dots split up. On the slow screen blue crawls, and on the fast one it races to the end. The code is the same in every row. Only the screen changed.
 
 <Beat kind="feel">More drawings, or more speed?</Beat>
 
 <FeelAB
-  question="Three dots cross in the same time. Which one is drawn most often?"
+  question="Three dots cross in the same time. Which one is drawn most often? Watch how smooth each one is, not how fast."
   kind="dot"
   options={[
     { motion: { easing: "steps(12)", duration: 1000 }, caption: "12 drawings a second · 1000ms" },
@@ -103,9 +107,17 @@ This program erases only part of the last picture before it draws the next one. 
   <p>Apple calls its variable-rate screens ProMotion. On recent Pro iPhones, iPad Pros and MacBook Pros they refresh up to 120 times a second, and lower the rate when the picture is still. In a browser that draws at 120Hz, frame-based code tuned on a 60Hz monitor runs twice as fast.</p>
 </Margin>
 
-You don't pick the frame rate. You ask the browser to call you before it paints the next frame, with `requestAnimationFrame(frame)`, and it calls you once, usually at the screen's own rate: every 16.7ms on a 60Hz display, every 8.3ms at 120Hz, every 6.9ms at 144Hz. To keep going, ask again from inside `frame`. While the tab is hidden, most browsers stop calling you at all.
+You don't pick the frame rate. The browser calls your `frame` function once per paint, so you get the screen's own rate: every 16.7ms on a 60Hz display, every 8.3ms at 120Hz, every 6.9ms at 144Hz. To keep going, ask again from inside `frame`. While the tab is hidden, most browsers stop calling you at all.
 
-Each call receives a timestamp in milliseconds, on the same clock as `performance.now()`. Subtract the previous frame's timestamp and you have `dt`: the time this frame has to account for.
+Those figures are averages. Frames are not evenly timed: a frame that takes too long to build (a slow script, a garbage collection, a busy tab) makes the next one late. The timestamp is the moment the frame began, on the same clock as `performance.now()`. Three example frames:
+
+| Frame | Timestamp | `dt` | Why |
+|---|---|---|---|
+| 1 | 1000.0ms | none yet | the first call has no previous frame |
+| 2 | 1016.7ms | 16.7ms | on time at 60Hz |
+| 3 | 1066.7ms | 50ms | a stall: two or three frames were missed |
+
+`dt` is that gap. It comes out in milliseconds; divide by 1000 and it is in seconds, the unit the rest of the course uses. A frame-based `x += 3` moves 3 pixels on frame 3 as on frame 2, so the dot hitches: 50ms went by and it moved as if 16.7 had. `x += 180 * dt` moves 9 pixels on frame 3 and about 3 on frame 2. The motion stays on the clock however the frames fall.
 
 <Beat kind="more">Frames or seconds</Beat>
 
@@ -115,7 +127,7 @@ There are two ways to write "move right".
 - **Time-based:** `x += 180 * dt`, with `dt` in seconds. That is 180px a second on every screen. A slow screen takes bigger steps and a fast one smaller steps, and they all arrive together.
 
 <Margin kind="history">
-  <p>Many PCs of the late 1980s and early 1990s had a Turbo button. Switched off, it slowed the machine down, so that older programs that timed themselves by the speed of the processor, games especially, didn't run too fast.</p>
+  <p>Many PCs of the late 1980s and early 1990s had a Turbo button. Switched off, it slowed the machine down, so that older programs that counted their time in processor cycles, games especially, didn't run too fast.</p>
 </Margin>
 
 Those are the blue and red dots of figure 14.1. Look at its middle row: at 60Hz the two agree exactly. That is why frame-based code looks right on the machine it was written on, and wrong on the next one.
@@ -136,7 +148,7 @@ So clamp it: `dt = Math.min(dt, 1 / 15)`. This site's own loop does exactly that
 
 A canvas has two sizes. Its **CSS size** is how big it looks on the page, set in CSS like any element's. Its **backing store** is how many pixels it actually holds, set by its `width` and `height` attributes: 300 × 150 unless you say otherwise. When the two don't match, the browser stretches the picture to fit, and a stretched picture is blurred.
 
-On a dense screen one CSS pixel covers several device pixels. A canvas 400 CSS pixels wide on a 2× screen needs 800 pixels of backing store to look sharp. So, whenever its size changes:
+On a dense screen one CSS pixel covers several device pixels. A canvas 400 CSS pixels wide on a 2× screen needs 800 pixels of backing store to look sharp. The extra pixels are free detail, if you use them. So, whenever its size changes:
 
 1. Read the CSS size: `canvas.clientWidth` and `canvas.clientHeight`.
 2. Size the backing store to match, times the ratio: `canvas.width = Math.floor(width * dpr)`, and the same for the height.
@@ -189,7 +201,7 @@ function resize() {
   const dpr = window.devicePixelRatio || 1;
   width = canvas.clientWidth;
   height = canvas.clientHeight;
-  canvas.width = Math.floor(width * dpr);   // resets the context...
+  canvas.width = Math.floor(width * dpr);   // whole pixels only; resets the context...
   canvas.height = Math.floor(height * dpr);
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);   // ...so scale after it
 }
@@ -200,7 +212,7 @@ const ball = { x: 0, speed: 240 };          // speed: px per second
 
 function update(dt) {
   ball.x += ball.speed * dt;                // the same on every screen
-  if (ball.x > width + 12) ball.x = -12;    // wrap: back in on the left
+  if (ball.x > width + 12) ball.x = -12;    // wrap once fully off (radius 12)
 }
 
 function draw() {
@@ -213,9 +225,10 @@ function draw() {
 
 let last;                                   // previous frame's time, ms
 
-function frame(now) {
+function frame(now) {                       // now: this frame's timestamp, ms
+  // the first frame has no previous one, so its dt is 0
   const elapsed = last === undefined ? 0 : (now - last) / 1000;
-  const dt = Math.min(elapsed, 1 / 15);     // seconds, clamped
+  const dt = Math.min(elapsed, 1 / 15);     // seconds, clamped (see above)
   last = now;
   update(dt);
   draw();
@@ -228,6 +241,8 @@ requestAnimationFrame(frame);
 </div>
 
 Nothing in the loop knows the refresh rate. The ball's speed lives in one place, in pixels per second, and `dt` turns it into this frame's step. For readers who ask for reduced motion, check `matchMedia('(prefers-reduced-motion: reduce)').matches`: instead of running the loop, draw one still frame, and draw it again after every resize.
+
+The loop moves things by a speed you chose. Next comes moving them toward a place: [chapter 15](/chapters/15-easing-by-hand) writes easing and smoothing as code, and finds the one line that quietly ignores `dt`.
 
 <Beat kind="drill">Guess the duration</Beat>
 

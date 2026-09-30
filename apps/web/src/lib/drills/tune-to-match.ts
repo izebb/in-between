@@ -28,7 +28,7 @@ export function springGap(a: TuneSpec, b: TuneSpec): number {
 export const tuneToMatch: DrillDef<TuneSpec, TuneAnswer> = {
   id: "tune-to-match",
   name: "Tune to match",
-  prompt: "Match the blue spring with your red one. Use your eyes, then submit.",
+  prompt: "Match the blue spring with your red one. Response is how quickly it arrives, bounce how far it overshoots. Use your eyes, then submit.",
   trains: "Springs: response and bounce as feel",
   unlocksAfter: 5,
   kind: "estimate",
@@ -47,7 +47,7 @@ export const tuneToMatch: DrillDef<TuneSpec, TuneAnswer> = {
       points,
       truth: Math.round(spec.response * 1000),
       answer: Math.round(a.response * 1000),
-      verdict: `Target: response ${spec.response.toFixed(2)}s, bounce ${spec.bounce.toFixed(2)}. Yours: ${a.response.toFixed(2)}s, ${a.bounce.toFixed(2)}. Paths differ by ${(gap * 100).toFixed(1)}% on average.`,
+      verdict: `Target: response ${spec.response.toFixed(2)}s, bounce ${spec.bounce.toFixed(2)}. Yours: ${a.response.toFixed(2)}s, ${a.bounce.toFixed(2)}. Paths differ by ${(gap * 100).toFixed(1)}% on average. Response sets how long it takes to arrive, bounce how much it overshoots (chapter 5).`,
       meta: { truthBounce: spec.bounce, answerBounce: a.bounce, gap },
     };
   },

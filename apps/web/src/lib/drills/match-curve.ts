@@ -22,6 +22,19 @@ const HARD = [
   { id: "expo-out", label: "expo-out", easing: "cubic-bezier(.16,1,.3,1)" },
 ];
 
+/** What each curve does to speed, in a clause: shown after the answer, so a miss teaches the difference. */
+const TRAIT: Record<string, string> = {
+  linear: "constant speed, equal gaps between frames",
+  "ease-in": "starts slowly and is still speeding up when it stops",
+  "ease-out": "starts fast and slows into the end",
+  "ease-in-out": "slow at both ends, fastest in the middle",
+  "back-out": "runs past the target, then comes back",
+  spring: "overshoots and wobbles before it rests",
+  steps: "jumps between fixed positions, with nothing in between",
+  anticipate: "backs up first, then goes",
+  "expo-out": "a very fast start and a long, slow crawl to the end",
+};
+
 /** Watch a motion, pick its curve from four. */
 export const matchCurve: DrillDef<MatchCurveSpec, number> = {
   id: "match-curve",
@@ -44,8 +57,8 @@ export const matchCurve: DrillDef<MatchCurveSpec, number> = {
       truth: spec.correct,
       answer,
       verdict: ok
-        ? `Yes: ${spec.options[spec.correct].label}.`
-        : `It was ${spec.options[spec.correct].label}, not ${spec.options[answer].label}. Compare their spacing below.`,
+        ? `Yes: ${spec.options[spec.correct].label}, ${TRAIT[spec.options[spec.correct].id]}.`
+        : `It was ${spec.options[spec.correct].label}: ${TRAIT[spec.options[spec.correct].id]}. ${spec.options[answer].label} ${TRAIT[spec.options[answer].id]}. Compare their spacing below (chapter 3).`,
       meta: { truthId: spec.options[spec.correct].id, answerId: spec.options[answer].id },
     };
   },

@@ -258,7 +258,7 @@ function draw(ctx, s, w, h) {
 }
 `;
 
-const boids = `// Boids (Reynolds, 1986): three local rules, no leader.
+const boids = `// Boids (Craig Reynolds, 1986; published 1987): three local rules, no leader.
 // Separation: don't crowd. Alignment: steer with neighbours. Cohesion: stay together.
 const LOOP = 12;
 const N = 70, SEE = 46, MIN = 45, MAX = 120;   // sight radius px, speed limits px/s

@@ -167,7 +167,7 @@
   {#if phase === "intro"}
     <div class="r-intro">
       <p>{def.prompt}{#if heading} <span class="trains">{def.trains}.</span>{/if}</p>
-      <p class="fine">{mode === "round" ? `A round lasts ${seconds} seconds.` : `${trials} trials.`} Judge with your eyes first; the numbers come after.</p>
+      <p class="fine">{mode === "round" ? `A round lasts ${seconds} seconds.` : `${trials} trials.`} Judge with your eyes first; the numbers come after. Three right in a row makes trials harder, a miss eases them.</p>
       <button class="btn solid" type="button" onclick={start}>Start</button>
     </div>
   {:else if phase === "trial" || phase === "reveal"}

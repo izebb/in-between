@@ -245,7 +245,7 @@
         <Seg bind:value={lab.renderer} options={[{ value: "svg", label: "SVG" }, { value: "canvas", label: "Canvas" }]} label="Renderer" />
       </Field>
     </div>
-    <p class="note">Click a bar to follow it. Matched by position, watch it turn into someone else.</p>
+    <p class="note">Click a bar to follow it. Matched by position, the bar becomes whatever datum is now in its slot; matched by key, it stays its own datum.</p>
   {/snippet}
 
   {#snippet stage()}

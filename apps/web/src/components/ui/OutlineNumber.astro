@@ -1,26 +1,32 @@
 ---
 /**
- * A number as Geist Bold outlines (lib/outline.ts): a hairline at rest. Inside a .pencil-hover it
- * is written over in blue pencil, one figure after the other, then inked: the page titles' write-on,
+ * A number as Bold outlines (lib/outline.ts): a hairline at rest. Inside a .pencil-hover it is
+ * written over in blue pencil, one figure after the other, then inked: the page titles' write-on,
  * played on hover (components.css). Each figure is two paths: the hairline, and the pencil and ink.
+ *
+ * Drawn in each theme's face, the page showing its theme's (data-face, tokens.css); or in one face,
+ * when a drawing it stands beside has chosen already (LineTitle).
  */
-import { numeral } from "~/lib/outline";
+import { faces, numeral, type Face } from "~/lib/outline";
 
 interface Props {
   text: string;
   class?: string;
+  face?: Face;
 }
-const { text, class: cls } = Astro.props;
-const n = numeral(text);
+const { text, class: cls, face } = Astro.props;
+const sets = (face ? [face] : faces).map((f) => ({ f, n: numeral(text, f) }));
 ---
 <span class:list={["o-num", cls]}>
   <span class="visually-hidden">{text}</span>
-  <svg viewBox={n.viewBox} style={n.style} aria-hidden="true">
-    {n.letters.map((d, i) => (
-      <g style={`--k:${i}`}>
-        <path class="o-hair" d={d} />
-        <path class="o-ink" d={d} pathLength="1" />
-      </g>
-    ))}
-  </svg>
+  {sets.map(({ f, n }) => (
+    <svg viewBox={n.viewBox} style={n.style} data-face={face ? undefined : f} aria-hidden="true">
+      {n.letters.map((d, i) => (
+        <g style={`--k:${i}`}>
+          <path class="o-hair" d={d} />
+          <path class="o-ink" d={d} pathLength="1" />
+        </g>
+      ))}
+    </svg>
+  ))}
 </span>

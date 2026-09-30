@@ -4,17 +4,17 @@ import EyeTrainer from "~/components/drills/EyeTrainer.svelte";
 import InkTitle from "~/components/ui/InkTitle.astro";
 import { drills, drillOrder } from "~/lib/drills";
 import { pad2 } from "~/lib/curriculum";
-import { numeral } from "~/lib/outline";
+import { numerals as figures } from "~/lib/outline";
 
 // Each row's number, outlined here: the island renders in the browser, where the font can't be read.
-const numerals = Object.fromEntries(drillOrder.map((id) => [id, numeral(pad2(drills[id]?.unlocksAfter ?? 0))]));
+const numerals = Object.fromEntries(drillOrder.map((id) => [id, figures(pad2(drills[id]?.unlocksAfter ?? 0))]));
 ---
 <Base title="L6 Eye trainer" description="Perception drills for motion: guess the duration, match the curve, and more. Scored, with a calibration graph." posture="lab">
   <div class="page">
     <header class="chapter-head" data-reveal-section>
       <span class="smallcaps part">Lab · L6</span>
       <InkTitle as="h1" text="Eye trainer" />
-      <p class="lede" data-reveal-lines data-lines>Ear training for the eyes. Short rounds, scored, with streaks. These drills turn knowledge into instinct.</p>
+      <p class="lede" data-reveal-lines data-lines>Ear training for the eyes. Pick a drill and play a round: each answer is checked against the true value and explained, so your judgement calibrates. The graph beside it shows whether you run high or low.</p>
     </header>
     <div data-reveal-block><EyeTrainer client:only="svelte" {numerals} /></div>
   </div>

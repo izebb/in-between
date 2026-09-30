@@ -92,9 +92,9 @@ export const themes = [
   {
     "id": "cartoon",
     "name": "Cartoon",
-    "fonts": "Fredoka + Nunito",
-    "note": "Thick outlines, bold colour, a friendly round hand.",
-    "display": "\"Fredoka Variable\", \"Fredoka\", system-ui, sans-serif",
+    "fonts": "Comic Neue",
+    "note": "Thick outlines, bold colour, a comic-book hand.",
+    "display": "\"Comic Neue\", \"Comic Sans MS\", \"Chalkboard SE\", cursive",
     "light": {
       "paper": "#FFF4D6",
       "ink": "#1D1B2E",

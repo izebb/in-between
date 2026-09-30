@@ -60,6 +60,14 @@ ${indent(vars(t.dark))}
   })
   .join("\n\n");
 
+// Drawn type (lib/outline.ts: titles, numbers) is drawn in every theme's face; a page shows the drawing
+// its theme writes and none of the others. Pencil, the theme with no palette of its own, sets no attribute.
+const baseTheme = themeIds.find((id) => !tokens.themes[id].light);
+const faceCss = `  /* Drawn type: each theme shows the drawing in its own face (data-face, lib/outline.ts). */
+${themeIds
+  .map((id) => `  ${id === baseTheme ? ":root:not([data-theme])" : `:root[data-theme="${id}"]`} [data-face]:not([data-face="${id}"])`)
+  .join(",\n")} { display: none !important; }`;
+
 const css = `/* ${HEADER} */
 
 @layer tokens {
@@ -70,6 +78,8 @@ ${colorVars("light")}
     --font-display: ${tokens.font.display};
     --font-body: ${tokens.font.body};
     --font-mono: ${tokens.font.mono};
+    /* The name is set in one face whatever the theme: no theme sets this. */
+    --font-brand: ${tokens.font.brand};
 
     /* Shape: what a theme reshapes. The outline of a control follows the rule unless a theme says. */
 ${Object.entries(tokens.shape)
@@ -118,6 +128,8 @@ ${colorVars("dark").replace(/^    /gm, "      ")}
   }
 
 ${themeCss}
+
+${faceCss}
 
   /* On paper it is always paper: printed pages take Pencil's light colours, whatever the screen's theme. */
   @media print {
