@@ -210,7 +210,7 @@ box.animate(
         {#if trackedLabel}<span class="mono hint">tracking {trackedLabel}</span>{/if}
       {:else}
         <Slider label="Loop after" bind:value={lab.pass} min={200} max={4000} step={50} unit="ms" />
-        <p class="note">Edit the code: numbers drag. The stage measures every frame and draws its ghosts. Use 0.1× or the arrow keys on the scrubber to step.</p>
+        <p class="note">Edit the code; numbers in it can be dragged. The stage measures every frame and leaves a ghost at each. Play at 0.1×, or click the scrubber and use the arrow keys to step.</p>
       {/if}
     </div>
     <div class="param-group keys">
@@ -256,7 +256,7 @@ box.animate(
   .trail { position: absolute; inset: 0; pointer-events: none; }
   .xo { position: absolute; left: 0.75rem; top: 0.6rem; background: var(--paper-raised); border: 1px solid var(--rule); padding: 0.2rem 0.45rem; border-radius: 4px; color: var(--ink); }
   .code-col { display: flex; flex-direction: column; height: 100%; }
-  .code-head { display: flex; align-items: center; justify-content: space-between; padding: 0.6rem 0.6rem 0.5rem 0.75rem; border-bottom: 1px solid var(--rule); }
+  .code-head { display: flex; align-items: center; justify-content: space-between; padding: 0.6rem 0.6rem 0.5rem calc(0.75rem + var(--code-head-start, 0px)); border-bottom: 1px solid var(--rule); }
   .code-head .smallcaps { color: var(--graphite-strong); }
   .code-body { flex: 1; position: relative; min-height: 260px; overflow: hidden; }
   .swap { position: absolute; inset: 0; }

@@ -27,6 +27,46 @@ const colorVars = (mode) =>
   Object.entries(tokens.color)
     .map(([name, c]) => `    --${name}: ${c[mode]};`)
     .join("\n");
+const indent = (text, by = "  ") => text.replace(/^/gm, by);
+
+// Themes: every theme but Pencil (the tokens above) overrides type and shape, and brings its own light
+// and dark: colours, and the few shape values that differ by mode (shadows, the ground).
+const themeIds = Object.keys(tokens.themes).filter((k) => !k.startsWith("$"));
+const vars = (o) => Object.entries(o).map(([k, v]) => `    --${k}: ${v};`).join("\n");
+const themeCss = themeIds
+  .filter((id) => tokens.themes[id].light)
+  .map((id) => {
+    const t = tokens.themes[id];
+    const sel = `:root[data-theme="${id}"]`;
+    return `  /* Theme: ${t.name} (${t.fonts}). ${t.note} */
+  ${sel} {
+    color-scheme: light;
+    --font-display: ${t.font.display};
+    --font-body: ${t.font.body};
+    --font-mono: ${t.font.mono};
+${vars(t.shape)}
+${vars(t.light)}
+  }
+  ${sel}[data-mode="dark"] {
+    color-scheme: dark;
+${vars(t.dark)}
+  }
+  @media (prefers-color-scheme: dark) {
+    ${sel}:not([data-mode="light"]) {
+      color-scheme: dark;
+${indent(vars(t.dark))}
+    }
+  }`;
+  })
+  .join("\n\n");
+
+// Drawn type (lib/outline.ts: titles, numbers) is drawn in every theme's face; a page shows the drawing
+// its theme writes and none of the others. Pencil, the theme with no palette of its own, sets no attribute.
+const baseTheme = themeIds.find((id) => !tokens.themes[id].light);
+const faceCss = `  /* Drawn type: each theme shows the drawing in its own face (data-face, lib/outline.ts). */
+${themeIds
+  .map((id) => `  ${id === baseTheme ? ":root:not([data-theme])" : `:root[data-theme="${id}"]`} [data-face]:not([data-face="${id}"])`)
+  .join(",\n")} { display: none !important; }`;
 
 const css = `/* ${HEADER} */
 
@@ -38,6 +78,14 @@ ${colorVars("light")}
     --font-display: ${tokens.font.display};
     --font-body: ${tokens.font.body};
     --font-mono: ${tokens.font.mono};
+    /* The name is set in one face whatever the theme: no theme sets this. */
+    --font-brand: ${tokens.font.brand};
+
+    /* Shape: what a theme reshapes. The outline of a control follows the rule unless a theme says. */
+${Object.entries(tokens.shape)
+  .map(([k, v]) => `    --${k}: ${v.value}; /* ${v.use} */`)
+  .join("\n")}
+    --outline: var(--rule);
 
     /* Durations (§1.6). Exits run at ${tokens.exitRatio}× the enter. */
 ${Object.entries(tokens.duration)
@@ -66,19 +114,24 @@ ${Object.entries(tokens.distance)
     --stagger-step: ${tokens.stagger.step.value}ms;
   }
 
-  :root[data-theme="dark"] {
+  /* Mode: light or dark, chosen or the system's. */
+  :root[data-mode="dark"] {
     color-scheme: dark;
 ${colorVars("dark")}
   }
 
   @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
+    :root:not([data-mode="light"]) {
       color-scheme: dark;
 ${colorVars("dark").replace(/^    /gm, "      ")}
     }
   }
 
-  /* On paper it is always paper: printed pages take the light colours, whatever the screen's theme. */
+${themeCss}
+
+${faceCss}
+
+  /* On paper it is always paper: printed pages take Pencil's light colours, whatever the screen's theme. */
   @media print {
     :root:root:root {
       color-scheme: light;
@@ -115,6 +168,20 @@ export const spring = ${JSON.stringify(springs, null, 2)} as const;
 export const distance = ${JSON.stringify(num(tokens.distance))} as const;
 export const stagger = ${JSON.stringify(num(tokens.stagger))} as const;
 export const color = ${JSON.stringify(Object.fromEntries(Object.entries(tokens.color).map(([k, c]) => [k, { light: c.light, dark: c.dark }])))} as const;
+/** Each theme's name, type and a swatch of its colours in each mode (paper, ink, the two pencils). */
+export const themes = ${JSON.stringify(
+  themeIds.map((id) => {
+    const t = tokens.themes[id];
+    const pick = (m) => {
+      const c = t[m] ?? Object.fromEntries(Object.entries(tokens.color).map(([k, v]) => [k, v[m]]));
+      return { paper: t.swatch?.[m] ?? c.paper, ink: c.ink, blue: c["blue-pencil"], red: c["red-pencil"] };
+    };
+    return { id, name: t.name, fonts: t.fonts, note: t.note, display: (t.font ?? tokens.font).display, light: pick("light"), dark: pick("dark") };
+  }),
+  null,
+  2,
+)} as const;
+export type ThemeId = (typeof themes)[number]["id"];
 export const usage = ${JSON.stringify({
   duration: Object.fromEntries(Object.entries(tokens.duration).map(([k, d]) => [k, d.use])),
   easing: Object.fromEntries(Object.entries(tokens.easing).map(([k, e]) => [k, e.use])),

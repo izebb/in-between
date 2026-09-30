@@ -147,7 +147,7 @@
     </div>
     <div class="inputs">
       <form class="easing" onsubmit={(e) => { e.preventDefault(); fromEasing(); }}>
-        <label class="label" for="ex-easing">Any easing</label>
+        <label class="label" for="ex-easing">Paste any easing</label>
         <div class="row">
           <input id="ex-easing" class="mono" bind:value={easingInput} placeholder="cubic-bezier(.2,.8,.2,1) · spring(response .4 bounce .2) · linear(…)" />
           <input class="mono dur" type="number" min="16" max="5000" step="1" bind:value={durationInput} aria-label="Duration in ms" />

@@ -43,9 +43,9 @@ const fade = (f) => f * f * f * (f * (f * 6 - 15) + 10);
 function noise(x) {
   const i = Math.floor(x);
   const f = x - i;
-  const a = slopes[i & 255] * f;             // the line leaving the left pin
+  const a = slopes[i & 255] * f;             // the line leaving the left pin (i & 255 wraps i into 0..255)
   const b = slopes[(i + 1) & 255] * (f - 1); // the line arriving at the right pin
-  return (a + (b - a) * fade(f)) * 2;
+  return (a + (b - a) * fade(f)) * 2;        // blend a to b, then scale up to fill -1..1
 }
 
 let t = 0;       // seconds of wobble so far
@@ -93,7 +93,7 @@ sync();
 
 A candle flame never holds still, and it never jumps. Neither does a leaf in a breeze or a field of tall grass. They move all the time, in no pattern you could predict, and yet each moment is close to the one before it. Nothing in nature teleports.
 
-When code wants something unpredictable, it reaches for `Math.random()` and gets the wrong kind. A fresh random number on every frame has no memory of the last one, so it flickers. Nature's randomness is *smooth*: unpredictable over time, continuous from one frame to the next. Graphics programmers call it *noise*.
+Chapter 17's particles used `Math.random()` once, at birth, to pick each direction, and that is where it belongs. When code asks it for a new value on every frame, it gets the wrong kind of unpredictable. A fresh random number has no memory of the last one, so the motion flickers. Nature's randomness is *smooth*: unpredictable over time, continuous from one frame to the next. Graphics programmers call it *noise*.
 
 <Beat kind="see">Random against noise</Beat>
 
@@ -121,7 +121,7 @@ The machine is on the left. It breathes with a single sine wave, `scale = 1 + 0.
 
 The other two never settle into a rhythm you can learn. The middle one is built from sines too, but several of them, with lengths that don't fit together. Its breath is two sines, one every 3.7s and a smaller one every 2.2s, plus a sway every 7.0s and a tilt every 4.8s. None of those is a simple multiple of another, so they keep meeting in new combinations, and the whole pattern comes back into step only once every 62.8s.
 
-How soon two loops line up again depends on how their lengths relate:
+Two loops are back in step when both have just finished a whole number of runs, and how soon that happens depends on how their lengths relate:
 
 | Two loops | Back in step after |
 |---|---|
@@ -135,7 +135,7 @@ The blob on the right has no loop to find. It is driven by noise.
 
 <Beat kind="more">Random has no memory</Beat>
 
-Look at figure 18.1 again. The left dot's code is one line per axis, run on every frame: `x = center + range · random(−1, 1)`. At 60 frames a second, that is 60 unrelated positions a second, each as likely to land at the far edge as right next door. In chapter 03's terms it is all gaps: the space between two frames can be as wide as the whole range, so the eye loses the object on every frame and sees a flicker instead of a motion.
+Look at figure 18.1 again. The left dot's code is one line per axis, run on every frame: `x = center + range · random(−1, 1)`. At 60 frames a second, that is 60 unrelated positions a second, each as likely to land at the far edge as right next door. In chapter 3's terms, the gap between two frames can be as wide as the whole range, so the eye loses the object on every frame and sees a flicker instead of a motion.
 
 <Margin kind="def">
   <p><b>Noise.</b> A function that looks random but is smooth. <code>noise(t)</code> and <code>noise(t + 0.01)</code> are nearly equal; <code>noise(t)</code> and <code>noise(t + 5)</code> are unrelated. The same input always gives the same output.</p>
@@ -151,13 +151,13 @@ The right dot's code is the same line with a different source: `x = center + ran
   <p>Ken Perlin developed his noise in the early 1980s, after working on <i>Tron</i> (1982), because computer graphics of the time looked machine-made. He published it in 1985, and in 1997 it earned him an Academy Award for Technical Achievement. Simplex noise, his 2001 redesign, has fewer directional artifacts and costs less in higher dimensions.</p>
 </Margin>
 
-Perlin's noise is simple in one dimension. Take the number line. At every whole number, pin the curve to zero and give it a random slope there: uphill or downhill, steep or gentle. Between two whole numbers, blend from the line leaving the left pin to the line arriving at the right one, along a smooth S-curve. The result is a curve of random hills and valleys, with no corners anywhere.
+Perlin's noise is simple in one dimension, and one dimension is all you need for a single wobbling number. Take the number line. At every whole number, pin the curve to zero and give it a random slope there: uphill or downhill, steep or gentle. Between two whole numbers, blend from the line leaving the left pin to the line arriving at the right one, along a smooth S-curve. The result is a curve of random hills and valleys, with no corners anywhere.
 
-The S-curve is `6t⁵ − 15t⁴ + 10t³`, from Perlin's 2002 paper *Improving Noise*. Its first and second derivatives are zero at both ends, so a motion driven by it has no jumps in speed or in acceleration. The JavaScript at the end of this chapter is exactly this, in a few lines.
+The S-curve is `6t⁵ − 15t⁴ + 10t³`, from Perlin's 2002 paper *Improving Noise*. Its first and second derivatives are zero at both ends, so a motion driven by it has no jumps in speed or in acceleration. The JavaScript at the end of this chapter is exactly this, in a few lines. One worked point: halfway between two pins, at `x = 3.5`, the left line has climbed half its slope and the right one is half a slope below zero, and the blend takes the middle, so the value there is a quarter of the difference of the two slopes. Doubling it at the end brings the extremes to 1.
 
 The whole numbers set the grain. Across a hundredth of a unit, noise barely changes. Across one unit it can swing through most of its range, and two units apart the values have nothing in common, because they are built from different slopes. It always stays between −1 and 1.
 
-Figure 18.1 uses the later *simplex* noise, in two dimensions, and reads x and y along two separate lines of it.
+Figure 18.1 uses the later *simplex* noise, in two dimensions, and reads x and y along two separate lines of it. You don't need it: the short one-dimensional version in the code below is enough for idle motion.
 
 <Beat kind="more">Walking through noise</Beat>
 
@@ -190,7 +190,7 @@ Some things should look alive even while nothing is happening: a voice assistant
 
 Three rules keep it that way.
 
-- **Small.** Idle motion should be almost unnoticed. In figure 18.2 the noise blob grows or shrinks by at most 4.5%, drifts at most 8px, and tilts at most about 3°. If people notice the motion before they notice the thing, it is too big.
+- **Small.** Idle motion should be almost unnoticed. In figure 18.2 the noise blob grows or shrinks by at most 4.5%, drifts at most 8px, and tilts at most a little over 3°. If people notice the motion before they notice the thing, it is too big.
 - **Slow.** Breaths, not a pulse. Loops several seconds long, noise walked at less than one unit a second.
 - **Honest.** Idle motion says *this is alive*, or *this is on*. Use it where that is true. A button that breathes on its own is asking for attention it hasn't earned.
 
@@ -220,7 +220,7 @@ This is figure 18.2 with its code. Change one thing at a time.
 
 CSS has no noise. It has something nearly as good for idling: several loops at once, on separate properties, with lengths that don't line up. Two details make it work. The loops go on the individual `scale` and `rotate` properties, because two animations on `transform` don't add up: the later one in the list replaces the earlier one. And each loop runs `alternate`, there and back, so a 3.7s loop takes 7.4s to come home.
 
-In JavaScript you can have real noise. The second snippet carries its own, the gradient noise described above, and drives a small wobble from a `requestAnimationFrame` loop with `dt`, so it moves at the same speed at any refresh rate. It pauses whenever the element is out of view or the tab is hidden, and it never runs under reduced motion.
+In JavaScript you can have real noise. The second snippet carries its own, the gradient noise described above, and drives a small wobble from a `requestAnimationFrame` loop with `dt`, so it moves at the same speed at any refresh rate. It pauses whenever the element is out of view or the tab is hidden, and it never runs under reduced motion. `sync()` is the one place that decides: the loop runs only if all three conditions allow it, and it is called whenever any of them changes. The amounts (3px, 2 degrees, 3%) are deliberately small: try 30px, 20 degrees and 30% and see the same code turn from breathing into shaking. Try speeds of 2.9, 3.7 and 5.3 in place of 0.29, 0.37 and 0.53 and it trembles instead of drifting.
 
 <div class="snippets">
 <Snippet title="18 · Organic motion: breathing in two loops" lab="frame-stepper" dialect="css" source={breatheCss} extra={{ pass: 4000 }}>
@@ -271,9 +271,9 @@ const fade = (f) => f * f * f * (f * (f * 6 - 15) + 10);
 function noise(x) {
   const i = Math.floor(x);
   const f = x - i;
-  const a = slopes[i & 255] * f;             // the line leaving the left pin
+  const a = slopes[i & 255] * f;             // the line leaving the left pin (i & 255 wraps i into 0..255)
   const b = slopes[(i + 1) & 255] * (f - 1); // the line arriving at the right pin
-  return (a + (b - a) * fade(f)) * 2;
+  return (a + (b - a) * fade(f)) * 2;        // blend a to b, then scale up to fill -1..1
 }
 
 let t = 0;       // seconds of wobble so far
@@ -323,6 +323,8 @@ sync();
 </div>
 
 The noise clock `t` only moves while the loop runs. After a pause the wobble picks up exactly where it stopped, so coming back into view never makes it jump.
+
+That closes the canvas chapters. Chapter 19 steps back and asks which medium should carry a motion at all: CSS, the Web Animations API, SVG, canvas or WebGL.
 
 <Beat kind="drill">Blind A/B</Beat>
 

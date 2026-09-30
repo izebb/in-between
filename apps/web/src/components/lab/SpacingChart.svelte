@@ -138,7 +138,7 @@
       </Field>
       <label class="check"><input type="checkbox" bind:checked={lab.compare} /> Compare with linear</label>
     </div>
-    <p class="note">Wide gaps read as fast, tight gaps as slow. The ticks are the same thing an animator pencils on the side of a key drawing.</p>
+    <p class="note">Pick a curve and press play. Wide gaps between ghosts read as fast, tight gaps as slow; try Compare with linear to see where the curve differs. The ticks are what an animator pencils beside a key drawing.</p>
   {/snippet}
 
   {#snippet stage()}

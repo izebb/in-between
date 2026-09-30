@@ -3,13 +3,13 @@ number: 25
 lede: "A motion system is a handful of decisions, made once, written down, and kept everywhere."
 ---
 
-Every chapter so far taught one idea at a time. This one asks you to use all of them at once, on something of your own.
+Chapter 24 took apart the motion system of this site. This chapter asks you to build one of your own, and to use everything before it while you do.
 
-You will design a motion system for a product you choose, in the layers of a motion system: tokens, primitives, patterns, policy. You will build one screen with it, with six moments: an enter, an exit, a shared element, a gesture, a canvas moment, and an animated infographic. Then you will publish it the way this course publishes everything, as figures with captions. A worked example runs through the whole chapter, so you can see each step done once before you do it yourself.
+You will choose a product and design its motion system in the five layers of chapter 24: tokens, primitives, orchestration, patterns and policy. You will build one screen with it, with six moments: an enter, an exit, a shared element, a gesture, a canvas moment, and an animated infographic. Then you will publish it the way this course publishes everything, as figures with captions. A worked example runs through the chapter, so you can see each step done once before you do it yourself. You can do all of it alone, in a plain HTML page and two or three files. Every step ends with a *Done when* line: a check you can run yourself, so you know you can move on.
 
 <Beat kind="see">One system, playing</Beat>
 
-These are four moments from a finished system, made for an imaginary notes app. Hover or click one to play it again.
+These are four moments from a finished system, made for an imaginary notes app. Hover or click one to play it again. Watch how each one starts and how it leaves.
 
 <Figure n="25.1" caption="A notes app's moments, from one system">
   <Specimens items={[
@@ -20,13 +20,13 @@ These are four moments from a finished system, made for an imaginary notes app. 
   ]} height={140} />
 </Figure>
 
-Watch them as a set. Nothing bounces. Nothing travels far. Whatever leaves goes faster than it came, and the way it came. The note that opens and the goal bar don't come or go at all: they change in place. No single moment here is remarkable. Together they sound like one voice, and that is what a system is for.
+Watch them as a set. Nothing bounces. Nothing travels far. Whatever leaves does so faster than it arrived (chapter 9). The note that opens and the goal bar don't come or go at all: they change in place (chapters 10 and 23). No single moment here is remarkable. Together they sound like one voice, and that is what a system is for.
 
 The same screen has two more moments that need a finger and a loop: a swipe to archive a note, and a small moment drawn on a canvas. They come later in the chapter.
 
-<Beat kind="feel">Which one belongs here?</Beat>
+<Beat kind="feel">Which one fits a notes app?</Beat>
 
-Three versions of the same moment. Each would be right for some product. Only one fits this one.
+Three versions of the same moment. Each would be right for some product. Only one fits this one. Decide by eye, as you did in chapter 22.
 
 <FeelAB
   question="A new note appears in an app people write in for an hour at a time. Which one belongs there?"
@@ -42,80 +42,86 @@ Three versions of the same moment. Each would be right for some product. Only on
 
 <Beat kind="more">The brief, as a checklist</Beat>
 
-Eight steps. Each one links back to the chapter that teaches it.
+Eight steps. Each one points back to the chapters that taught it. Do them in order: each uses the last one's output. Expect the first five to be writing and the sixth to be the only real build.
 
 1. **Pick a voice.** Three words for how the product moves, and one feeling to avoid ([chapter 22](/chapters/22-taste)).
-2. **Write the tokens.** Durations, curves, springs, distances. Keep the scale small ([02](/chapters/02-timing), [03](/chapters/03-spacing), [05](/chapters/05-springs), [09](/chapters/09-enter-exit-change)).
+2. **Write the tokens.** Durations, curves, springs, distances, a stagger step. Keep the scale small ([02](/chapters/02-timing), [03](/chapters/03-spacing), [05](/chapters/05-springs), [09](/chapters/09-enter-exit-change)).
 3. **Make primitives.** Single motions written only in tokens, each with an interruption rule ([chapter 24](/chapters/24-motion-architecture)).
-4. **Compose patterns** for the moments your screen needs ([08](/chapters/08-stagger-and-hierarchy), [10](/chapters/10-object-permanence)).
-5. **Set the policy:** reduced motion, a frequency budget, and what may run at once ([21](/chapters/21-care), [22](/chapters/22-taste)).
+4. **Compose patterns** for the moments your screen needs, using orchestration such as stagger ([08](/chapters/08-stagger-and-hierarchy), [24](/chapters/24-motion-architecture)) and shared elements ([10](/chapters/10-object-permanence)).
+5. **Set the policy:** reduced motion, a frequency budget, and what may run at once ([21](/chapters/21-care), [22](/chapters/22-taste), [24](/chapters/24-motion-architecture)).
 6. **Build the screen's six moments:** an enter, an exit, a shared element, a gesture, a canvas moment, an animated infographic.
-7. **Document it:** a spacing chart for every primitive, captioned like a figure, and a specimen sheet.
-8. **Critique it** with the protocol from chapter 22 and the Eye trainer. Save specimens in the Journal. Export with the Export desk.
+7. **Document it:** a spacing chart for every primitive ([03](/chapters/03-spacing)), captioned like a figure, and a specimen sheet.
+8. **Critique it** with the protocol from chapter 22 and the Eye Trainer. Save specimens in the Journal. Export with the Export desk.
 
 <Beat kind="more">1 · A voice</Beat>
 
-Choose a product, real or imagined, and describe how it moves in three words. Pick words you could check against a spacing chart: *calm* can be seen, *delightful* can't. Then name one feeling to avoid. That word is the useful one, because it turns into rules.
+Choose a product, real or imagined, and describe how it moves in three words. Pick words you could check against a spacing chart: *calm* can be seen, *fun* can't. Then name one feeling to avoid. That word is the useful one, because it turns into rules.
 
-The example is a notes app. Its words are **calm, clear, quiet**. The feeling to avoid is **busy**.
+The example is a notes app. Its words are **calm, clear, quiet**. The feeling to avoid is **busy**. Chapter 22 called this a personality: the same tools, chosen on purpose.
 
-- *Calm*: nothing starts with a jolt, and nothing overshoots.
-- *Clear*: every motion says where a thing came from and where it went ([chapter 09](/chapters/09-enter-exit-change), [chapter 11](/chapters/11-spatial-models)).
-- *Quiet*: short distances, and durations short enough that nobody waits for them.
+- *Calm*: nothing starts with a jolt, and nothing overshoots ([chapter 3](/chapters/03-spacing), [chapter 5](/chapters/05-springs)).
+- *Clear*: every motion says where a thing came from and where it went ([chapter 9](/chapters/09-enter-exit-change), [chapter 11](/chapters/11-spatial-models)).
+- *Quiet*: short distances, and durations short enough that nobody waits for them ([chapter 2](/chapters/02-timing)).
 - *Never busy*: one moment on stage at a time, and no motion at all while you type.
+
+Done when: each of your three words has a line like these, a rule you could check against a spacing chart or a stopwatch, and the feeling to avoid has one too. If a rule can't be checked, the word is too vague. Swap it.
 
 <Beat kind="more">2 · Tokens</Beat>
 
-Tokens are the only place a number may live. Every duration, curve, spring and distance in the product is one of them. Keep the scale small: if you can't tell two tokens apart by eye, you only need one of them. This site gets by on fourteen; they are on its [specimen sheet](/system).
+Tokens are the only place a number may live. Every duration, curve, spring, distance and stagger step in the product is one of them. Keep the scale small: if you can't tell two tokens apart by eye, you only need one of them. This site gets by on fourteen, listed in chapter 24 and on its [specimen sheet](/system).
 
-The notes app has ten, and one rule.
+The notes app has ten, and one rule. It keeps this site's names, `--ease-out` and the rest, with values of its own.
 
 | Token | Value | Used for |
 |---|---|---|
-| `duration.quick` | `160ms`, exit `112ms` | toggles, menus, cross-fades |
-| `duration.base` | `240ms`, exit `168ms` | notes arriving, leaving, and moving |
-| `duration.scene` | `360ms`, exit `252ms` | opening a note, the week chart |
-| `easing.out` | `cubic-bezier(.3, .6, .2, 1)` | enter |
-| `easing.in` | `cubic-bezier(.4, 0, 1, 1)` | exit |
-| `easing.inout` | `cubic-bezier(.65, 0, .35, 1)` | on-screen moves |
+| `--dur-quick` | `160ms`, exit `112ms` | toggles, menus, cross-fades |
+| `--dur-base` | `240ms`, exit `168ms` | notes arriving, leaving, and moving |
+| `--dur-scene` | `360ms`, exit `252ms` | opening a note, the week chart |
+| `--ease-out` | `cubic-bezier(.3, .6, .2, 1)` | enter |
+| `--ease-in` | `cubic-bezier(.4, 0, 1, 1)` | exit |
+| `--ease-inout` | `cubic-bezier(.65, 0, .35, 1)` | on-screen moves |
 | `spring.settle` | response `0.35`, bounce `0` | anything under a finger |
-| `distance.nudge` | `6px` | enters and exits |
-| `distance.travel` | `16px` | the *Archived* toast, from the bottom edge |
-| `stagger.step` | `24ms` | rows on launch |
+| `--dist-nudge` | `6px` | enters and exits |
+| `--dist-travel` | `16px` | the *Archived* toast, from the bottom edge |
+| `--stagger-step` | `24ms` | rows on launch |
 
-The rule is from chapter 09: an exit takes `0.7×` the time of its enter.
+The rule is the one from chapter 9 and chapter 24: an exit takes `0.7×` the time of its enter, which the build writes as each duration's `-exit` twin. Nothing is special about `0.7`. Keep whatever ratio you like, as long as exits stay shorter.
 
 <Margin kind="wild">
-  <p>IBM's Carbon Design System publishes its motion as tokens: named durations and easing curves. Each curve comes in two styles, <i>productive</i> for everyday tasks and <i>expressive</i> for moments that deserve attention. Two voices, one system.</p>
+  <p>IBM's Carbon Design System publishes its motion as tokens: named durations and easing curves. Its easings come in two styles, <i>productive</i> for everyday tasks and <i>expressive</i> for moments that deserve attention. Two voices, one system.</p>
 </Margin>
 
-Each value comes from the voice. The durations sit a little under this site's: a notes app is used all day, and the more often a thing is seen, the less it should move. *Calm* lives in the enter curve. A cubic-bezier starts at `y1 / x1` times its average speed. This site's enter, `cubic-bezier(.2, .8, .2, 1)`, starts at four times; the notes app's starts at twice. In the first quarter of its time, this site's enter covers 77% of the way and the notes app's covers 61%. It arrives without a jolt.
+Each value comes from the voice, starting from this site's value in chapter 24 and moved by feel until the Export desk below showed the voice you chose. Move one value at a time. The durations sit under this site's, by 11 to 25%, and both distances are smaller: a notes app is used all day, and the more often a thing is seen, the less it should move (chapter 22). *Calm* lives in the enter curve. A cubic-bezier's opening speed is `y1 / x1` times linear speed, the slope of its first handle (chapter 3). This site's enter, `cubic-bezier(.2, .8, .2, 1)`, opens at four times; the notes app's, `cubic-bezier(.3, .6, .2, 1)`, at twice. In the first quarter of its time, this site's enter covers 77% of the way and the notes app's covers 61%. It arrives without a jolt. To check this for your own curve, divide its `y1` by its `x1`: a bigger number is a sharper start.
 
-There is one spring, and it has no bounce, because *calm* rules out overshoot. A note thrown by a finger can still pass its place a little. That overshoot is honest: it is the finger's speed, not the spring's ([chapter 05](/chapters/05-springs)). With mass `1`, the spring is stiffness `322.3` and damping `35.9`, and it settles in `544ms`.
+There is one spring, and it has no bounce, because *calm* rules out overshoot. A note thrown by a finger can still pass its place a little. That overshoot is honest: it is the finger's speed, not the spring's ([chapter 5](/chapters/05-springs)). With mass `1`, the spring is stiffness `322.3` and damping `35.9`, and its duration is a result, not a choice: it settles in `544ms`. (Chapter 5 gives the formulas: stiffness is `(2π ÷ response)² × mass`, damping is `4π ÷ response × mass`, and the Export desk works them out for you.)
+
+Done when: you have a `tokens.json` like the one under *The notation*, with your own values, and for every pair of durations, curves or distances you can tell them apart by eye in the Lab. If you can't, delete one.
 
 <Beat kind="more">3 and 4 · Primitives and patterns</Beat>
 
-A primitive is one motion, written only in tokens. It can take a token's name as an argument, never a raw number. And it says what happens when something interrupts it. There are four answers ([chapter 24](/chapters/24-motion-architecture)):
+A primitive is one motion, written only in tokens. It can take a token's name as an argument, never a raw number. And it declares what happens when something interrupts it, the contract from chapter 24. There are four answers:
 
-- **Retarget.** Head for the new target from where it is now. A spring keeps its velocity as it turns.
 - **Reverse.** Turn back from the frame on screen, without jumping to an end first.
-- **Finish.** Jump to the end state, then run the new motion.
+- **Retarget.** Head for the new target from where it is now. A spring keeps its velocity as it turns.
 - **Queue.** Wait until the current motion settles. Only for small moments that block nothing.
+- **Finish.** Jump to the end state, then run the new motion.
 
-The notes app has three primitives.
+The notes app has three primitives. Their names are its own, chosen for this product; chapter 24's `fade` and `rise` belong to that chapter's system, and yours will have its own names too.
 
-- **`appear`** fades and rises into place. Going out, it sinks and fades, quicker. Tokens: `duration.base`, `easing.out` and `easing.in`, `distance.nudge`. If interrupted: *reverse*.
-- **`slide`** carries a thing to its new place, FLIP-style. Tokens: `duration.base`, `easing.inout`. If interrupted: *retarget*.
-- **`settle`** is a spring to a target that starts at the finger's speed. Token: `spring.settle`. If interrupted: *retarget*, keeping its velocity.
+- **`appear`** fades and rises into place. Going out, it sinks and fades, quicker. Tokens: `--dur-base`, `--ease-out` and `--ease-in`, `--dist-nudge`. If interrupted: *reverse*.
+- **`slide`** carries a thing to its new place, FLIP-style. Tokens: `--dur-base`, `--ease-inout`. If interrupted: *retarget*.
+- **`settle`** is a spring to a target that starts at the finger's speed ([chapter 12](/chapters/12-direct-manipulation)). Token: `spring.settle`. If interrupted: *retarget*, keeping its velocity.
 
-A pattern is a moment of the product, built from primitives. Name it after the moment, not the motion: `noteOpen`, not `scaleAndFade`. The notes app needs two.
+A pattern is a moment of the product, built from primitives. Name it after the moment, not the motion: `noteOpen`, not `scaleAndFade`. The moment is what will still be true when you change the motion. The notes app needs two.
 
-- **`noteOpen`.** The tapped card becomes the editor: a shared element ([chapter 10](/chapters/10-object-permanence)). The card travels on `easing.inout` for `scene`, because it is the longest trip on the screen. Everything else cross-fades over `quick`. It is built on the View Transitions API, where starting a new transition skips the running one to its end. So its rule is *finish*.
-- **`noteArchive`.** The swipe. The row follows the finger 1:1. On release, `settle` carries it off at the finger's speed, or back into place if the throw was too weak ([chapter 12](/chapters/12-direct-manipulation), [chapter 06](/chapters/06-momentum-and-friction)). The rows below `slide` up together, as one ([chapter 08](/chapters/08-stagger-and-hierarchy)). Then an *Archived* toast with Undo rises from the bottom edge: `appear` again, with `travel` in place of `nudge`.
+- **`noteOpen`.** The tapped card becomes the editor: a shared element ([chapter 10](/chapters/10-object-permanence)). The card travels on `--ease-inout` for `--dur-scene`, because it is the longest trip on the screen. Everything else cross-fades over `--dur-quick`. It is built on the View Transitions API, where starting a new transition skips the running one to its end. So its rule is *finish*, and it works where the API exists; elsewhere the editor simply appears.
+- **`noteArchive`.** The swipe. The row follows the finger 1:1. On release, `settle` carries it off at the finger's speed, or back into place if the throw was too weak ([chapter 12](/chapters/12-direct-manipulation), [chapter 6](/chapters/06-momentum-and-friction)). The rows below `slide` up together, as one ([chapter 8](/chapters/08-stagger-and-hierarchy)). Then an *Archived* toast with Undo rises from the bottom edge: `appear` again, with `--dist-travel` in place of `--dist-nudge`.
+
+Done when, for primitives: each one is a function that contains no number of its own, only token names, and you can say its interruption rule aloud. Test it by calling it twice quickly on one element: it must turn back, not restart. Done when, for patterns: each has a name from the product's vocabulary, a list of the primitives it calls, and one sentence on what happens if it is interrupted.
 
 <Beat kind="more">5 · Policy</Beat>
 
-Policy is the set of rules every motion obeys, whoever wrote it. Write it in sentences first. Code it second.
+Policy is the set of rules every motion obeys, whoever wrote it. Write it in sentences first. Code it second. One rule is already set: each primitive and pattern above declares its interruption rule.
 
 **Reduced motion: reduce, don't remove** ([chapter 21](/chapters/21-care)). Both distances become `0`, so every `appear` is a fade. `noteOpen` names nothing, so nothing travels and the screen cross-fades. The swipe still follows the finger, because that motion is the user's own, but on release the row fades out instead of flying. The canvas moment doesn't play.
 
@@ -124,36 +130,40 @@ Policy is the set of rules every motion obeys, whoever wrote it. Write it in sen
 | How often | Moments | Budget |
 |---|---|---|
 | All the time | typing, scrolling, the cursor | no motion |
-| Often | toggles, menus, *Saved*, a new note | `quick` or `base`, `nudge` |
-| Sometimes | opening a note, archiving, switching weeks | up to `scene` |
+| Often | toggles, menus, *Saved*, a new note | `--dur-quick` or `--dur-base`, `--dist-nudge` |
+| Sometimes | opening a note, archiving, switching weeks | up to `--dur-scene` |
 | Once a day | the day's goal is met | the one expressive moment |
 
-**One moment at a time.** A moment may move many elements: a list of notes arriving is one moment. But two moments never overlap. If a note is opening, the *Saved* toast waits until it settles. Its rule is *queue*.
+**One moment at a time.** A moment may move many elements: a list of notes arriving is one moment. But two moments never overlap. If a note is opening, the *Saved* toast waits until it settles. Its rule is *queue*. As with the site's concurrency budget in chapter 24, this is a rule for the people who write and review motion until you build code that enforces it.
 
-**Cheap properties** ([chapter 20](/chapters/20-performance)). Whatever the app animates itself, it animates with `transform` and `opacity`. Rows close a gap with FLIP, never by animating `height`, and the chart's bars grow with `scaleY`.
+**Cheap properties** ([chapter 20](/chapters/20-performance)). Whatever the app animates itself, it animates with `transform` and `opacity`. Rows close a gap with FLIP, never by animating `height`, and the chart's bars grow with `scaleY` from their baseline.
+
+Done when: the policy fits on one screen as sentences, and you have tested the first rule. In your browser's developer tools, or in your system settings, switch on *reduce motion* and reload: nothing may travel, and every fade must still be there.
 
 <Beat kind="more">6 · One screen, six moments</Beat>
 
-The screen is the list of notes, with the week's writing charted above it. Each moment uses the system; none brings its own numbers. Choose the medium for each one ([chapter 19](/chapters/19-choosing-the-medium)): CSS for state, JavaScript for choreography and physics, a canvas for what is drawn frame by frame.
+The screen is the list of notes, with the week's writing charted above it. Each moment uses the system; none brings its own numbers. Build one moment at a time, in the table's order, and check each before starting the next. Use plain HTML, `tokens.css`, and the `appear.js` from the notation: the enter and the exit need nothing else. Choose the medium for each one ([chapter 19](/chapters/19-choosing-the-medium)), and give each property one owner ([chapter 24](/chapters/24-motion-architecture)): CSS for state, JavaScript for choreography and physics, a canvas for what is drawn frame by frame.
 
 | Moment | In the notes app | Built from |
 |---|---|---|
-| Enter | On launch, the notes rise in, one stagger step apart | `appear` and `stagger.step` · chapters [08](/chapters/08-stagger-and-hierarchy), [09](/chapters/09-enter-exit-change) |
-| Exit | A deleted note fades where it stands; the rows below close the gap | `appear` out, then `slide` · chapter [09](/chapters/09-enter-exit-change) |
-| Shared element | The tapped card becomes the editor, and goes back into its card | `noteOpen` · chapter [10](/chapters/10-object-permanence) |
+| Enter | On launch, the notes rise in, one stagger step apart | `appear` and `--stagger-step` · chapters [08](/chapters/08-stagger-and-hierarchy), [09](/chapters/09-enter-exit-change) |
+| Exit | A deleted note sinks and fades where it stands; the rows below close the gap | `appear` out, then `slide` · chapter [09](/chapters/09-enter-exit-change) |
+| Shared element | The tapped card becomes the editor; run the other way, it goes back into its card | `noteOpen` · chapter [10](/chapters/10-object-permanence) |
 | Gesture | Swipe a note to archive it | `noteArchive` and `settle` · chapters [12](/chapters/12-direct-manipulation), [06](/chapters/06-momentum-and-friction) |
 | Canvas moment | When the day's goal is met, a few specks of ink rise from the word count and fade | a loop with `dt`, and particles · chapters [14](/chapters/14-the-loop), [17](/chapters/17-many-things) |
-| Animated infographic | Words per day, this week. Switch weeks and each day's bar grows or shrinks to its new value | `easing.inout` for `scene`, bars keyed by weekday · chapter [23](/chapters/23-animated-infographics) |
+| Animated infographic | Words per day, this week. Switch weeks and each day's bar grows or shrinks to its new value | `--ease-inout` for `--dur-scene`, bars keyed by weekday · chapter [23](/chapters/23-animated-infographics) |
+
+Done when, for each moment: it plays from a button, it runs on tokens only (search your files for a raw number of milliseconds; there should be none outside `tokens.json`), it can be interrupted without a jump, and it obeys reduced motion. The chart's bars also pass one more check: switch weeks twice quickly and no bar may jump or overshoot.
 
 Two of these need a word more.
 
-The specks are the one moment the tokens don't fully describe, because canvas motion is procedural. Policy still holds. The loop runs on `dt`, so it looks the same at any refresh rate. Its randomness is seeded, so every replay is identical. It happens once a day, which is what earns it the right to be the most expressive thing in the product.
+The specks are the one moment the tokens don't fully describe, because canvas motion is procedural. Policy still holds. The loop runs on `dt`, so it looks the same at any refresh rate ([chapter 14](/chapters/14-the-loop)). Its randomness is seeded, so every replay is identical. It happens once a day, which is what earns it the right to be the most expressive thing in the product.
 
-The chart is information first. Each bar is keyed to its weekday, so Tuesday stays Tuesday when the week changes: the bar moves, it is never replaced. It never overshoots, because a bar that passes its value claims, for a moment, a number that isn't true. And the value labels appear when the bars settle, not while they travel.
+The chart is information first. Each bar is keyed to its weekday, so Tuesday stays Tuesday when the week changes: the bar moves, it is never replaced. It never overshoots, because a bar that passes its value claims, for a moment, a number that isn't true ([chapter 23](/chapters/23-animated-infographics)). And the value labels appear when the bars settle, not while they travel.
 
 <Beat kind="more">7 · Publish it</Beat>
 
-Publish the system the way this course publishes every idea: as figures with captions. Make one spacing chart per primitive in the [Spacing chart](/lab/spacing-chart), number your figures, and caption them in small caps, like *Fig. 1.2 — Appear, enter, 14 fr*. This is the notes app's.
+Publish the system the way this course publishes every idea: as figures with captions. Make one spacing chart per primitive in the [Spacing chart](/lab/spacing-chart), number your figures, and caption them in small caps, like *Fig. 25.2 — Appear, enter, 14 fr* (`fr` is frames: the chart shows 14 of them at 60Hz). This is the notes app's.
 
 <Figure n="25.2" caption="The notes app's primitives, published">
   <SpacingChart rows={[
@@ -164,7 +174,7 @@ Publish the system the way this course publishes every idea: as figures with cap
   ]} />
 </Figure>
 
-Read it as someone joining your team would. The enter's ghosts crowd at the end, where it settles. Its first gaps grow for two frames before they shrink: it gathers speed instead of jumping, and that is what *calm* looks like in a spacing chart. This site's enter covers 28% of the way in its first frame at this length; the notes app's covers 15%. The exit's ghosts crowd at the start, and it is gone sooner. The slide is slow at both ends, because it starts and ends on screen. The spring comes to rest without passing its line.
+Read it as someone joining your team would. The enter's ghosts crowd at the end, where it settles. Its first three gaps grow before they shrink: it gathers speed instead of jumping, and that is what *calm* looks like in a spacing chart. Take the first frame at 60Hz over `240ms`: this site's enter curve would cover 28% of the way in it, the notes app's 15%. The exit's ghosts crowd at the start, and it is gone sooner. The slide is slow at both ends, because it starts and ends on screen. The spring, drawn from its physics with no duration typed in, comes to rest without passing its line.
 
 <Margin kind="def">
   <p><b>Specimen sheet.</b> Type foundries printed specimen sheets to show a typeface in all its sizes on one page. A motion specimen sheet does the same for a system: every moment, side by side, ready to play.</p>
@@ -178,30 +188,32 @@ A finished document has five parts:
 4. **A specimen sheet.** Every moment of the screen, playable, with a one-line note, like Figure 25.1.
 5. **The policy**, in sentences.
 
+Done when: a stranger could rebuild one of your motions from the document alone, without opening your code. Give it to someone, or reread it a day later and try.
+
 This site publishes its own on its [specimen sheet](/system).
 
 <Beat kind="more">8 · Critique it</Beat>
 
-Then look at the screen the way chapter 22 taught: **feeling-word → cause → parameter → change one thing.**
+Then look at the screen the way chapter 22 taught: **name the feeling, find its cause, name the parameter, change one thing.**
 
-In the example, launch felt *slow*. The cause: with twelve notes, the last row started eleven stagger steps late and landed just over half a second after launch. The parameter: the stagger. The change: rows after the eighth arrive with the eighth. That brings the last one in at `408ms`. One change, then look again.
+In the example, launch felt *slow*. The cause: with twelve notes, the last row started eleven stagger steps late and landed just over half a second after launch (chapter 8: the count multiplies the step). The parameter: the stagger. The change: rows after the eighth arrive with the eighth. That brings the last one in at `408ms`. One change, then look again: if the feeling is gone, stop; if a new one has appeared, name that one and repeat. Done when the critique names one feeling, one cause and one parameter, and the change leaves your tokens file with a new value or a new rule, not a special case in one component.
 
 <Margin kind="read">
   <p>Two books on motion in interfaces: Val Head's <i>Designing Interface Animation</i> and Rachel Nabors' <i>Animation at Work</i>.</p>
 </Margin>
 
-Sharpen your eye before each critique with a few rounds of Blind A/B in the [Eye trainer](/lab/eye-trainer). And keep a record. Every instrument has *Save to Journal*: save each token as you settle it, and name it with the words it earned. Over time the Journal shows what you mean by *calm*, in milliseconds.
+Sharpen your eye before each critique with a few rounds of Blind A/B in the [Eye Trainer](/lab/eye-trainer). And keep a record. Every instrument has *Save to Journal*: below is the journal itself. Save each token as you settle it, and name it with the words it earned. Over time the Journal shows what you mean by *calm*, in milliseconds.
 
 <Lab id="specimen-journal" />
 
 <Beat kind="tune">Export the system</Beat>
 
-The Export desk writes one motion in every notation: CSS, Web Animations, Motion, GSAP and Canvas, plus design-token JSON and a sentence a designer can read. It opens on the notes app's `appear`: a rise of `6px` over `240ms` on `easing.out`.
+The Export desk writes one motion in every notation: CSS, WAAPI, Motion, GSAP and Canvas, plus design-token JSON and a sentence a designer can read. It opens on the notes app's `appear`: a rise of `6px` over `240ms` on `--ease-out`.
 
 - Read the sentence in the handoff card. That line goes under the spacing chart of `appear` in your document.
-- Type the exit into *Any easing*, `cubic-bezier(.4, 0, 1, 1)` with `168` beside it, and press Convert. Every dialect rewrites itself. They are the same numbers in different notation.
-- Now type `spring(response .35 bounce 0)`. The duration box no longer matters: a spring's time comes from its physics. The token JSON keeps both pairs, stiffness and damping, response and bounce.
-- Do the same for each of your own tokens, or choose a specimen from your Journal.
+- Type the exit into *Any easing*, `cubic-bezier(.4, 0, 1, 1)` with `168` beside it, and press Convert. Every notation rewrites itself. They are the same numbers written differently.
+- Now type `spring(response .35 bounce 0)`. The duration box no longer matters: a spring's time comes from its physics, `544ms` here. The token JSON keeps both pairs, stiffness and damping, response and bounce.
+- Do the same for each of your own tokens, or choose a specimen from your Journal. Done when every token in your document has an exported line next to it that a designer could check.
 
 <Lab id="export-desk" easing="cubic-bezier(.3, .6, .2, 1)" duration={240} from={6} to={0} property="y" />
 
@@ -357,6 +369,7 @@ export function appear(el, dir = 'in', { dist = 'nudge', delay = 0 } = {}) {
 // Its timing lives in CSS, on ::view-transition-group(note).
 // Interruption rule: finish. Starting a new view transition
 // skips the one in progress to its end state.
+// Closing is the same call with the two elements swapped.
 export async function noteOpen(card, editor, showEditor) {
   if (!document.startViewTransition) {
     showEditor(); // no API: just change
@@ -387,4 +400,4 @@ Two versions of a moment from anywhere in the course. Pick the better one, then 
 
 <Drill kind="blind-ab" trials={5} chapter={25} />
 
-Every token in your system answers one of two questions: how long, and how far each frame. See it, feel it, tune it, then write it down.
+When all eight are done, you have a system another person could join. Every token in your system answers a question this course taught you to ask: how long, how the frames are spaced, how far, how heavy. The same loop builds all of them: see it, feel it, tune it, then write it down.

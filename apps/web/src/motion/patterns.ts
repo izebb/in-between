@@ -9,7 +9,7 @@ import { prefersReducedMotion } from "./policy";
 
 /**
  * Page cut: a quick cross-dissolve and a 4px rise. Calm and bookish.
- * Used as Astro's transition:animate on <main>.
+ * Used as Astro's transition:animate on the page's scrolling frame (.scroller).
  */
 export const pageCut = {
   forwards: {

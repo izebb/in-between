@@ -29,6 +29,98 @@
   .instrument.code-first > .i-params { border-right: 0; border-top: 1px solid var(--rule); flex-direction: row; flex-wrap: wrap; align-items: flex-start; }
   .instrument.code-first > .i-params > * { flex: 1 1 200px; }
 
+  /* The code card's handle only exists stage first (below). */
+  .instrument > .i-handle { display: none; }
+
+  /* ---------- Stage first: an instrument on its own lab page, on a wide screen ----------
+     The stage is the page. The knobs, the code and the time bar float over it as cards, so nothing
+     boxes the motion in; the code can be put away, and the stage takes its room. The stage keeps
+     padding where the cards sit, so what runs on it is laid out in the space between them. */
+  @media (min-width: 1180px) {
+    .instrument.stage-first {
+      --float-gap: 1.25rem;
+      --params-w: clamp(15rem, 18vw, 17.5rem);
+      --code-w: clamp(19rem, 26vw, 25rem);
+      --time-h: 3.25rem;
+      position: relative;
+      display: block;
+      overflow: clip;
+      border: 0;
+      border-radius: 16px;
+      background: var(--plate-bg);
+    }
+    /* The stage is the one thing that scrolls: taller than the window, it scrolls under the cards,
+       which stay put. Its content is centred while it fits and starts at the top once it doesn't. */
+    .instrument.stage-first > .i-stage {
+      z-index: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: safe center;
+      box-sizing: border-box;
+      min-height: inherit;
+      height: 100%;
+      overflow: hidden auto;
+      padding:
+        var(--float-gap)
+        calc(var(--code-w) + 2 * var(--float-gap))
+        calc(var(--time-h) + 2 * var(--float-gap))
+        calc(var(--params-w) + 2 * var(--float-gap));
+      background: none;
+      transition: padding-right var(--dur-base) var(--ease-inout);
+    }
+    .instrument.stage-first:is(.no-code, .code-away) > .i-stage { padding-right: calc(2 * var(--float-gap)); }
+    .instrument.stage-first > :is(.i-params, .i-code, .i-time) {
+      position: absolute;
+      z-index: 1;
+      box-sizing: border-box;
+      border: 1px solid var(--rule);
+      border-radius: 12px;
+      background: var(--paper-float);
+      box-shadow: 0 14px 34px -22px rgb(0 0 0 / 0.35);
+    }
+    /* The cards run the stage's height (the code's always; the knobs' as far as they need) and scroll
+       inside if what they hold is taller; a shadow at an edge says there is more past it (the covers
+       scroll with the content, the shadows don't). */
+    .instrument.stage-first > :is(.i-params, .i-code) {
+      top: var(--float-gap);
+      max-height: calc(100% - 2 * var(--float-gap));
+      overflow-y: auto;
+    }
+    .instrument.stage-first > .i-params {
+      left: var(--float-gap);
+      width: var(--params-w);
+      padding: 1rem 1.1rem;
+      gap: 1.1rem;
+      background:
+        linear-gradient(var(--paper-float) 30%, transparent) top / 100% 2.5rem no-repeat local,
+        linear-gradient(transparent, var(--paper-float) 70%) bottom / 100% 2.5rem no-repeat local,
+        linear-gradient(color-mix(in srgb, var(--ink) 12%, transparent), transparent) top / 100% 0.6rem no-repeat scroll,
+        linear-gradient(transparent, color-mix(in srgb, var(--ink) 12%, transparent)) bottom / 100% 0.6rem no-repeat scroll,
+        var(--paper-float);
+    }
+    .instrument.stage-first > .i-code {
+      --code-head-start: 2rem;
+      right: var(--float-gap);
+      width: var(--code-w);
+      height: calc(100% - 2 * var(--float-gap));
+      overflow: hidden auto;
+    }
+    /* The time bar sits under the stage's own space, between the cards, centred there. */
+    .instrument.stage-first > .i-time {
+      left: calc(var(--params-w) + 2 * var(--float-gap));
+      right: calc(var(--code-w) + 2 * var(--float-gap));
+      bottom: var(--float-gap);
+      max-width: 46rem;
+      margin-inline: auto;
+      padding: 0.3rem 1.1rem 0.3rem 0.5rem;
+      border-radius: 999px;
+      transition: right var(--dur-base) var(--ease-inout);
+    }
+    .instrument.stage-first:is(.no-code, .code-away) > .i-time { right: calc(2 * var(--float-gap)); }
+    /* On a card, groups are set apart by space, not rules. */
+    .instrument.stage-first .param-group + .param-group { border-top: 0; padding-top: 0; }
+  }
+
   .instrument .i-title { display: flex; align-items: baseline; gap: 0.5rem; }
   .instrument .i-title .serif { font-size: 1.35rem; line-height: 1; }
 
@@ -58,4 +150,61 @@
     .instrument > .i-params { border-right: 0; border-top: 1px solid var(--rule); }
     .instrument > .i-stage { min-height: 260px; }
   }
+}
+
+@media (min-width: 1180px) {
+  /* The code card is a drawer, and its handle rides the card's top left corner. Put away, card and
+     handle slide to the stage's right edge together, one on-screen move on one curve, the card fading
+     as it goes and clipped by the stage as it passes the edge. The handle comes to rest there on a
+     card of its own, facing back, to pull the drawer out again: the same move, reversed.
+     (Unlayered, to outrank .btn's own transition.) */
+  .instrument.stage-first { --code-away: calc(var(--code-w) - 0.5rem - 30px); }
+  .instrument.stage-first > .i-code {
+    transition: translate var(--dur-base) var(--ease-inout), opacity var(--dur-base) var(--ease-out), visibility var(--dur-base);
+  }
+  .instrument.stage-first.code-away > .i-code {
+    translate: var(--code-away) 0;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: translate var(--dur-base) var(--ease-inout), opacity var(--dur-base) var(--ease-in), visibility var(--dur-base);
+  }
+  .instrument.stage-first > .i-handle {
+    display: inline-flex;
+    position: absolute;
+    z-index: 2;
+    top: calc(var(--float-gap) + 0.55rem);
+    right: calc(var(--float-gap) + var(--code-away));
+    border-color: transparent;
+    transition:
+      translate var(--dur-base) var(--ease-inout),
+      background-color var(--dur-base) var(--ease-inout),
+      border-color var(--dur-base) var(--ease-inout),
+      box-shadow var(--dur-base) var(--ease-inout);
+  }
+  .instrument.stage-first.code-away > .i-handle {
+    translate: var(--code-away) 0;
+    border-color: var(--rule);
+    background: var(--paper-float);
+    box-shadow: 0 10px 24px -16px rgb(0 0 0 / 0.35);
+  }
+  /* Its arrow turns as it goes: out, it points the way the drawer shuts; put away, the way it opens. */
+  .instrument.stage-first > .i-handle .chev { transform-box: fill-box; transform-origin: center; transition: rotate var(--dur-base) var(--ease-inout); }
+  .instrument.stage-first.code-away > .i-handle .chev { rotate: 180deg; }
+}
+/* Reduced motion: the drawer fades, and the handle is simply at its place, with no travel. */
+@media (min-width: 1180px) and (prefers-reduced-motion: reduce) {
+  .instrument.stage-first > :is(.i-code, .i-handle) { transition-property: opacity, visibility, background-color, border-color, box-shadow; }
+  .instrument.stage-first > .i-handle .chev { transition: none; }
+}
+@media (min-width: 1180px) {
+  :root[data-motion="reduce"] .instrument.stage-first > :is(.i-code, .i-handle) { transition-property: opacity, visibility, background-color, border-color, box-shadow; }
+  :root[data-motion="reduce"] .instrument.stage-first > .i-handle .chev { transition: none; }
+}
+
+/* Outside the layer, since the time bar's own styles aren't in one and would win: in the stage-first
+   pill the time bar keeps to one row, the scrubber narrowing rather than wrapping under. */
+@media (min-width: 1180px) {
+  .instrument.stage-first > .i-time .timebar { flex-wrap: nowrap; }
+  .instrument.stage-first > .i-time .track { order: 0; flex-basis: auto; }
 }

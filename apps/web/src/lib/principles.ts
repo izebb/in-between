@@ -218,7 +218,7 @@ export const PRINCIPLES: Principle[] = [
     id: "arcs",
     name: "Arcs",
     ui: "Curved paths for natural travel",
-    why: "Thrown things travel on arcs, not rails. The curved path reads as natural; the straight one as mechanical.",
+    why: "Thrown things travel on arcs, not rails. The arc reads as natural; a straight line would read as mechanical.",
     still: { from: 0.05, to: 0.45, key: 0.47 },
     draw(ctx, t, w, h, c) {
       // Over and back along the same arc, so the loop meets itself.
@@ -289,8 +289,8 @@ export const PRINCIPLES: Principle[] = [
   {
     id: "exaggeration",
     name: "Exaggeration",
-    ui: "Overshoot for delight, used sparingly",
-    why: "The badge overshoots its size and settles back. Exaggeration makes a moment feel alive, if it's rare.",
+    ui: "Overshoot, used sparingly",
+    why: "The badge overshoots its size and settles back. Exaggeration marks a moment, but only while it stays rare.",
     draw(ctx, t, w, h, c) {
       // Pops in on a bouncy spring (in real time: 0.7 of the 1.8s loop is 1.26s), holds, shrinks away.
       const s = (t < 0.05 ? 0 : pop.position(seg(t, 0.05, 0.75) * 1.26)) * (1 - easeIn(seg(t, 0.84, 0.97)));
@@ -305,7 +305,7 @@ export const PRINCIPLES: Principle[] = [
     id: "solid",
     name: "Solid drawing",
     ui: "Depth: scale, shadow, perspective",
-    why: "Lifting the card grows it slightly and softens its shadow together. The depth cues agree, so it reads as a solid object.",
+    why: "Lifting the card grows it slightly and lets its shadow spread and drop together. The depth cues agree, so it reads as a solid object.",
     draw(ctx, t, w, h, c) {
       const k = out(seg(t, 0.1, 0.45)) * (1 - easeInOut(seg(t, 0.7, 0.95)));
       const s = 1 + 0.08 * k;

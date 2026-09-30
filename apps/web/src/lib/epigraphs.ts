@@ -3,7 +3,7 @@
  * shown one at a time, each with its author drawn in pencil. The set runs from what animation is, to
  * the craft (timing and spacing), to manner, to feeling, and ends on a warm, wry line.
  *
- * Every quote is checked against a source (`source`). Portraits live in public/images/, traced from
+ * Each quote's `source` says how well it is documented; those marked as attributed have not been checked against a primary source. Portraits live in public/images/, traced from
  * freely licensed photographs into pencil hatching on paper; `photo` credits the photograph, and the
  * home page's footer lists them all (Footer.astro). Drawings made from share-alike photographs are
  * shared under the same licence.
@@ -37,7 +37,7 @@ export const epigraphs: Epigraph[] = [
     quote: "We can have a natural feel for timing, but we have to learn the spacing of things.",
     name: "Richard Williams",
     role: "Animator · 1933–2019",
-    source: "The Animator's Survival Kit (Faber, 2001), “It's All in the Timing and the Spacing”, p. 39.",
+    source: "Attributed to Richard Williams, The Animator's Survival Kit (Faber, 2001), on timing and spacing. Wording and page not checked against the book.",
     portrait: "/images/williams-pencil.png",
     photo: {
       by: "Alexander Williams, 2015",
@@ -50,7 +50,7 @@ export const epigraphs: Epigraph[] = [
     quote: "A comedian is not a person who opens a funny door — he's the person who opens a door funny.",
     name: "Chuck Jones",
     role: "Looney Tunes · 1912–2002",
-    source: "John Lewell, “The Art of Chuck Jones” (1982), in Animation – Art and Industry, ed. Maureen Furniss (2009), p. 134.",
+    source: "Widely attributed to Chuck Jones; exact wording and primary source not confirmed.",
     portrait: "/images/jones-pencil.png",
     photo: {
       by: "Alan Light, 1978",
@@ -63,7 +63,7 @@ export const epigraphs: Epigraph[] = [
     quote: "Don't animate drawings, animate feelings.",
     name: "Ollie Johnston",
     role: "Nine Old Men · 1912–2008",
-    source: "His maxim, as Andreas Deja recalled it (Animation World Network, April 2008).",
+    source: "Widely attributed to Ollie Johnston; exact wording and primary source not confirmed.",
     portrait: "/images/johnston-pencil.png",
     photo: {
       by: "J-E Nyström, 1989",

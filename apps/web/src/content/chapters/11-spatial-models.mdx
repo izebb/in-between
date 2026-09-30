@@ -21,7 +21,7 @@ export const push = {
   },
 };
 
-A screen is a rectangle of pixels that gets swapped for another rectangle. On its own it has no position: nothing says where it is, or where the last one went. Motion adds that. Where a screen comes from says where it lives. Where it goes says where to find it again.
+Chapter 10 used motion to say *same thing*. Motion can also say *where*. A screen is a rectangle of pixels that gets swapped for another rectangle. On its own it has no position: nothing says where it is, or where the last one went. Motion adds that. Where a screen comes from says where it lives. Where it goes says where to find it again.
 
 Keep those directions consistent and people build a map of the app without trying. They know Home is back to the left and the page they came from is still there. Pick directions at random and the app turns into a pile of screens.
 
@@ -49,7 +49,7 @@ A spatial model is a promise. Every transition either keeps it or breaks it, and
 - **Back returns the way you came.** The screen you left is where you left it, and going back retraces the path.
 - **Things on top come toward you, then go back.** A sheet or a dialog is not the next step. It is a layer over this one, and when it closes you are where you were.
 
-Two axes do most of the work: **x for sequence** and **z for hierarchy**.
+Two axes do most of the work: **x for sequence** (which step comes next) and **z for hierarchy** (what sits above what, toward you). The next two sections take one each.
 
 <Beat kind="more">x is sequence</Beat>
 
@@ -57,31 +57,31 @@ Two axes do most of the work: **x for sequence** and **z for hierarchy**.
   <p>On iPhone, each new screen in a navigation stack slides in from the right. Swipe in from the left edge and the top screen follows your finger back to the right, the way it came. A sheet that covers most of the screen rises from the bottom, and the screen behind it shrinks back a little.</p>
 </Margin>
 
-Left to right is the order of things: pages in a book, steps in a form, screens in a navigation stack. Going deeper *pushes* a screen onto the stack. Back *pops* it off. The next screen is always to the right of this one, so a push arrives from the right, and back moves everything the other way.
+Left to right is the order of things: pages in a book, steps in a form, screens in a navigation stack. Going deeper *pushes* a screen onto the stack, like laying a card on a pile. Back *pops* it off the top. The next screen is always to the right of this one, so a push arrives from the right, and back moves everything the other way.
 
-In figure 11.1 the arriving screen travels the full width in 360ms with `--ease-out`. The screen it replaces moves 30% of the width the same way and fades to half in 252ms with `--ease-in`: 0.7× the time, the exit rule from chapter 03. Going back plays both paths in reverse. The top screen slides back off the full width, on the exit's 252ms, and the screen under it returns from 30%, on the enter's 360ms.
+In figure 11.1 the arriving screen travels the full width in 360ms with `--ease-out`. The screen it replaces moves 30% of the width the same way and fades to half in 252ms with `--ease-in`: 0.7× the time, the exit rule from chapters 3 and 9 (leaving is quicker than arriving, so the exit gets about 70% of the enter's time). The 30% is a taste value: enough to read as movement, small enough to stay a supporting move. Try 20% to 40%. Going back plays both paths in reverse. The top screen slides back off the full width, on the exit's 252ms, and the screen under it returns from 30%, on the enter's 360ms.
 
 <Margin kind="def">
   <p><b>Parallax.</b> When you move, near things slide past faster than far things. So of two layers moving together, the one that moves less looks further away.</p>
 </Margin>
 
-That short 30% move does real work. The two screens move the same way at different speeds, so the slower one looks further away: *under* the new one, not beside it. A push is mostly x, with a little z. Back keeps that order: the screen that was on top leaves on top.
+That short 30% move does real work. The two screens move the same way at different speeds (200px against 60px in the lab below), so the slower one looks further away: *under* the new one, not beside it. A push is mostly x, with a little z. Back keeps that order: the screen that was on top leaves on top.
 
-Which side is "forward" comes from reading. In Arabic or Hebrew, text runs right to left, and the model mirrors: forward arrives from the left, and the back arrow points right. Mirror the whole model at once, never one transition on its own.
+Which side is "forward" depends on the reading direction. In Arabic or Hebrew, text runs right to left, and the model mirrors: forward arrives from the left, and the back arrow points right. Mirror the whole model at once, never one transition on its own.
 
 <Beat kind="more">z is hierarchy</Beat>
 
-Depth is for things that sit *on* the page rather than *after* it: sheets, dialogs, popovers, menus. They don't take you anywhere. They come toward you, you deal with them, and they go back, leaving you where you were.
+Depth (z) is for things that sit *on* the page rather than *after* it: sheets, dialogs, popovers, menus. They don't take you anywhere. They come toward you, you deal with them, and they go back, leaving you where you were.
 
-In figure 11.1 the reply sheet rises over 360ms with `--ease-out`. At the same time, the page behind it scales to `0.93` and drops to 85% brightness over 280ms. Three cues carry one message: the page is smaller because it is further away, it is darker because it is under something, and the sheet casts a shadow onto it.
+In figure 11.1 the reply sheet rises over 360ms with `--ease-out`. At the same time, the page behind it scales to `0.93` (7% smaller) and drops to 85% brightness over 280ms. These are taste values: 0.9 to 0.96 and 80% to 90% all work. The point is that the change is visible but the page stays readable, and the sheet finishes a little after the page has settled. Three cues carry one message: the page is smaller because it is further away, it is darker because it is under something, and the sheet casts a shadow onto it.
 
-The cues must agree. This is solid drawing from chapter 07: a card that lifts grows a little, and its shadow spreads and softens, both at once. If one cue contradicts the others, say a dialog that grows while its shadow shrinks, or a page that brightens as it sinks, the eye can't place the thing at all.
+The cues must agree. This is solid drawing from chapter 7: a card that lifts grows a little, and its shadow spreads and softens, both at once. If one cue contradicts the others, say a dialog that grows while its shadow shrinks, or a page that brightens as it sinks, the eye can't place the thing at all.
 
 <Margin kind="read">
   <p>Material Design's motion guidelines name this the <i>shared axis</i> pattern: screens with a spatial or navigational relationship move together along the x, y or z axis.</p>
 </Margin>
 
-Don't mix the axes. A settings panel that slides in from the right reads as the next step, and people look for the way back. A new screen that grows up out of the page reads as a layer, and people look for a close button. Pick the axis from what the thing *is*.
+Don't mix the axes. The rule to take away: if the thing is the next step, use x; if it is a layer you will dismiss, use z. A settings panel that slides in from the right reads as the next step, and people look for the way back. A new screen that grows up out of the page reads as a layer, and people look for a close button. Pick the axis from what the thing *is*.
 
 <Beat kind="more">Edges</Beat>
 
@@ -105,36 +105,45 @@ CSS can draw real depth. Give an element `perspective` and its children can turn
   <p>The widgets in Mac OS X Tiger's Dashboard turned over like cards to show their settings on the back.</p>
 </Margin>
 
-A flip is a spatial promise too. It says the back was always there, on the other side of the same card: a widget's settings are *behind* it, not somewhere else. Use it rarely. 3D turns are loud. One flip in a product is a small delight; a flip on every card is noise.
+(That is a flip in the everyday sense, not chapter 10's FLIP technique. The CSS for it is in the last snippet.) A flip is a spatial promise too. It says the back was always there, on the other side of the same card: a widget's settings are *behind* it, not somewhere else. Use it rarely. 3D turns are loud. One flip in a product is a small delight; a flip on every card is noise.
 
 <Beat kind="tune">A push, on one clock</Beat>
 
-This is the push from figure 11.1 on an exposure sheet. The two boxes stand for the two screens: `old` is the one you leave, `new` the one you arrive on. `new` travels 200px to its place, and `old` travels 60px the same way, 30% as far. Play it, then pick the `old · x` bar on the sheet and change its **To**.
+This is the push from figure 11.1 on an exposure sheet. The two boxes stand for the two screens: `old` is the one you leave, `new` the one you arrive on. `new` travels 200px to its place, and `old` travels 60px the same way, 30% as far. Play it, then pick the `old · x` bar on the sheet and change its **To**. Watch where the two boxes travel, and whether they still look like one under the other.
 
 <Lab id="exposure-sheet" extra={push} code={false} />
 
-- **`120`**: the old screen now moves right, into the path of the new one. The two collide, and you are back in the scrambled app.
+- **`120`**: the old screen now moves right, the same way the new one arrives. It runs ahead of it and the two cross. The stacking order stops making sense, and you are back in the scrambled app.
 - **`60`**: the old screen doesn't move at all. The new one slides over a still page, and reads as a layer on top: more like a drawer than a next step.
 
 Set it back to `0` and read the sheet. Both screens start on the same frame, and `old` finishes first: the exit is shorter.
 
 <Beat kind="write">The notation</Beat>
 
-A same-document view transition can run figure 11.1's push and pop. Decide the direction *before* the transition starts, and put it on `<html>` as a `data-direction` attribute. Back plays the same two paths in reverse, so it only swaps the keyframes and lifts the old picture above the new one. `--dir` says which side forward comes from, and a right-to-left page flips it. Under reduced motion the slides are skipped, and the browser's default cross-fade runs instead.
+A same-document view transition (chapter 10's platform version, without shared names) can run figure 11.1's push and pop. The CSS below uses only the `root` picture: the old page and the new page are each one big sheet to slide. Decide the direction *before* the transition starts, and put it on `<html>` as a `data-direction` attribute. Back plays the same two paths in reverse, so it only swaps the keyframes and lifts the old picture above the new one. `--dir` says which side forward comes from, and a right-to-left page flips it. Under reduced motion the slides are skipped, and the browser's default cross-fade runs instead.
 
-Newer browsers can also hand the direction to the transition itself: pass `types: ['back']` along with the `update` callback to `startViewTransition()`, and match it in CSS with `:active-view-transition-type(back)` on the root. The attribute works wherever view transitions do.
+Newer browsers can also hand the direction to the transition itself: call `startViewTransition({ update, types: ['back'] })`, and match it in CSS with `:active-view-transition-type(back)` on the root. The attribute works wherever view transitions do. One more line is needed: by default the browser adds the old and new pictures together while it cross-fades them, which brightens any overlap, so the CSS below sets `mix-blend-mode: normal` to make them stack instead.
 
 <div class="snippets">
 <Snippet title="11 · Spatial models: push and pop as a view transition" lab="exposure-sheet" extra={push}>
 
 ```css
-/* Which side does forward come from? 1: the right. -1: the left. */
+/* --dir is a multiplier: 1 puts forward on the right, -1 on the left.
+   Every distance below is multiplied by it, so one variable mirrors all. */
 html { --dir: 1; }
 html[dir="rtl"] { --dir: -1; }                        /* mirror the model */
 
 @media (prefers-reduced-motion: no-preference) {
-  /* Forward: the new page arrives over the old one,
-     which gives way 30% and fades. */
+  /* The default blend adds the two pictures together (plus-lighter),
+     which brightens where they overlap. A slide wants them to stack. */
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    mix-blend-mode: normal;
+  }
+
+  /* Forward: the new page arrives over the old one, which gives way
+     30% and fades. 360ms and 252ms are the numbers from figure 11.1;
+     `both` holds the first and last keyframe outside the run. */
   ::view-transition-new(root) {
     animation: 360ms cubic-bezier(.2, .8, .2, 1) both arrive;
   }
@@ -153,6 +162,8 @@ html[dir="rtl"] { --dir: -1; }                        /* mirror the model */
   }
 }
 
+/* A keyframe with only `from` or only `to` animates from or to the
+   element's normal state: arrive slides in TO where the page sits. */
 @keyframes arrive    { from { transform: translateX(calc(100% * var(--dir))); } }
 @keyframes give-way  { to   { transform: translateX(calc(-30% * var(--dir))); opacity: 0.5; } }
 @keyframes leave     { to   { transform: translateX(calc(100% * var(--dir))); } }
@@ -165,17 +176,20 @@ html[dir="rtl"] { --dir: -1; }                        /* mirror the model */
 
 ```js
 // Set the direction first, so the CSS knows which way to slide.
+// update: your function that swaps the page. Returns the transition.
 function navigate(update, direction = 'forward') {
   if (!document.startViewTransition) return update();
   const html = document.documentElement;
   html.dataset.direction = direction;
   const transition = document.startViewTransition(update);
-  transition.finished.finally(() => delete html.dataset.direction);
+  // Remove the attribute afterwards, whether it finished or was skipped.
+  const clear = () => delete html.dataset.direction;
+  transition.finished.then(clear, clear);
   return transition;
 }
 
 navigate(() => showPage('inbox'));         // forward: from the right
-navigate(() => showPage('home'), 'back');  // back: from the left
+navigate(() => showPage('home'), 'back');  // back: the top page leaves to the right
 ```
 
 </Snippet>
@@ -184,32 +198,42 @@ navigate(() => showPage('home'), 'back');  // back: from the left
 
 ```js
 // Pages sit on top of each other (position: absolute; inset: 0)
-// in a container with overflow: clip.
+// in a container with overflow: clip, so a page off to the side is
+// cut off rather than making the container scroll.
 const ARRIVE = { duration: 360, easing: 'cubic-bezier(.2, .8, .2, 1)' };
 const LEAVE = { duration: 252, easing: 'cubic-bezier(.4, 0, 1, 1)' };
 const reduce = matchMedia('(prefers-reduced-motion: reduce)');
 
 // Forward: `top` arrives over `under`, which gives way 30% and fades.
 // Back plays the same two paths in reverse, and `top` stays on top.
+// back: false to go forward, true to go back.
 async function slide(under, top, back) {
   const side = getComputedStyle(top).direction === 'rtl' ? -1 : 1; // mirror
-  const aside = { transform: `translateX(${100 * side}%)`, opacity: 1 };
-  const given = { transform: `translateX(${-30 * side}%)`, opacity: 0.5 };
-  const home = { transform: 'none', opacity: 1 };
-  under.after(top); // the deeper page is always the upper one
-  under.hidden = top.hidden = false;
+  // Three poses. %: of the page's own width.
+  const aside = { transform: `translateX(${100 * side}%)`, opacity: 1 }; // off the edge
+  const given = { transform: `translateX(${-30 * side}%)`, opacity: 0.5 }; // pushed back
+  const home = { transform: 'none', opacity: 1 }; // resting
+  under.after(top); // later siblings paint on top: top goes above
+  under.hidden = top.hidden = false; // both must be present to animate
   if (!reduce.matches) {
+    // Forward: top goes aside -> home. Back: home -> aside, the same
+    // path reversed. Forward uses ARRIVE for top and LEAVE for under;
+    // back swaps them, because the top page is now the one leaving.
     const a = top.animate(back ? [home, aside] : [aside, home],
       { ...(back ? LEAVE : ARRIVE), fill: 'forwards' });
     const b = under.animate(back ? [given, home] : [home, given],
       { ...(back ? ARRIVE : LEAVE), fill: 'forwards' });
     await Promise.all([a.finished, b.finished]);
+    // fill: 'forwards' held the last pose; drop it now the run is over.
     a.cancel();
     b.cancel();
   }
+  // Hide whichever page is no longer showing: forward hides the one
+  // underneath, back hides the one that slid away.
   (back ? top : under).hidden = true;
 }
 
+// The stack is the app's history: the last item is the page on screen.
 const stack = [document.querySelector('.page')];
 
 function forward(page) {
@@ -231,7 +255,7 @@ function back() {
 
 ```css
 .card {
-  perspective: 800px;            /* how far your eye is from the card */
+  perspective: 800px;            /* how far your eye is from the card, in px */
 }
 
 .card-inner {
@@ -263,7 +287,9 @@ function back() {
 </Snippet>
 </div>
 
-Whichever version you use, send the browser's own back button through it too. However someone goes back, it should look like back.
+Whichever version you use, send the browser's own back button through it too (a `popstate` listener that calls the same function with `'back'`). However someone goes back, it should look like back.
+
+In every figure here the screen moved because you tapped. In chapter 12 it moves because you are holding it, and the direction comes from your hand.
 
 <Beat kind="drill">Where did it come from?</Beat>
 

@@ -28,6 +28,40 @@
   .btn.ghost:hover { color: var(--ink); background: color-mix(in srgb, var(--ink) 5%, transparent); }
   .btn.icon { width: 30px; padding: 0; }
   .btn.small { min-height: 24px; padding: 0 0.5rem; font-size: var(--text-xs); }
+  /* A drawn icon in a button: a pencil stroke in the text's colour. */
+  .btn .ico { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* ---------- Tooltip: a word under an icon button ----------
+     It rises into place on hover or focus and drops away quicker. .show holds it up without either,
+     to say something just happened (Copied). .end pins it to the button's right edge, for a button
+     at the right of its box. Under reduced motion it only fades. */
+  .tip-host { position: relative; }
+  .tip {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 50%;
+    z-index: 5;
+    translate: -50% calc(-1 * var(--dist-rise));
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    background: var(--ink);
+    color: var(--paper);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    line-height: 1.2;
+    letter-spacing: 0;
+    text-transform: none;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--dur-quick-exit) var(--ease-in), translate var(--dur-quick-exit) var(--ease-in);
+  }
+  .tip.end { left: auto; right: 0; translate: 0 calc(-1 * var(--dist-rise)); }
+  .tip-host:is(:hover, :focus-visible) > .tip, .tip.show { opacity: 1; translate: -50% 0; transition: opacity var(--dur-quick) var(--ease-out), translate var(--dur-quick) var(--ease-out); }
+  .tip-host:is(:hover, :focus-visible) > .tip.end, .tip.end.show { translate: 0 0; }
+  @media (prefers-reduced-motion: reduce) { .tip { translate: -50% 0; } .tip.end { translate: 0 0; } }
+  :root[data-motion="reduce"] .tip { translate: -50% 0; }
+  :root[data-motion="reduce"] .tip.end { translate: 0 0; }
   .btn svg { width: 14px; height: 14px; flex: none; }
   .btn.solid { background: var(--ink); color: var(--paper); border-color: var(--ink); }
   .btn.solid:hover { background: color-mix(in srgb, var(--ink) 86%, var(--paper)); }
@@ -357,17 +391,18 @@
   .inspect-outline { outline: 1px dashed var(--blue-pencil) !important; outline-offset: 2px; }
 
   /* ---------- Cards for lab bench / drills ---------- */
-  /* Ten boxes, always a full grid: five across, two across, or one. Each draws its own right and bottom
-     rule; they are see-through, so a neighbour on its own layer can't paint over a shared edge. */
+  /* Ten boxes: three across, two across, or one. Each draws its own right and bottom rule; they are
+     see-through, so a neighbour on its own layer can't paint over a shared edge. */
   .bench-list { display: grid; grid-template-columns: minmax(0, 1fr); border-top: 1px solid var(--rule); border-left: 1px solid var(--rule); }
   @media (min-width: 560px) { .bench-list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-  @media (min-width: 1180px) { .bench-list { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+  @media (min-width: 860px) { .bench-list { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
   .bench-item { border-right: 1px solid var(--rule); border-bottom: 1px solid var(--rule); padding: 1rem 1rem 1.1rem; text-decoration: none; display: flex; flex-direction: column; gap: 0.4rem; min-height: 12rem; }
 
   /* Hover: a blue-pencil outline is drawn as one line, from the top-left, all the way round until it
      meets itself (an SVG rect, dashed to its own perimeter); leaving, it's taken back the way it came.
      The title turns blue and the index number a light tint of the same blue (also offered as --ph-n,
-     for pages whose own styles colour the number). Under reduced motion the outline fades instead. */
+     for pages whose own styles colour the number). Under reduced motion the outline fades instead.
+     .ph-held keeps a .pencil-hover drawn as if hovered, for as long as it stays chosen (an open row). */
   .pencil-hover { position: relative; --ph-radius: 4px; }
   .ph-outline { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
   .ph-outline rect {
@@ -383,11 +418,11 @@
     stroke-dashoffset: 1;
     transition: stroke-dashoffset calc(var(--dur-base) * 1.5) var(--ease-in);
   }
-  .pencil-hover:focus-visible .ph-outline rect { stroke-dashoffset: 0; transition: stroke-dashoffset calc(var(--dur-scene) * 1.5) var(--ease-inout); }
+  .pencil-hover:is(:focus-visible, .ph-held) .ph-outline rect { stroke-dashoffset: 0; transition: stroke-dashoffset calc(var(--dur-scene) * 1.5) var(--ease-inout); }
   .pencil-hover :is(.ph-title, .ph-n) { transition: color var(--dur-quick) var(--ease-out); }
-  .pencil-hover:focus-visible .ph-title { color: var(--blue-pencil); }
-  .pencil-hover:focus-visible { --ph-n: color-mix(in srgb, var(--blue-pencil) 55%, var(--paper)); }
-  .pencil-hover:focus-visible .ph-n { color: var(--ph-n); }
+  .pencil-hover:is(:focus-visible, .ph-held) .ph-title { color: var(--blue-pencil); }
+  .pencil-hover:is(:focus-visible, .ph-held) { --ph-n: color-mix(in srgb, var(--blue-pencil) 55%, var(--paper)); }
+  .pencil-hover:is(:focus-visible, .ph-held) .ph-n { color: var(--ph-n); }
   @media (hover: hover) {
     .pencil-hover:hover .ph-outline rect { stroke-dashoffset: 0; transition: stroke-dashoffset calc(var(--dur-scene) * 1.5) var(--ease-inout); }
     .pencil-hover:hover .ph-title { color: var(--blue-pencil); }
@@ -396,10 +431,10 @@
   }
   @media (prefers-reduced-motion: reduce) {
     .ph-outline rect { stroke-dashoffset: 0; opacity: 0; transition: opacity var(--dur-quick) var(--ease-out); }
-    .pencil-hover:is(:hover, :focus-visible) .ph-outline rect { opacity: 1; }
+    .pencil-hover:is(:hover, :focus-visible, .ph-held) .ph-outline rect { opacity: 1; }
   }
   :root[data-motion="reduce"] .ph-outline rect { stroke-dashoffset: 0; opacity: 0; transition: opacity var(--dur-quick) var(--ease-out); }
-  :root[data-motion="reduce"] .pencil-hover:is(:hover, :focus-visible) .ph-outline rect { opacity: 1; }
+  :root[data-motion="reduce"] .pencil-hover:is(:hover, :focus-visible, .ph-held) .ph-outline rect { opacity: 1; }
   :is(.bench-item, .pg).pencil-hover { --ph-radius: 0px; }
 
   /* ---------- Outline numerals (OutlineNumber.astro) ----------
@@ -423,7 +458,7 @@
       stroke-dashoffset calc(var(--dur-base) * 1.2) var(--ease-in),
       fill-opacity var(--dur-quick) var(--ease-in);
   }
-  .pencil-hover:focus-visible .o-ink {
+  .pencil-hover:is(:focus-visible, .ph-held) .o-ink {
     stroke-dashoffset: 0;
     fill-opacity: 1;
     transition:
@@ -440,11 +475,11 @@
     }
   }
   @media (prefers-reduced-motion: reduce) {
-    .o-ink, .pencil-hover:is(:hover, :focus-visible) .o-ink { stroke-dashoffset: 0; fill-opacity: 1; opacity: 0; transition: opacity var(--dur-quick) var(--ease-out); }
-    .pencil-hover:is(:hover, :focus-visible) .o-ink { opacity: 1; }
+    .o-ink, .pencil-hover:is(:hover, :focus-visible, .ph-held) .o-ink { stroke-dashoffset: 0; fill-opacity: 1; opacity: 0; transition: opacity var(--dur-quick) var(--ease-out); }
+    .pencil-hover:is(:hover, :focus-visible, .ph-held) .o-ink { opacity: 1; }
   }
-  :root[data-motion="reduce"] :is(.o-ink, .pencil-hover:is(:hover, :focus-visible) .o-ink) { stroke-dashoffset: 0; fill-opacity: 1; opacity: 0; transition: opacity var(--dur-quick) var(--ease-out); }
-  :root[data-motion="reduce"] .pencil-hover:is(:hover, :focus-visible) .o-ink { opacity: 1; }
+  :root[data-motion="reduce"] :is(.o-ink, .pencil-hover:is(:hover, :focus-visible, .ph-held) .o-ink) { stroke-dashoffset: 0; fill-opacity: 1; opacity: 0; transition: opacity var(--dur-quick) var(--ease-out); }
+  :root[data-motion="reduce"] .pencil-hover:is(:hover, :focus-visible, .ph-held) .o-ink { opacity: 1; }
 
   .bench-item .serif { font-size: 1.3rem; line-height: 1.1; }
   .bench-item p { font-size: var(--text-sm); color: var(--graphite-strong); line-height: 1.45; }

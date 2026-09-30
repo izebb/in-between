@@ -105,7 +105,7 @@
     </div>
     {#if e}
       <div class="param-group">
-        <span class="label">Handles · velocity at start and end</span>
+        <span class="label">Handles · (x1, y1) start, (x2, y2) end</span>
         <Slider label="x1" value={e.x1} min={0} max={1} step={0.01} link="0.easing.x1" onchange={(v) => setHandle("x1", v)} />
         <Slider label="y1" value={e.y1} min={-1} max={2} step={0.01} link="0.easing.y1" onchange={(v) => setHandle("y1", v)} />
         <Slider label="x2" value={e.x2} min={0} max={1} step={0.01} link="0.easing.x2" onchange={(v) => setHandle("x2", v)} />

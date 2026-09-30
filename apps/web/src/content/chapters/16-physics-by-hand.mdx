@@ -135,19 +135,19 @@ function draw(ctx, s, width, height) {
 }
 `;
 
-[Chapter 05](/chapters/05-springs) drew springs from a formula. Give it a time and it tells you where the spring is. That works because a spring on its own is simple enough to solve once, on paper, and the Spring bench uses that answer. Put a floor under it, a wall beside it or a finger on it, and there is usually no formula to find. What's left is the rule: how hard is everything being pushed, right now?
+[Chapter 5](/chapters/05-springs) drew springs from a formula. Give it a time and it tells you where the spring is. That works because a spring on its own is simple enough to solve once, on paper, and the Spring bench uses that answer. Put a floor under it, a wall beside it or a finger on it, and there is usually no formula to find. What's left is the rule: how hard is everything being pushed, right now?
 
-So you step. Work out the push, change the speed a little, change the position a little, move the clock on by a sliver of a second, and ask again. Every physics engine is that loop. What matters is how you take each step.
+So you step. Work out the push, change the speed a little, change the position a little, move the clock on by a sliver of a second, and ask again. Chapter 15 stepped one number toward a target. A moving thing has two to step, its position and its speed, and the order you step them in matters more than you would expect. Physics engines are this loop, run on more things.
 
 <Beat kind="see">One spring, three ways to step</Beat>
 
-Here is a spring with no friction at all. A spring like that should swing forever between the same two heights, like a perfect pendulum. Each row steps it with the same fairly large step, and the line traces where it is over a few seconds. The rows differ in one thing: the order of two lines, and in the last row, what gets remembered.
+Here is a spring with no friction at all, pulled out to a height of 1 and let go. A spring like that should swing forever between the same two heights, like a perfect pendulum, so the height of the swing (its energy) should never change. Each row steps it with the same fairly large step, 1/30 of a second, and the line traces where it is over six seconds. The rows are labelled with the names of three ways of stepping, which the next sections explain. What differs is the order of two lines and, in the last row, what gets remembered. Look at how high each row's swings reach as time passes.
 
 <Figure n="16.1" caption="One spring with no friction, stepped three ways">
   <Canvas program="integrators" controls={false} readout={false} />
 </Figure>
 
-The top row doesn't keep its height. Each swing is wider than the last, and within two swings it runs off its row. Nothing pushed it. The energy came from the stepping. The top row moves first, with the speed it had before the spring pulled, and only then lets the pull change the speed. The middle row does the same two things the other way round: the pull changes the speed, then it moves. Its swing holds. So does the bottom row's, which doesn't store a speed at all.
+The top row doesn't keep its height. Each swing is wider than the last, and within a few swings it runs off its row. Nothing pushed it. The energy came from the stepping. The top row moves first, with the speed it had before the spring pulled, and only then lets the pull change the speed. The middle row does the same two things the other way round: the pull changes the speed, then it moves. Its swing holds. So does the bottom row's, which doesn't store a speed at all.
 
 <Beat kind="feel">Which one gains energy?</Beat>
 
@@ -176,9 +176,9 @@ A simulation needs three numbers for each direction a thing can move in:
   <p><b>Integrator.</b> The rule that turns the forces at one moment into the position and velocity one step later. Explicit Euler, semi-implicit Euler, Verlet and RK4 are four of them.</p>
 </Margin>
 
-Forces decide the acceleration. Newton's second law, `F = m · a`, says the same push moves a heavy thing less: `a = F / m`. A spring pushes with `−k · x − c · v`, the pull and the friction from chapter 05. Gravity pulls with `m · g`, so its acceleration is just `g`, whatever the mass.
+Forces decide the acceleration. Newton's second law, `F = m · a`, says the same push moves a heavy thing less: `a = F / m`. A spring pushes with `−k · x − c · v`, the pull and the friction from chapter 5: `k` is the stiffness, `c` the damping, and `x` here is how far the thing is from where the spring wants it. Gravity pulls with `m · g`, so its acceleration is just `g`, whatever the mass.
 
-Then, every step, in this order:
+Then, every step, in this order (the next section shows why the order matters):
 
 1. **Acceleration from forces.** Add up the forces and divide by the mass.
 2. **Velocity from acceleration.** `v += a * dt`.
@@ -193,43 +193,45 @@ Steps 2 and 3 look independent. They aren't. Step 3 needs a velocity, and the qu
 - **Explicit Euler** moves first, with the old velocity, then updates it: `x += v * dt`, then `v += a * dt`. It's the most obvious way to write it, and the top row of figure 16.1.
 - **Semi-implicit Euler** updates the velocity first, then moves with the new one: `v += a * dt`, then `x += v * dt`. The middle row.
 
-Explicit Euler takes every step with numbers from the start of it. It moves with the speed from before the push, and the push it uses comes from the position before the move. Both halves look back, and on a spring both mistakes lean the same way: each adds a sliver of energy. With no friction, every step multiplies the energy by exactly `1 + (k / m) · dt²`. In figure 16.1, `k` is `60`, `m` is `1` and the step is 1/30 s. That's 6.7% more energy every step: it doubles every 11 steps, about a third of a second.
+Explicit Euler takes every step with numbers from the start of it. It moves with the speed from before the push, and the push it uses comes from the position before the move. Both halves look back, and on a spring both mistakes lean the same way: each adds a sliver of energy.
+
+Take one step by hand. A spring is pulled out to `1` and let go from rest, with `k` of `60` and a step of 1/30 s. The pull is `−60 × 1`, so the acceleration is `−60`, and one step changes the speed by `−60 / 30 = −2`. Semi-implicit Euler lets the pull change the speed first, to `−2`, then moves with it: the position is `1 − 2/30`, about `0.933`, in the very first step. Explicit Euler moves first, with a speed of `0`, so the position stays at `1`, and only then does the speed become `−2`. It is always a step behind the spring. Its next move uses that late speed, and the pull it adds comes from a position it has just left. With no friction, every step multiplies the energy by exactly `1 + (k / m) · dt²`. In figure 16.1, `k` is `60`, `m` is `1` and the step is 1/30 s. That's 6.7% more energy every step: it doubles every 11 steps, about a third of a second.
 
 <Margin kind="read">
   <p>Daniel Shiffman's <i>The Nature of Code</i> builds forces, springs and particle systems out of these lines, one frame at a time. Its update adds the acceleration to the velocity, then the velocity to the position: velocity first, like the middle row.</p>
 </Margin>
 
-Semi-implicit Euler still takes the push from where the thing was, but then it moves with the speed that push produced. One half looks back and the other looks forward, so their mistakes lean opposite ways. It gains a little energy in one part of a swing and gives it back in the next, and its energy wobbles around the right value instead of climbing. It costs exactly the same as explicit Euler: the same two lines, in the other order.
+Semi-implicit Euler still takes the push from where the thing was, but then it moves with the speed that push produced. One half looks back and the other looks forward, so their mistakes lean opposite ways. It gains a little energy in one part of a swing and gives it back in the next, and its energy wobbles around the right value instead of climbing. It costs exactly the same as explicit Euler: the same two lines, in the other order. So the rule for Monday is simple: when you write a stepper, put the velocity line first.
 
-Friction hides the bug. With enough damping, explicit Euler still settles, only late and loose, as in the FEEL above. So it ships looking like a slightly bouncier spring, until someone turns the friction down, or the frame rate drops and the steps get longer.
+Friction hides the bug. With enough damping, explicit Euler still settles, only late and loose, as in the feel test above. So it ships looking like a slightly bouncier spring, until someone turns the friction down, or the frame rate drops and the steps get longer.
 
-Semi-implicit Euler has a limit too. If one step is longer than about a third of the spring's response, the time one full swing takes, it blows up as well. Stiff springs need small steps.
+Semi-implicit Euler has a limit too. If one step is longer than about a third of the spring's response, the time one full swing takes, it blows up as well. (The exact limit for a spring without friction is response ÷ π.) For the response-0.4 spring later in this chapter that is about 0.13 s, far above the 1/120 s we use. Stiff springs need small steps.
 
 <Beat kind="more">Two more ways to step</Beat>
 
-**Verlet** keeps no velocity at all. It remembers where the thing is now and where it was one step ago, and the gap between the two *is* its velocity. Each step, the next position is `2 · x − previous + a · dt²`. Like semi-implicit Euler, it holds its energy: the bottom row of figure 16.1.
+**Verlet** keeps no velocity at all. It remembers where the thing is now and where it was one step ago, and the gap between the two, divided by `dt`, *is* its velocity. Each step, the next position is `2 · x − previous + a · dt²`. Where that comes from: the speed is `(x − previous) / dt`, so moving with it for one step adds `x − previous`, and the acceleration adds `a · dt²` on top. On the first step, set `previous` equal to `x` for a thing that starts at rest. Like semi-implicit Euler, it holds its energy: the bottom row of figure 16.1.
 
 <Margin kind="wild">
-  <p>Thomas Jakobsen's paper <i>Advanced Character Physics</i> (GDC 2001) explained the physics behind IO Interactive's <i>Hitman: Codename 47</i>, including its cloth and its ragdoll bodies: particles stepped with Verlet, held together by distance constraints.</p>
+  <p>Thomas Jakobsen's paper <i>Advanced Character Physics</i> (GDC 2001) described the physics of IO Interactive's <i>Hitman: Codename 47</i>, including its ragdoll bodies: particles stepped with Verlet and held together by distance constraints. The same idea makes rope and cloth.</p>
 </Margin>
 
-Its gift is constraints. A rope is a chain of points that must stay a fixed distance apart. With Verlet you step every point, then move any two that drifted apart back to the right distance. There is no velocity to fix up, because none was stored: next step, the velocity is read from where the points are. Cloth is the same idea, in two directions.
+Its gift is constraints, rules such as "these two points stay 10px apart". A rope is a chain of points that must stay a fixed distance apart. With Verlet you step every point, then move any two that drifted apart back to the right distance. There is no velocity to fix up, because none was stored: next step, the velocity is read from where the points are. Cloth is the same idea, in two directions.
 
 **RK4**, the fourth-order Runge–Kutta method, samples the acceleration four times per step, once at the start, twice at the middle and once at the end, and blends them. It is far more accurate. Halve Euler's step and its error halves; halve RK4's and its error shrinks sixteen times. It costs four force calculations per step instead of one. For interface motion it's rarely worth it: semi-implicit Euler with a small step is close enough, and simpler.
 
 <Beat kind="more">Smaller steps, fixed steps</Beat>
 
-Every integrator gets better as the step gets smaller. Here is figure 16.1 again with its step exposed, set to 1/120 s, a quarter of the step you saw.
+Every integrator gets better as the step gets smaller. Here is figure 16.1 again with its step exposed, set to 1/120 s, a quarter of the step you saw. Change the step control and watch the top row.
 
 <Figure n="16.2" caption="The same spring, with a choice of step">
   <Canvas program="integrators" params={{ step: 1 / 120 }} />
 </Figure>
 
-At 1/120 s the explicit Euler row still grows, only more slowly: it takes over four seconds to run off its row instead of just over one. A smaller step slows the error down. It doesn't change which way the error leans. Now try 1/15 s: semi-implicit Euler and Verlet still hold, a little rougher.
+At 1/120 s the explicit Euler row still grows, only more slowly: it takes over four seconds to run off its row instead of just over one. A smaller step slows the error down. It doesn't change which way the error leans. Now set the step to 1/15 s, twice the first figure's: semi-implicit Euler and Verlet still hold, a little rougher.
 
 The step shouldn't depend on the screen, either. If every frame takes one step of its own `dt`, a 144Hz monitor takes small steps and a phone that drops to 30fps takes big ones. Same code, different physics: [chapter 15](/chapters/15-easing-by-hand)'s trap in a new form.
 
-The fix is a **fixed step**. Choose one step size, and 1/120 s is a good default. Then let each frame pay for as many whole steps as its time covers:
+The fix is a **fixed step**. Choose one step size. 1/120 s is a good default: small enough for fairly stiff springs, and only a couple of steps per frame on a 60Hz screen. Then let each frame pay for as many whole steps as its time covers:
 
 1. Add the frame's `dt` to an *accumulator*. Clamp it first, as in chapter 14, so a long pause can't turn into a thousand steps at once.
 2. While the accumulator holds at least one step, take a step and subtract it.
@@ -247,7 +249,7 @@ The remainder means the drawing can lag the simulation by up to one step. At 1/1
 
 A spring is now a handful of lines. Work out the force, `−k · (x − target) − c · v`. Divide it by the mass for the acceleration. Add that to the velocity, then add the velocity to the position. That's semi-implicit Euler, and the whole spring fits in six lines of code. They're in the notation below.
 
-How close does it get? The Spring bench (L3) doesn't step. It uses the exact solution from chapter 05, a formula for the position at any moment. Here are both, with the spring from chapter 05's CSS: response 0.4, bounce 0.3, which is `k = 246.7`, `c = 21.99`, `m = 1`.
+How close does it get? The Spring bench (L3) doesn't step. It uses the exact solution from chapter 5, a formula for the position at any moment. Here are both, with the spring from chapter 5's CSS: response 0.4, bounce 0.3, which is `k = 246.7`, `c = 21.99`, `m = 1` by the conversion in chapter 5 (`k = (2π / response)²`, `c = 4π · (1 − bounce) / response`).
 
 <Figure n="16.3" caption="A spring stepped by hand at 1/120 s, against the Spring bench">
   <CurvePlot easing={byHand.easing} duration={byHand.duration} compare="spring(response .4 bounce .3)" label="by hand · 1/120 s" compareLabel="Spring bench · exact" />
@@ -267,28 +269,28 @@ RK4 at 1/60 s stays within 0.01% of the bench the whole way. For a spring on scr
 
 <Beat kind="more">Gravity, floors and friction</Beat>
 
-Gravity is the simplest force there is: the same acceleration, straight down, whatever the mass. Add `g * dt` to the vertical speed each step and leave the sideways speed alone. The path comes out as the arc from [chapter 04](/chapters/04-weight), with nobody drawing it.
+Gravity is the simplest force there is: the same acceleration, straight down, whatever the mass. On a screen, 1200 px/s² is a choice of scale that makes a ball fall 300px in about 0.7 s; try doubling it. Add `g * dt` to the vertical speed each step and leave the sideways speed alone. The path comes out as the arc from [chapter 4](/chapters/04-weight), with nobody drawing it.
 
-A floor isn't a force. It's a check after each step: if the ball has gone below the floor, put it back on the surface and turn its vertical speed around, keeping only a share of it. That share is the restitution from chapter 04. Walls are the same check, sideways.
+A floor isn't a force. It's a check after each step: if the ball has gone below the floor, put it back on the surface and turn its vertical speed around, keeping only a share of it. That share is the restitution from chapter 4. Walls are the same check, sideways.
 
-Friction is the floor dragging on the ball while they touch. In this figure it takes a share of the sideways speed for every second of contact, written per second so the step size doesn't change it. A ball that has stopped bouncing touches the floor all the time, so it slides to a halt, losing the same share each second, like the glide in [chapter 06](/chapters/06-momentum-and-friction).
+Friction is the floor dragging on the ball while they touch. In this figure the sideways speed shrinks by the factor `e^(−FRICTION · t)`: with a friction of 3, about two thirds of it are gone after a third of a second. It is written per second so the step size doesn't change it. A ball that has stopped bouncing touches the floor all the time, so it slides to a halt, losing the same share each second, like the glide in [chapter 6](/chapters/06-momentum-and-friction).
 
 <Figure n="16.4" caption="Gravity, walls, restitution and floor friction">
   <Canvas program="collisions" />
 </Figure>
 
-Tap the figure to drop more balls. Turn **Restitution** up to 0.98 and they bounce almost forever; down to 0 and they land dead. Set **Floor friction** to 0 and the balls that have stopped bouncing slide from wall to wall. Raise it and they stop almost at once.
+Tap the figure to drop more balls. Turn **Restitution** up to 0.98 and they bounce almost forever; down to 0 and they land dead. Set **Floor friction** to 0 and the balls that have stopped bouncing keep sliding, losing speed only at the walls. Raise it and they stop almost at once.
 
 Collisions are checked after the move, so they depend on the step too. A fast ball and a thin wall can miss each other: one step it's in front, the next it's already behind. That's called *tunnelling*. Small, fixed steps make it rarer, and physics engines also sweep the path between steps for fast objects.
 
 <Beat kind="tune">Swap two lines</Beat>
 
-This is the weight on a spring from chapter 05, with its code. It takes one step per frame, velocity first. Drag the weight down and let go.
+This is the weight on a spring from chapter 5, with its code. It takes one step per frame, velocity first. Drag the weight down and let go.
 
-- Set **Damping c** to 0, then pull the weight down again and let go. It swings on and on, to the same height every time.
+- Set **Damping c** to 0 and leave it there. Pull the weight down and let go. It swings on and on, to the same height every time.
 - In `update`, swap the two stepping lines, so `s.y += s.v * dt` comes before `s.v += …`. That's explicit Euler. Each swing is wider than the last, until the weight leaves the canvas.
 - Set **Refresh rate** to 120Hz: smaller steps, slower growth. Then try 30Hz.
-- Swap the lines back. Still at 30Hz, raise **Stiffness k** to 600. It holds.
+- Swap the lines back. Still at 30Hz, raise **Stiffness k** to 600. A stiffer spring needs smaller steps, but this one is still within the limit, so it holds.
 
 <Lab id="canvas-sandbox" program="spring-mass" hz={60} />
 
@@ -368,13 +370,14 @@ requestAnimationFrame(frame);
 
 ```js
 // Step the spring ahead of time and keep one x per frame.
-// Uses step() from the card above.
+// Uses step() from the card above. fps is the frame rate of the
+// recording; each frame is built from 'substeps' tiny steps.
 function bake(k, c, m = 1, fps = 60, substeps = 16) {
   const s = { x: 0, v: 0 };
   const stops = [0];
   const dt = 1 / (fps * substeps);            // ahead of time, tiny steps are free
   for (let frame = 1; frame <= fps * 5; frame++) {   // five seconds at most
-    for (let i = 0; i < substeps; i++) step(s, 1, dt, k, c, m);
+    for (let i = 0; i < substeps; i++) step(s, 1, dt, k, c, m);  // target is 1
     stops.push(+s.x.toFixed(4));
     if (Math.abs(s.x - 1) < 0.001 && Math.abs(s.v) < 0.01) break;  // settled
   }
@@ -431,6 +434,8 @@ function step(b, dt, width, floor) {
 </div>
 
 Two details. Friction is written per second, `Math.exp(-FRICTION * dt)`, not as a share per step, so it survives a change of step size. And for readers who ask for reduced motion, check `matchMedia('(prefers-reduced-motion: reduce)').matches` and set the position straight to the target instead of stepping towards it.
+
+One spring is one small loop. The next question is what happens when there are a hundred things, or a thousand, each running a rule like this one. That is chapter 17.
 
 <Beat kind="drill">Tune the spring to match</Beat>
 

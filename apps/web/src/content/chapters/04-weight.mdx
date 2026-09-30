@@ -27,7 +27,11 @@ export const heavyBall = ballDrop(0.3, 2);
 export const lightBall = ballDrop(0.7, 5);
 
 export const bounceCss = `/* Dropped from 160px. Each contact keeps half the speed,
-   so each bounce is a quarter as high and half as long. */
+   so each bounce is a quarter as high and half as long.
+   Percentages are shares of the 1000ms: 0-40% is the first fall (400ms),
+   then each hop lasts half as long as the last (200ms, then 100ms).
+   Heights: 160px, then 40px (a quarter), then 10px (a quarter again).
+   "both" holds the first frame before it starts and the last after. */
 .is-on .box {
   animation: drop 1000ms both;
 }
@@ -50,9 +54,11 @@ const RISE = 'cubic-bezier(.33, .67, .67, 1)'; // ease-out: gravity slows it dow
 
 function drop(el, { height = 160, fall = 400, restitution = 0.5 } = {}) {
   const keys = [{ at: 0, transform: \`translateY(\${-height}px)\`, easing: FALL }];
-  let at = fall;
-  // Keep a fraction e of the speed: e² of the height, e of the time.
-  // Stop when the next hop would be under a pixel.
+  let at = fall; // ms: the first fall ends here, at the first contact
+  // e is the share of the speed kept after this contact: the hop is e² of
+  // the height and lasts e of the time. Each pass of the loop is one hop,
+  // and e shrinks by another restitution each time.
+  // Stop once a hop would be under a pixel high.
   for (let e = restitution; e < 1 && height * e * e >= 1; e *= restitution) {
     keys.push({ at, transform: 'translateY(0)', easing: RISE }); // contact
     at += fall * e;
@@ -60,8 +66,9 @@ function drop(el, { height = 160, fall = 400, restitution = 0.5 } = {}) {
     at += fall * e;
   }
   keys.push({ at, transform: 'translateY(0)' });
-  const total = at;
+  const total = at; // ms: the whole bounce, from release to rest
   return el.animate(
+    // offset is each keyframe's place in the animation, from 0 to 1
     keys.map(({ at, ...k }) => ({ ...k, offset: at / total })),
     { duration: total, fill: 'both' }, // no easing here: the keyframes carry it
   );
@@ -73,7 +80,7 @@ drop(document.querySelector('.box'), { restitution: 0.5 }); // try 0.3, then 0.7
 
 Draw a bowling ball and a beach ball and you get two circles. Nothing in the drawing says which is which. The motion does. A heavy thing is slow to get going and hard to stop, and it doesn't linger in the air. A light thing leaps, hangs, drifts, and bounces.
 
-So weight isn't something you draw. It's timing and spacing, read by an eye that has spent a lifetime lifting, dropping, and catching things.
+So weight isn't something you draw. It's timing (chapter 2) and spacing (chapter 3), read by an eye that has spent a lifetime lifting, dropping, and catching things. This chapter puts the two together in one object.
 
 <Beat kind="see">A ball, dropped</Beat>
 
@@ -97,7 +104,7 @@ None of that is in the drawing. It's all *when* and *where*, and every part of i
     { motion: { easing: lightBall.easing, duration: lightBall.duration }, caption: "380ms fall · keeps 70% of its speed" }
   ]}
   answer={0}
-  explain="Both fall for exactly the same time, so here the fall tells you nothing. The floor does. A keeps less than a third of its speed and stops after one low hop: a dead landing. B keeps most of its speed and bounces on and on, and the eye reads that as light."
+  explain="Both fall for exactly the same time, so here the fall tells you nothing. The floor does. A keeps less than a third of its speed, so it gives one short, low hop and a tiny second one, then stops: a dead landing. B keeps most of its speed and bounces on and on, and the eye reads that as light."
 />
 
 <Beat kind="more">What the eye reads</Beat>
@@ -106,9 +113,9 @@ None of that is in the drawing. It's all *when* and *where*, and every part of i
   <p>Galileo argued that, without air, heavy and light things fall together. In 1971, on the Moon, Apollo 15's David Scott dropped a hammer and a falcon feather side by side. They landed at the same moment.</p>
 </Margin>
 
-Chapter 02 used a rough rule: the longer move reads as heavier. That holds when duration is the only thing that changes. But, air aside, a ball falls just as fast whatever it weighs, and when the eye has more to go on, it stops timing the whole move and reads its shape.
+Chapter 2 used a rough rule: the longer move reads as heavier. That holds when duration is the only thing that changes. In physics, air aside, a ball falls just as fast whatever it weighs. So when the eye has more to go on, it stops timing the whole move and reads its shape.
 
-The two dots below travel the same arc. The path is identical; only the timing and spacing differ. One takes 0.7s and the other 1.3s, and the heavy one is the quicker of the two.
+The two dots below travel the same arc. The path is identical; only the timing and spacing differ. The heavy one takes `0.7s` and the light one `1.3s`, so the heavy one is the quicker of the two. Play it and watch the two ends of each move, the start and the finish, rather than the clock. Hover for the ghosts, and see where they bunch.
 
 <Figure n="4.2" caption="Heavy and light on the same arc">
   <Canvas program="heavy-light" />
@@ -121,14 +128,14 @@ Four things tell them apart:
 - **Bouncing.** A heavy thing lands and stays down. A light one comes back up with much of its speed.
 - **Squashing.** Contact shows the impact. A rubber ball flattens against the floor and springs back; a bowling ball keeps its shape and simply stops. Squash says how hard it hit and what it's made of.
 
-Total time is the weakest of these cues. The heavy dot above is faster overall, and it still reads as heavy, because of where it spends its time.
+Total time is the weakest of these cues. The heavy dot above is faster overall, and it still reads as heavy, because of where it spends its time. This is why chapter 2's rule needed the words "when duration is the only thing that changes".
 
 <Beat kind="more">The bouncing ball</Beat>
 
 The ball in figure 4.1 is a classic first exercise for animators, because all of weight fits into one bounce. Read it in four parts:
 
-1. **The fall: ease-in.** Gravity adds the same amount of speed every frame, so each gap is wider than the last. The distance fallen grows with the square of the time: in twice the time, four times as far.
-2. **Contact.** The fastest frame, and the shortest. The ball squashes: flatter and wider, but the same amount of ball.
+1. **The fall: ease-in.** Gravity adds the same amount of speed every frame, so each gap is wider than the last. The distance fallen grows with the square of the time: in twice the time, four times as far. That is why the fall is an ease-in curve, slow at first and quickest at the end.
+2. **Contact.** The fastest frame of the whole bounce. The ball squashes: flatter and wider, but the same amount of ball.
 3. **The rise: ease-out.** The fall played backwards. It leaves the floor fast and slows to a stop at the top, where the drawings crowd together.
 4. **Energy loss.** At each contact the ball keeps only part of its speed, so every bounce is lower and shorter than the last.
 
@@ -136,7 +143,7 @@ The ball in figure 4.1 is a classic first exercise for animators, because all of
   <p><b>Restitution.</b> The fraction of its speed a ball keeps at each bounce. At 1 it bounces forever; at 0 it stops dead.</p>
 </Margin>
 
-That fraction is the ball's *restitution*, and the rest follows from it. The height of a bounce goes with the square of the speed, and its time goes with the speed. So a ball that keeps half its speed bounces a quarter as high, for half as long.
+That fraction is the ball's *restitution*, and the rest follows from it. Throw a ball upward twice as fast and it climbs four times as high, so height goes with the square of the speed. It also stays up twice as long, so time goes with the speed. Turn that round: a ball that keeps half its speed at contact bounces a quarter as high, for half as long. Each later bounce repeats the step, so the hops shrink in a fixed ratio.
 
 | Restitution | Next bounce: height | Next bounce: time | Reads as |
 |---|---|---|---|
@@ -144,9 +151,9 @@ That fraction is the ball's *restitution*, and the rest follows from it. The hei
 | 0.5 | 25% | 50% | firm |
 | 0.8 | 64% | 80% | light, lively |
 
-Strictly, bounciness belongs to the material, not the mass. But the eye has learned from bowling balls and ping-pong balls, and it reads a dead landing as heavy.
+Strictly, bounciness belongs to the material, not the mass. But the eye has learned from bowling balls and ping-pong balls, and it reads a dead landing as heavy. So restitution is the dial you turn to say "heavy" or "light". The table's bands (below about 0.3 heavy, above about 0.7 lively) are a matter of taste, not a law.
 
-In CSS terms, every fall is an ease-in and every rise an ease-out. The keyword `ease-in`, the solid curve below, is a close stand-in for gravity. A real fall, the blue dashed one, is `cubic-bezier(.33, 0, .67, .33)` to two decimals, and its velocity is a straight line, because gravity adds the same speed every frame. The rise is the same curve turned around, `cubic-bezier(.33, .67, .67, 1)`.
+In CSS terms, every fall is an ease-in and every rise an ease-out. The keyword `ease-in`, the solid curve below, is a rough stand-in for gravity. A real fall, the blue dashed one, is `cubic-bezier(.33, 0, .67, .33)` to two decimals, and its velocity is a straight line, because gravity adds the same speed every frame. The rise is the same curve turned around, `cubic-bezier(.33, .67, .67, 1)`. In the figure, compare the two velocity lines: the real fall climbs steadily, while the keyword `ease-in` curves away from it and reaches a higher top speed.
 
 <Figure n="4.3" caption="Ease-in against a real fall, position and velocity">
   <CurvePlot easing="ease-in" compare="cubic-bezier(.33,0,.67,.33)" duration={400} label="ease-in" compareLabel="free fall" />
@@ -160,31 +167,35 @@ In CSS terms, every fall is an ease-in and every rise an ease-out. The keyword `
 
 Interfaces have no gravity, but they borrow its cues. A large surface, like a sheet or a full-screen panel, should move like something heavy: slow to start, slow to settle, no bounce. A small thing, like a badge, a chip, or a like button, can snap into place and bounce a little.
 
-Swap them and both feel wrong. A bouncing dialog seems flimsy, and a badge that takes its time seems sluggish. Pick the weight to match the size and importance of the thing, and keep it the same everywhere that thing appears.
+Swap them and both feel wrong. A bouncing dialog seems flimsy, and a badge that takes its time seems sluggish. Pick the weight to match the size and importance of the thing, and keep it the same everywhere that thing appears. As starting points to adjust by eye: a sheet around 400ms with an ease-out and no overshoot, a badge around 200ms with a small overshoot. Both numbers are taste, not rules.
 
 <Beat kind="tune">Make it heavy, then light</Beat>
 
 This is the ball from figure 4.1, with its knobs and its code. Change one thing at a time.
 
-- Turn **Restitution** down to about 0.2. The ball lands with a thud and stays down: heavy.
+- Turn **Restitution** (the fraction of speed kept at each bounce, from the table above) down to about 0.2. The ball lands with a thud and stays down: heavy.
 - Turn it up to about 0.9. It bounces on and on, like rubber: light.
-- Lower **Gravity**. Every arc slows and hangs at the top, and the ball starts to float like a beach ball.
-- Turn **Squash** off. The ball turns hard, like wood.
+- Lower **Gravity** (how fast the fall picks up speed, in px/s²). Every arc slows and hangs at the top, and the ball starts to float like a beach ball. Raise it and the ball drops like a stone.
+- Turn **Squash on contact** off. The ball turns hard, like wood.
 
 <Lab id="canvas-sandbox" program="bouncing-ball" />
 
-In the code, find the two lines that hold the weight: gravity adding to the speed every frame, and the contact that flips the speed and keeps only a fraction of it.
+In the code, find the two lines that hold the weight: gravity adding to the speed every frame, and the contact that flips the speed and keeps only a fraction of it. Change the numbers there and run it again.
 
 <Beat kind="write">The notation</Beat>
 
-A transition has one curve, and a bounce needs two: ease-in for every fall, ease-out for every rise. Keyframes give you as many as you need. In CSS, an `animation-timing-function` set inside a keyframe applies to the segment from that keyframe to the next one. In the Web Animations API, a keyframe's `easing` does the same. The contacts sit on keyframes, where one curve hands over to the other, and that sharp corner is the bounce.
+A transition has one curve, and a bounce needs two: ease-in for every fall, ease-out for every rise. Keyframes give you as many as you need. In CSS, an `animation-timing-function` set inside a keyframe applies to the segment from that keyframe to the next one. In the Web Animations API, a keyframe's `easing` does the same. The contacts sit on keyframes, where one curve hands over to the other, and that sharp corner is the bounce. Below, the CSS card lists every height and time by hand. The JS card computes them from one number, the restitution.
 
 <div class="snippets">
 <Snippet title="04 · Weight: a bounce in keyframes" lab="frame-stepper" dialect="css" source={bounceCss} extra={{ pass: 1400 }}>
 
 ```css
 /* Dropped from 160px. Each contact keeps half the speed,
-   so each bounce is a quarter as high and half as long. */
+   so each bounce is a quarter as high and half as long.
+   Percentages are shares of the 1000ms: 0-40% is the first fall (400ms),
+   then each hop lasts half as long as the last (200ms, then 100ms).
+   Heights: 160px, then 40px (a quarter), then 10px (a quarter again).
+   "both" holds the first frame before it starts and the last after. */
 .is-on .box {
   animation: drop 1000ms both;
 }
@@ -212,9 +223,11 @@ const RISE = 'cubic-bezier(.33, .67, .67, 1)'; // ease-out: gravity slows it dow
 
 function drop(el, { height = 160, fall = 400, restitution = 0.5 } = {}) {
   const keys = [{ at: 0, transform: `translateY(${-height}px)`, easing: FALL }];
-  let at = fall;
-  // Keep a fraction e of the speed: e² of the height, e of the time.
-  // Stop when the next hop would be under a pixel.
+  let at = fall; // ms: the first fall ends here, at the first contact
+  // e is the share of the speed kept after this contact: the hop is e² of
+  // the height and lasts e of the time. Each pass of the loop is one hop,
+  // and e shrinks by another restitution each time.
+  // Stop once a hop would be under a pixel high.
   for (let e = restitution; e < 1 && height * e * e >= 1; e *= restitution) {
     keys.push({ at, transform: 'translateY(0)', easing: RISE }); // contact
     at += fall * e;
@@ -222,8 +235,9 @@ function drop(el, { height = 160, fall = 400, restitution = 0.5 } = {}) {
     at += fall * e;
   }
   keys.push({ at, transform: 'translateY(0)' });
-  const total = at;
+  const total = at; // ms: the whole bounce, from release to rest
   return el.animate(
+    // offset is each keyframe's place in the animation, from 0 to 1
     keys.map(({ at, ...k }) => ({ ...k, offset: at / total })),
     { duration: total, fill: 'both' }, // no easing here: the keyframes carry it
   );
@@ -235,7 +249,9 @@ drop(document.querySelector('.box'), { restitution: 0.5 }); // try 0.3, then 0.7
 </Snippet>
 </div>
 
-Two details. Leave the animation's own easing alone: in the Web Animations API it would bend the whole bounce on top of the keyframes' curves. And `linear()` from chapter 03 can draw a whole bounce as one curve; that is how the two balls in the FEEL above were made.
+Two details. Leave the animation's own easing alone: in the Web Animations API it would bend the whole bounce on top of the keyframes' curves. And `linear()` from chapter 3 can draw a whole bounce as one curve; that is how the two balls in the "Which ball is heavier?" exercise above were made.
+
+This bounce is drawn by hand: you chose every height and every time. Chapter 5 stops drawing and describes the physics instead. A spring is set by how quick it is and how bouncy, and the timing falls out.
 
 <Beat kind="drill">Which is heavier?</Beat>
 

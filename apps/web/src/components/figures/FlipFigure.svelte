@@ -27,8 +27,8 @@
     "const first = el.getBoundingClientRect();   // F",
     "changeLayout();                              // the DOM moves",
     "const last = el.getBoundingClientRect();    // L",
-    "el.style.transform = `translate(${first.x - last.x}px, ${first.y - last.y}px)`;   // I",
-    "el.animate([{ transform: el.style.transform }, { transform: 'none' }], timing);   // P",
+    "const from = `translate(${first.x - last.x}px, ${first.y - last.y}px)`; el.style.transform = from;   // I",
+    "el.style.transform = ''; el.animate([{ transform: from }, { transform: 'none' }], timing);   // P",
   ];
   const lineFor = $derived([ -1, 0, 2, 3, 4 ][phase]);
 

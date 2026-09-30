@@ -3,15 +3,15 @@ number: 3
 lede: "The key idea of this course: easing is spacing."
 ---
 
-Timing is *how long* a motion takes. Spacing is *where the object is* on each frame in between. Two motions with the same timing can feel completely different, and spacing is the whole difference.
+Chapter 2 fixed *how long* a motion takes. Spacing is *where the object is* on each frame in between: the distance it moves from one frame to the next. Two motions with the same timing can feel completely different, and spacing is the whole difference.
 
-Animators plan spacing with a chart: a line with a tick for every drawing. Close ticks mean the object barely moves between frames, so it looks slow. Wide ticks mean it jumps, so it looks fast. An easing curve is nothing more than a spacing plan written as maths.
+Animators plan spacing with a spacing chart (also called a tick chart): a line with a tick for every drawing. Close ticks mean the object barely moves between frames, so it looks slow. Wide ticks mean it jumps, so it looks fast. An **easing** is a curve that maps progress in time to progress in distance, which makes it a spacing plan written as maths. In practice: halfway through the time, how far along is the object? Linear says half. An ease-out says much more than half, because it front-loads the movement. Change that answer at every moment and you have changed the spacing.
 
 <Beat kind="see">Same timing, four spacings</Beat>
 
-Each row takes the same time over the same distance. Hover the figure to see every frame at once. Only the spacing differs.
+Each row takes the same time over the same distance. Hover the figure to see every frame at once, as ghosts: faint copies of the object, one per frame, like the faint earlier drawings an animator sees through the paper. Compare the gaps between ghosts along each row, not the rows' speed: they all arrive together. Only the spacing differs.
 
-<Figure n="3.1" caption="Linear, ease-in, ease-out, ease-in-out, 500ms each">
+<Figure n="3.1" caption="Linear, ease-in, ease-out, ease-in-out, same time each">
   <SpacingChart rows={[
     { label: "linear", easing: "linear", duration: 500 },
     { label: "ease-in", easing: "cubic-bezier(.55,0,1,.45)", duration: 500 },
@@ -21,11 +21,15 @@ Each row takes the same time over the same distance. Hover the figure to see eve
 </Figure>
 
 - **Linear:** even gaps. It moves like a machine, because only machines keep a constant speed.
-- **Ease-in:** tight gaps, then wide. It starts slowly and leaves fast.
-- **Ease-out:** wide gaps, then tight. It moves fast and then settles.
+- **Ease-in:** tight gaps, then wide. It starts slowly and ends fast.
+- **Ease-out:** wide gaps, then tight. It starts fast and then settles.
 - **Ease-in-out:** tight, wide, tight. It starts gently, travels, and lands gently.
 
+The figure draws the three eased rows (the three that are not linear) with slightly stronger curves than the CSS keywords `ease-in`, `ease-out` and `ease-in-out`, so the differences are easy to see. The shapes are the same.
+
 <Beat kind="feel">Which one arrives?</Beat>
+
+Play both cards a couple of times. Watch the last few frames of each.
 
 <FeelAB
   question="A card comes onto the screen. Which one feels like it arrived?"
@@ -41,21 +45,21 @@ Each row takes the same time over the same distance. Hover the figure to see eve
 <Beat kind="more">Enter with ease-out, exit with ease-in</Beat>
 
 <Margin kind="history">
-  <p>Robert Penner's easing equations, written for Flash around 2001, named the families still used today: quad, cubic, quart, expo, back, elastic, bounce.</p>
+  <p>Robert Penner's easing equations, written for Flash in the early 2000s, named families still used today: quad, cubic, quart, expo, back, elastic, bounce.</p>
 </Margin>
 
-The rule follows from the world. **Things arrive and settle; things leave and accelerate.** An entrance should decelerate into place (ease-out). An exit should accelerate away (ease-in), and it should be quicker, because the thing that's leaving no longer needs your attention. On-screen moves, where something starts and ends in view, get both (ease-in-out).
+The rule follows from the world. **Things arrive and settle; things leave and accelerate.** An entrance should decelerate into place (ease-out). An exit should accelerate away (ease-in), and it should be quicker, because the thing that is leaving no longer needs your attention. (How much quicker is taste; 0.6 to 0.8 of the enter time is a sensible range, and this app uses 0.7.) On-screen moves, where something starts and ends in view, get both (ease-in-out).
 
-This app's own curves follow it: `--ease-out` is `cubic-bezier(.2, .8, .2, 1)` for enters, `--ease-in` is `cubic-bezier(.4, 0, 1, 1)` for exits at 0.7× the time, and `--ease-inout` for moves.
+This app's own curves follow it: `--ease-out` is `cubic-bezier(.2, .8, .2, 1)` for enters, `--ease-in` is `cubic-bezier(.4, 0, 1, 1)` for exits, run at 0.7× the enter time (so a `280ms` enter has a `196ms` exit), and `--ease-inout` for moves. The next section explains what those four numbers mean.
 
 <Beat kind="more">Reading a cubic-bezier</Beat>
 
-`cubic-bezier(x1, y1, x2, y2)` draws a curve from the bottom-left corner (start) to the top-right (end). Time runs across, progress runs up. The four numbers are two **handles**:
+`cubic-bezier(x1, y1, x2, y2)` draws a curve on a square from the bottom-left corner (start) to the top-right (end). Time runs across, from 0 to 1 (0 is the first frame, 1 the last). Progress runs up, from 0 (not started) to 1 (arrived). The four numbers are the positions of two **handles**, each a point on that square, one pulling on each end of the curve:
 
-- The first handle `(x1, y1)` sets the direction the curve *leaves* the start. Its slope is the starting speed.
-- The second handle `(x2, y2)` sets the direction it *arrives* at the end. Its slope is the arriving speed.
+- The first handle `(x1, y1)` sets the direction the curve *leaves* the start. Draw a line from the start corner to it: that line's slope is the starting speed.
+- The second handle `(x2, y2)` sets the direction it *arrives* at the end. Draw a line from it to the end corner: that line's slope is the arriving speed.
 
-A steep slope is fast. A flat slope is slow. So in `cubic-bezier(.2, .8, .2, 1)` the first handle points steeply up (it leaves fast) and the second lies flat along the top (it arrives slowly). A `y` above 1 means the curve overshoots its target and comes back.
+A steep slope is fast. A flat slope is slow. So in `cubic-bezier(.2, .8, .2, 1)` the first handle is at (0.2, 0.8), and the line to it climbs 0.8 for every 0.2 across: steep, so the object leaves fast. The second handle is at (0.2, 1), level with the end corner, so the line from it to the end is flat: the object arrives slowly. The `x` values must stay between 0 and 1, since time cannot run backwards. A `y` above 1 (or below 0) makes the object overshoot its target and come back.
 
 <Figure n="3.2" caption="--ease-out, position and velocity">
   <CurvePlot easing="--ease-out" compare="linear" duration={600} label="--ease-out" compareLabel="linear" />
@@ -65,18 +69,18 @@ A steep slope is fast. A flat slope is slow. So in `cubic-bezier(.2, .8, .2, 1)`
   <p><b>Velocity graph.</b> The slope of the position curve at every moment. 1× is the speed of linear motion over the same time. The tallest point is where the object is fastest.</p>
 </Margin>
 
-Read the velocity graph on the right: `--ease-out` starts at four times the speed of linear motion (0.8 ÷ 0.2, the slope of its first handle) and spends the second half of its time barely moving. That long, slow tail is the "settle". The spacing chart shows the same thing: the ghosts crowd together at the end.
+In the figure, the left graph is position against time, and the right is speed (the slope of the left one). Read the velocity graph on the right: `--ease-out` starts at four times the speed of linear motion (0.8 ÷ 0.2, the slope of its first handle) and is already about 95% of the way there at the halfway point, so it spends the second half of its time barely moving. That long, slow tail is the "settle". The spacing chart shows the same thing: the ghosts crowd together at the end.
 
-Two more CSS spacings are worth knowing. `steps(n)` holds still and then jumps, so every gap is either zero or large: good for clocks, counters, and sprite sheets. `linear()` takes any list of stops, so it can draw spacing that no bézier can, like a bounce or a spring.
+Two more spacings that CSS can write are worth knowing. `steps(n)` holds still and then jumps, so every gap is either zero or large: good for clocks, counters, and sprite sheets. `linear()` takes any list of stops, so it can draw spacing that no bézier can, like a bounce or a spring. It works in all current browsers, but older ones ignore it, so declare a plain `transition` before it as a fallback.
 
 <Beat kind="tune">Drag the handles</Beat>
 
-Start from `ease-out`. Its first handle sits in the corner; its second lies flat along the top, and that flat handle is the settle. Pull the second handle straight down onto the dotted diagonal. Watch the velocity peak shrink to 1× and the ghosts spread evenly. You're turning an arrival back into a machine. B is `ease-in`: the same curve turned around, the spacing of an exit.
+Start from the CSS keyword `ease-out`. Its first handle sits in the bottom-left corner; its second lies flat along the top, and that flat handle is the settle. Pull the second handle straight down onto the dotted diagonal. Watch the velocity peak shrink to 1× and the ghosts spread evenly. You're turning an arrival back into a machine. Then push the second handle above the top edge (a `y` over 1) and watch the object overshoot and return. B is `ease-in`, the spacing of an exit, kept as a reference: the reverse of an ease-out, slow start and fast finish.
 
 <Lab id="curve-bench" easing="ease-out" duration={600} compare="ease-in" code={false} />
 
 <Margin kind="wild">
-  <p>Material Design's classic "standard curve" is <code>cubic-bezier(0.4, 0.0, 0.2, 1)</code>: a gentle start and a long settle, used for moves that begin and end on screen.</p>
+  <p>Material Design 2's "standard curve" is <code>cubic-bezier(0.4, 0.0, 0.2, 1)</code>: a gentle start and a long settle, used for moves that begin and end on screen.</p>
 </Margin>
 
 <Beat kind="write">The notation</Beat>
@@ -87,10 +91,13 @@ Start from `ease-out`. Its first handle sits in the corner; its second lies flat
 ```css
 /* Enter: decelerate into place. Exit: accelerate away, faster. */
 .card-enter {
+  /* 280ms is --dur-base. The fade is shorter (180ms, --dur-quick) so the card is
+     fully visible while its slide is still settling. */
   transition: transform 280ms cubic-bezier(.2, .8, .2, 1),
               opacity   180ms linear;
 }
 
+/* Exit times are the enter times x 0.7: 280 -> 196ms, 180 -> 126ms. */
 .card-exit {
   transition: transform 196ms cubic-bezier(.4, 0, 1, 1),
               opacity   126ms linear;
@@ -102,11 +109,14 @@ Start from `ease-out`. Its first handle sits in the corner; its second lies flat
 <Snippet title="03 · Spacing: steps and linear()" lab="spacing-chart" easing="steps(8)" duration={800} property="rotate" to={360}>
 
 ```css
-/* Hold, then jump: eight positions per turn. */
+/* Hold, then jump: eight positions per turn. steps(8) splits the 800ms into eight
+   equal holds, so the spinner turns in eight visible jumps. */
 .spinner { animation: spin 800ms steps(8) infinite; }
 @keyframes spin { to { rotate: 1turn; } }
 
-/* Any spacing you can draw, as stops: a small bounce. */
+/* Any spacing you can draw, as stops: a small bounce. Each stop is
+   "progress time%": at 20% of the time the object is 0.36 of the way, at 40% it
+   reaches 1 (the target), then it falls back to 0.81, returns to 1, and settles. */
 .drop {
   transition: transform 600ms
     linear(0, 0.36 20%, 1 40%, 0.81 55%, 1 70%, 0.95 85%, 1);
@@ -118,6 +128,9 @@ Start from `ease-out`. Its first handle sits in the corner; its second lies flat
 <Snippet title="03 · Spacing: the same arrival in JS" lab="curve-bench" easing="cubic-bezier(.2,.8,.2,1)" duration={280} from={16} to={0} property="y">
 
 ```js
+// The same enter as .card-enter, using the Web Animations API from chapter 1.
+// fill: 'both' applies the first keyframe before the animation starts and holds
+// the last one after it ends.
 card.animate(
   [
     { transform: 'translateY(16px)', opacity: 0 },
@@ -132,6 +145,6 @@ card.animate(
 
 <Beat kind="drill">Match the curve</Beat>
 
-Watch a motion and pick the curve that made it. Look at the start and the end: where is it slow?
+Watch a motion and pick the curve that made it. Look at the start and the end: where is it slow? You now know what a curve decides. Chapter 4 uses it to make things feel heavy or light.
 
 <Drill kind="match-curve" trials={5} chapter={3} />

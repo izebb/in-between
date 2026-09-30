@@ -1,0 +1,73 @@
+/*
+ * Themes: how a look other than Pencil reshapes the site's own pieces (tokens.json themes). The
+ * tokens change the colour, the type and the shape values; these rules take them to the parts that
+ * write theirs out. Pencil is the site as drawn, so nothing here applies to it: every rule is under
+ * :root[data-theme], which only a theme other than Pencil sets.
+ *
+ * Unlayered, so it outranks the components' own scoped styles. Figures' content (the mock screens,
+ * the charts) keeps its drawing: it is what the lessons are about. Motion is the same in every theme.
+ */
+
+/* ---------- Every theme ---------- */
+
+/* The art behind the page, on the sheet the page is laid on. */
+:root[data-theme] .frame { background-image: var(--art); background-size: var(--art-size); }
+
+/* Shape: the shared pieces take the theme's corners and outline. */
+:root[data-theme] :is(.btn, .lab-btn, .pf-field, .tip, .inspector, .journal-form, .words) { border-radius: var(--radius-s); }
+:root[data-theme] .seg { border-radius: calc(var(--radius-s) + 2px); }
+/* The sliding tint is the ::before, which :is() can't hold: it is named on its own. Inside, the
+   corners run concentric with the control's (its corner less the padding and border). */
+:root[data-theme] .seg > button,
+:root[data-theme] .seg::before { border-radius: calc(var(--radius-s) - 1px); }
+:root[data-theme] :is(.plate, .drill-plate, .snippet, pre.astro-code, .prose pre, .instrument, .prefs, .pf-menu) { border-radius: var(--radius-m); }
+:root[data-theme] .drills > .item { border-radius: var(--radius-m); }
+:root[data-theme] .instrument.stage-first { border-radius: var(--radius-l); }
+:root[data-theme] .instrument.stage-first > :is(.i-params, .i-code) { border-radius: var(--radius-m); background-color: var(--paper-float); border-color: var(--outline); box-shadow: var(--shadow-float); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur); }
+:root[data-theme] .instrument.stage-first > .i-time { background-color: var(--paper-float); border-color: var(--outline); box-shadow: var(--shadow-float); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur); }
+
+/* ---------- Glassy: frosted panels over soft colour ---------- */
+
+:root[data-theme="glassy"] :is(.plate, .drill-plate, .snippet, .journal-form, .bench-item, .drills > .item.open, .instrument:not(.stage-first), .inspector) {
+  border-color: var(--outline);
+  background-color: var(--paper-raised);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  box-shadow: var(--shadow-card);
+}
+:root[data-theme="glassy"] .instrument.stage-first { background: var(--paper-raised); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur); box-shadow: var(--shadow-card); }
+:root[data-theme="glassy"] .btn.solid { box-shadow: 0 8px 20px -10px color-mix(in srgb, var(--ink) 60%, transparent); }
+/* The lab's boxes stand apart as frosted cards rather than sharing rules. */
+:root[data-theme="glassy"] .bench-list { gap: 1rem; border: 0; }
+:root[data-theme="glassy"] .bench-item { border: var(--line) solid var(--outline); border-radius: var(--radius-m); }
+
+/* ---------- Mono: the editor ---------- */
+
+/* Labels read like identifiers: lower case, set solid. */
+:root[data-theme="mono"] :is(.smallcaps, .label, .cap) { text-transform: lowercase; letter-spacing: 0; }
+:root[data-theme="mono"] .seg > button[aria-pressed="true"] { box-shadow: inset 0 -2px 0 var(--blue-pencil); }
+:root[data-theme="mono"] .seg[data-seg]::before { box-shadow: inset 0 -2px 0 var(--blue-pencil); }
+:root[data-theme="mono"] .btn.solid { background: #1F883D; border-color: rgb(31 35 40 / 0.15); color: #FFFFFF; }
+:root[data-theme="mono"][data-mode="dark"] .btn.solid { background: #238636; border-color: rgb(240 246 252 / 0.1); }
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="mono"]:not([data-mode="light"]) .btn.solid { background: #238636; border-color: rgb(240 246 252 / 0.1); }
+}
+
+/* ---------- Cartoon: thick outlines and a hard shadow ---------- */
+
+:root[data-theme="cartoon"] :is(h1, h2, h3, .serif, .pf-name) { font-weight: 600; }
+:root[data-theme="cartoon"] :is(.plate, .drill-plate, .snippet, .journal-form, .bench-item, .drills > .item.open, .instrument:not(.stage-first), .instrument.stage-first > :is(.i-params, .i-code, .i-time), .prefs, .pf-menu, .inspector) {
+  border: var(--line) solid var(--outline);
+  box-shadow: var(--shadow-card);
+}
+:root[data-theme="cartoon"] :is(.prefs, .pf-menu) { box-shadow: var(--shadow-float); }
+:root[data-theme="cartoon"] .instrument.stage-first { border: var(--line) solid var(--outline); box-shadow: var(--shadow-card); }
+:root[data-theme="cartoon"] :is(.btn, .lab-btn, .pf-field, .seg) { border: var(--line) solid var(--outline); }
+:root[data-theme="cartoon"] :is(.btn, .lab-btn) { box-shadow: 2px 2px 0 var(--outline); font-weight: 700; }
+:root[data-theme="cartoon"] :is(.btn, .lab-btn):active { translate: 2px 2px; box-shadow: 0 0 0 var(--outline); }
+:root[data-theme="cartoon"] .btn.ghost { border-color: transparent; box-shadow: none; }
+:root[data-theme="cartoon"] .btn.solid { background: var(--red-pencil); color: #FFFFFF; }
+:root[data-theme="cartoon"] .chip { border: 1.5px solid var(--outline); font-weight: 700; }
+:root[data-theme="cartoon"] .seg[data-seg]::before { background: color-mix(in srgb, var(--blue-pencil) 22%, transparent); }
+:root[data-theme="cartoon"] .bench-list { gap: 1.1rem; border: 0; }
+:root[data-theme="cartoon"] .bench-item { border-radius: var(--radius-m); background: var(--paper-raised); }

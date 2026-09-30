@@ -131,7 +131,7 @@ export const specimens: Record<string, Specimen> = {
   },
 
   weight(g, t) {
-    // A bounce: fall (ease-in), rise (ease-out), losing height each time.
+    // A bounce: it rises slowing toward the top, falls with ease-in, and loses height each time.
     const { w, h, c } = g;
     const ground = h - 5;
     line(g, 4, ground + 3.5, w - 4, ground + 3.5, c.graphite);
@@ -418,7 +418,7 @@ export const specimens: Record<string, Specimen> = {
   },
 
   performance(g, t) {
-    // Frame budget: bars under the 8.3ms line are fine; one long frame is a jank.
+    // Frame budget: bars under the line fit in a frame; one long frame is jank.
     const { w, h, c } = g;
     const budget = h * 0.45;
     const n = 16;

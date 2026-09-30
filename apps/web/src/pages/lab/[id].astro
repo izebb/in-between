@@ -1,6 +1,6 @@
 ---
 import Base from "~/layouts/Base.astro";
-import { instruments, instrumentById, chapters, pad2, type InstrumentId } from "~/lib/curriculum";
+import { instruments, instrumentById, type InstrumentId } from "~/lib/curriculum";
 import SpacingChart from "~/components/lab/SpacingChart.svelte";
 import CurveBench from "~/components/lab/CurveBench.svelte";
 import FrameStepper from "~/components/lab/FrameStepper.svelte";
@@ -17,19 +17,20 @@ export function getStaticPaths() {
 
 const id = Astro.params.id as InstrumentId;
 const meta = instrumentById(id);
-const usedIn = chapters.filter((c) => c.instruments.includes(id));
+// The instruments on the shared shell put their actions (Journal, Share, Code) at the end of the top line.
+const shelled = !["specimen-journal", "export-desk"].includes(id);
+// The instruments laid out stage first (Instrument.svelte): on a wide screen their page is fitted to
+// the window, and only the stage scrolls.
+const fitted = ["spacing-chart", "curve-bench", "spring-bench", "exposure-sheet", "frame-stepper", "data-stage"].includes(id);
 const built: InstrumentId[] = ["spacing-chart", "curve-bench", "frame-stepper", "spring-bench", "canvas-sandbox", "exposure-sheet", "specimen-journal", "export-desk", "data-stage"];
 ---
 <Base title={`${meta.code} ${meta.name}`} description={meta.does} posture="lab">
-  <div class="lab-page">
-    <header class="lab-head">
+  <div class:list={["lab-page", { fitted }]}>
+    <!-- One line: where it is and its name. The instrument's own actions (Journal, Share, Code) sit
+         at the right end of it. The stage comes straight after, and the page ends with it. -->
+    <header class:list={["lab-top", { shelled }]}>
       <nav class="crumbs smallcaps" aria-label="Breadcrumb"><a href="/lab">Lab</a> / {meta.code}</nav>
-      <p class="does">{meta.does} <span class="trains">Trains: {meta.trains.toLowerCase()}.</span></p>
-      {usedIn.length > 0 && (
-        <p class="used smallcaps">
-          Used in {usedIn.map((c, i) => (<>{i > 0 && " · "}<a href={`/chapters/${c.slug}`}>{pad2(c.number)} {c.title}</a></>))}
-        </p>
-      )}
+      <h1 class="lab-name">{meta.name}</h1>
     </header>
     {id === "spacing-chart" && <SpacingChart client:only="svelte" />}
     {id === "curve-bench" && <CurveBench client:only="svelte" />}
@@ -45,15 +46,28 @@ const built: InstrumentId[] = ["spacing-chart", "curve-bench", "frame-stepper", 
 </Base>
 
 <style>
-  .lab-page { padding-bottom: 2rem; }
-  .lab-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.35rem 1.5rem; padding-block: 0.5rem 1rem; }
+  .lab-page { position: relative; padding-bottom: 2rem; }
+  .lab-top { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.35rem 1rem; padding-block: 1.1rem 1.25rem; }
   .crumbs { color: var(--graphite-strong); }
   .crumbs a { text-decoration: none; }
-  .does { font-size: var(--text-sm); color: var(--graphite-strong); max-width: 70ch; }
-  .trains { color: var(--graphite); }
-  .used { color: var(--graphite); margin-left: auto; }
-  .used a { color: var(--graphite-strong); }
+  .lab-name { font-family: var(--font-display); font-size: 1.75rem; font-weight: 500; line-height: 1; letter-spacing: -0.02em; }
+  /* Room at the line's right end for the instrument's actions, which the island places there. */
+  @media (min-width: 860px) {
+    .lab-top.shelled { padding-right: 21rem; }
+    :global(.lab-page .instrument-wrap:not(.embedded) > .i-bar) { position: absolute; top: 0.85rem; right: var(--gutter); }
+  }
   .soon { padding: 4rem 0; font-family: var(--font-display); font-size: var(--text-xl); color: var(--graphite-strong); }
   :global(.posture-lab .instrument) { min-height: calc(100dvh - 2 * var(--frame-inset) - 170px); }
+  /* Fitted, on a wide screen the page is the window: the line on top, and the stage taking the rest.
+     Nothing scrolls but the stage (lab.css), and the site's footer stays off the page. */
+  @media (min-width: 1180px) {
+    :global(body:has(.lab-page.fitted) .frame > .scroller) { overflow: hidden; }
+    :global(body:has(.lab-page.fitted) main) { height: 100%; }
+    :global(body:has(.lab-page.fitted) .site-footer) { display: none; }
+    .lab-page.fitted { display: flex; flex-direction: column; box-sizing: border-box; height: 100%; padding-bottom: var(--gutter); }
+    .lab-page.fitted > :global(astro-island) { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+    .lab-page.fitted :global(.instrument-wrap) { flex: 1; min-height: 0; }
+    .lab-page.fitted :global(.instrument.stage-first) { flex: 1; min-height: 0; }
+  }
   :global(.posture-lab .site-footer) { margin-top: 2rem; }
 </style>

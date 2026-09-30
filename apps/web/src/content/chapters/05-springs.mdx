@@ -3,23 +3,23 @@ number: 5
 lede: "A spring has no duration. It has physics, and time falls out of it."
 ---
 
-Every tween makes a promise before it starts: *I will be there in this long.* Then the curve bends the path so the promise comes true. That works while nothing changes. But people change their minds. They tap again, grab the thing mid-flight, send it somewhere else. The promise is already made, and a tween has two bad choices: ignore the change, or start again from a standstill.
+In chapter 4 you drew a bounce by hand, choosing every height and every time. A spring lets physics choose them. To see why that matters, start with what a tween promises. A tween (from "in between") is any animation with a fixed duration and an easing curve, such as a CSS transition or every curve so far in this course. Every tween makes a promise before it starts: *I will be there in this long.* Then the curve bends the path so the promise comes true. That works while nothing changes. But people change their minds. They tap again, grab the thing mid-flight, send it somewhere else. The promise is already made, and a tween has two bad choices: ignore the change, or start again from a standstill.
 
 A spring makes no promise about time. It describes the thing instead: how hard it is pulled toward its place, how much it resists, how heavy it is. The motion follows from that, and the time follows the motion. A tween fixes the time and bends the path to fit. A spring fixes the physics and lets time follow.
 
 <Beat kind="see">Change its mind</Beat>
 
-Both dots chase the same target, the blue ring. Every so often the target jumps. Tap the figure to move it yourself. Under each row, a line traces the dot's velocity.
+Both dots chase the same target, the blue ring. Every so often the target jumps. Tap the figure to move it yourself. Under each row, a line traces the dot's velocity. Watch what that line does at the moment of each jump.
 
 <Figure n="5.1" caption="A tween and a spring, retargeted mid-flight">
   <Canvas program="interrupt" readout={false} />
 </Figure>
 
-Watch each jump. The tween starts its new trip from a standstill: its velocity line drops straight to zero and climbs again, and the dot stalls before it turns. The spring never stalls. The pull changes direction, but the speed the dot already had is still there, so it curves into the new trip. The spring never needs to know how long the trip will take. It only needs to know where the target is now.
+Watch each jump. The tween starts its new trip from a standstill: its velocity line drops straight to zero and climbs again, and the dot stalls before it turns. The spring never stalls. The pull changes direction, but the speed the dot already had is still there, so it curves into the new trip. The spring never needs to know how long the trip will take. It only needs to know where the target is now. So anything the user can interrupt (a drawer, a drag, a toggle) wants a spring, not a tween.
 
 <Beat kind="feel">Which one lands in its place?</Beat>
 
-Both of these are springs. One thing differs between them.
+Both of these are springs, written as the `spring(response, bounce)` pair you will meet below. Response is how quick, and it is the same for both. Bounce is how much the thing overshoots, and it is the one thing that differs.
 
 <FeelAB
   question="An item moves to the other list. Which one lands in its place?"
@@ -40,7 +40,7 @@ A spring's motion comes from one rule, applied again and again. The further the 
   <p><b>Settle time.</b> This site calls a spring settled once it is within 0.1% of the distance from its target and moving slower than 1% of the distance per second. Draw the line somewhere else and the "duration" changes. The motion doesn't.</p>
 </Margin>
 
-In the maths, a spring never quite stops. It only gets closer and closer. So its duration is a measurement, not a setting: the moment it is close enough and slow enough that nobody could see it move again. This site's own `spring.snappy` settles in 474ms and `spring.soft` in 727ms. Nobody typed those numbers. They were computed from the physics.
+In the maths, a spring never quite stops. It only gets closer and closer. So its duration is a measurement, not a setting: the moment it is close enough and slow enough that nobody could see it move again. This site's own springs, `spring.snappy` and `spring.soft` (its two spring tokens), settle in 474ms and 727ms. Nobody typed those numbers. They were computed from the physics.
 
 <Beat kind="more">Springs are a model</Beat>
 
@@ -48,21 +48,21 @@ In the maths, a spring never quite stops. It only gets closer and closer. So its
   <p>The pull of a spring grows in proportion to how far it is stretched. Robert Hooke published the law in 1678 as <i>ut tensio, sic vis</i>: as the extension, so the force.</p>
 </Margin>
 
-The model is a weight on a coil spring, with some friction. Three numbers describe it:
+Picture a weight hanging from a coil spring, like a toy on a spring or a car on its suspension. Pull it down and let go: it bobs, and the bobbing dies away because of friction, like a shock absorber. Three numbers describe it:
 
 - **Stiffness `k`**: how hard the spring pulls. The pull grows with the distance from rest: twice as far, twice the pull. A stiffer spring is faster.
-- **Damping `c`**: friction that grows with speed. It takes energy out of the motion. With too little, the weight swings past rest again and again.
+- **Damping `c`**: friction that grows with speed, like moving through honey: the faster you go, the more it holds you back. It takes energy out of the motion. With too little, the weight swings past rest again and again.
 - **Mass `m`**: how heavy the weight is. A heavier weight is slower to get going and slower to stop.
 
-On every frame the spring adds two forces, the pull `−k · x` and the friction `−c · v`, and divides by the mass to get the acceleration. Here `x` is the distance from the target and `v` is the velocity. That is the whole model.
+Here `x` is the distance from the target and `v` is the velocity: how fast the weight is moving, and in which direction. At every instant the spring adds two forces, the pull `−k · x` and the friction `−c · v`, and divides by the mass to get the acceleration, the rate at which `v` changes: `a = (−k·x − c·v) / m`. Each frame, a program adds `a · dt` to `v`, then `v · dt` to `x` (`dt` is the seconds since the last frame). That is the whole model.
 
 <Figure n="5.2" caption="A weight on a spring: stiffness, damping, mass">
   <Canvas program="spring-mass" />
 </Figure>
 
-Every few seconds the figure pulls the weight down and lets go, and you can drag it yourself. With these settings it swings back and forth for a while, because there is almost no friction. Raise the damping to about 22 and it returns without passing the rest line. Then double the mass: it gets slower, and it overshoots again, a little.
+Every few seconds the figure pulls the weight down and lets go, and you can drag it yourself. With these settings it swings back and forth for a while, because there is almost no friction. Raise the damping to about 22 and it returns without passing the rest line: the friction now just beats the swing. Then double the mass: it gets slower, and it overshoots again, a little. Try stiffness too: higher is a faster, tighter swing.
 
-That is the trouble with `k`, `c` and `m` as design tools: each one changes two things at once. Stiffer means faster and bouncier. Heavier means slower and bouncier. More damping means less bounce, but past a point it also means slower.
+That is the trouble with `k`, `c` and `m` as design tools: each one changes two things at once (speed and bounce). Stiffer means faster and bouncier, because the extra pull arrives while friction stays the same. Heavier means slower and bouncier. More damping means less bounce, but past a point it also means slower. You cannot say "keep the tempo, remove the bounce" by touching one of them.
 
 <Beat kind="more">The designer's pair</Beat>
 
@@ -71,11 +71,13 @@ A designer wants two separate dials: how quick, and how bouncy. So the same spri
 - **Response**: the spring's tempo, in seconds. It is the time one full swing would take with no friction. Lower is snappier.
 - **Bounce**: how much it overshoots. `0` is none, and values toward `1` swing more and more. Below `0`, it creeps into place without overshooting.
 
-They convert exactly to the physics:
+They convert exactly to the physics (Apple's model, the one this site uses). `ζ` (zeta) is the damping ratio, explained in the next section: 1 means no overshoot, less than 1 means overshoot.
 
 - `k = (2π / response)² · m`
 - `c = 4π · ζ · m / response`
 - `ζ = 1 − bounce`, or `ζ = 1 / (1 + bounce)` when bounce is below zero.
+
+Where they come from: a weight on a spring swings once every `2π · √(m / k)` seconds with no friction. Set that equal to the response and solve for `k`, and you get the first line. The third line just turns the bounce dial into damping ratio, and the second line turns that ratio into friction.
 
 Three springs, both ways, with `m = 1`:
 
@@ -89,7 +91,7 @@ Three springs, both ways, with `m = 1`:
   <p>Apple described springs this way in the WWDC 2018 talk <i>Designing Fluid Interfaces</i>: damping ratio and response instead of mass, stiffness and damping. SwiftUI takes the same pair in <code>.spring(response:dampingFraction:)</code>, and from iOS 17 also <code>.spring(duration:bounce:)</code>.</p>
 </Margin>
 
-Mass drops out. `k` and `c` both grow with `m`, so every mass gives the same motion, and the designer's pair needs no mass dial. And each dial does one job. Change the response and the overshoot stays exactly the same; the whole motion just plays faster or slower. Change the bounce and the stiffness stays put; only the friction changes. A rule of thumb: with no bounce, a spring here settles in about 1.5 times its response.
+Mass drops out here. In the designer's pair, `k` and `c` both grow with `m`, so every mass gives the same motion and there is no mass dial. (In the `k · c · m` picture above, you held `k` and `c` fixed, so a heavier weight really did change the motion.) And each dial does one job. Change the response and the overshoot stays exactly the same; the whole motion just plays faster or slower. Change the bounce and the stiffness stays put; only the friction changes. A rule of thumb: with no bounce, a spring settles in about 1.5 times its response, so response 0.3 settles in roughly 450ms. Start there when you need a duration to budget for.
 
 <Beat kind="more">When a bounce is honest</Beat>
 
@@ -138,13 +140,13 @@ The same fact means a spring can start already moving. Hand it the velocity of a
   ]} track={false} />
 </Figure>
 
-Both springs are critically damped. The blue one starts at rest and never passes its target. The one with the red dot starts already moving toward the target, as if flicked. It arrives with so much speed that it overshoots by about 11%, with no bounce at all. That overshoot is honest: it is the finger's momentum, not the spring's. It's why a spring for direct manipulation can have bounce 0 and still feel physical.
+Both springs are critically damped. Look at the ends of the two curves. The blue one starts at rest and never passes its target. The one with the red dot starts already moving toward the target, as if flicked (30 trip-lengths per second, about a thirtieth of a second to cross the whole trip if nothing slowed it). It arrives with so much speed that it overshoots by about 11%, with no bounce at all. That overshoot is honest: it is the finger's momentum, not the spring's. It's why a spring for direct manipulation can have bounce 0 and still feel physical.
 
 A tween has none of this. Its state is a clock. Interrupt it and it starts a new clock, and its speed jumps to whatever its curve starts with, not the speed it had. The kink in Figure 5.1 is that jump.
 
 <Beat kind="tune">Two dials</Beat>
 
-The bench starts at response 0.4, bounce 0.3. Drag the bounce down to 0 and watch *settles in* drop from 699ms to 612ms. Take it below 0 and watch the curve creep. Then change the response: the shape holds, only the tempo moves. Last, switch to `k · c · m` and double the mass. It gets slower and bouncier at once.
+The bench starts at response 0.4, bounce 0.3. Drag the bounce down to 0 and watch *settles in* drop from 699ms to 612ms: less wobble, so it comes to rest sooner. Take it below 0 and watch the curve creep, never crossing the target. Then change the response: the shape holds, only the tempo moves. Last, switch *Describe it as* to `k · c · m`, where `ζ` in the readout tells you how bouncy it is (under 1 overshoots), and double the mass. It gets slower and bouncier at once.
 
 <Lab id="spring-bench" response={0.4} bounce={0.3} code={false} />
 
@@ -159,7 +161,10 @@ A `linear()` spring is still a tween, though. It has the spring's shape but not 
 
 ```css
 /* response 0.4, bounce 0.3 → k 246.7, c 21.99, m 1.
-   Sampled into linear() over its settle time, 699ms. */
+   Sampled into linear() over its settle time, 699ms.
+   Each stop is the spring's position (0 = start, 1 = target) at a
+   point in time. Values above 1 are the overshoot: up to 1.046,
+   4.6% past the target, before it settles back to 1. */
 :root {
   --spring-pop: linear(0, 0.0057 1%, 0.0154 1.67%, 0.0291 2.33%,
     0.0669 3.67%, 0.1157 5%, 0.1578 6%, 0.219 7.33%, 0.4836 12.67%,
@@ -185,7 +190,9 @@ A `linear()` spring is still a tween, though. It has the spring's shape but not 
 <Snippet title="05 · Springs: the same spring in WAAPI" lab="spring-bench" response={0.4} bounce={0.3} property="scale" to={1}>
 
 ```js
-// linear() as the easing, the settle time as the duration.
+// linear() as the easing, the settle time as the duration:
+// change the duration and the spring plays faster or slower, but no longer
+// matches its physics.
 const pop = {
   duration: 699,
   easing: `linear(0, 0.0057 1%, 0.0154 1.67%, 0.0291 2.33%, 0.0669 3.67%,
@@ -208,12 +215,14 @@ badge.animate(
 ```js
 import { animate } from 'motion';
 
-// spring.snappy (response 0.3, bounce 0) as physics.
+// spring.snappy (response 0.3, bounce 0) as physics: the k, c and m
+// from the table above, so no duration is given. Motion works it out.
 const snappy = { type: 'spring', stiffness: 438.7, damping: 41.89, mass: 1 };
 let open = false;
 
 // Tap again mid-flight: the new spring starts where the panel is,
 // at the speed it already has. Nothing restarts.
+// x is in px: 240 is open, 0 is closed.
 toggle.addEventListener('click', () => {
   open = !open;
   animate(panel, { x: open ? 240 : 0 }, snappy);
@@ -222,6 +231,8 @@ toggle.addEventListener('click', () => {
 
 </Snippet>
 </div>
+
+A spring can take the speed of a finger, but it cannot say where a fast flick should end up. Chapter 6 asks that: given a release speed and some friction, where does the thing stop?
 
 <Beat kind="drill">Tune the spring to match</Beat>
 

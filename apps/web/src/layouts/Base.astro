@@ -1,12 +1,21 @@
 ---
 import "@fontsource-variable/geist";
 import "@fontsource-variable/geist-mono";
+// The other themes' type (tokens.json themes). A face is only fetched when a theme on screen uses it.
+import "@fontsource-variable/sora";
+import "@fontsource-variable/manrope";
+import "@fontsource-variable/jetbrains-mono";
+import "@fontsource/comic-neue/400.css";
+import "@fontsource/comic-neue/400-italic.css";
+import "@fontsource/comic-neue/700.css";
+import "@fontsource/comic-neue/700-italic.css";
 import "~/styles/index.css";
 import { ClientRouter } from "astro:transitions";
 import Header from "~/components/ui/Header.astro";
 import ChapterRuler from "~/components/ui/ChapterRuler.astro";
 import Footer from "~/components/ui/Footer.astro";
 import { pageCut } from "~/motion/patterns";
+import { themes } from "~/motion/tokens";
 
 interface Props {
   title: string;
@@ -15,8 +24,9 @@ interface Props {
   /** On a chapter: its number and title, which the top bar takes up once the page's title scrolls under it. */
   crumb?: { number: string; title: string };
 }
-const { title, description = "A field manual and laboratory for motion on the web.", posture = "read", crumb } = Astro.props;
+const { title, description = "An animation course for developers: twenty-five chapters with live figures, and a lab of instruments to test what you read.", posture = "read", crumb } = Astro.props;
 const fullTitle = title === "in-between" ? title : `${title} · in-between`;
+const themeIds = themes.map((t) => t.id);
 ---
 <!doctype html>
 <html lang="en">
@@ -28,15 +38,19 @@ const fullTitle = title === "in-between" ? title : `${title} · in-between`;
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <meta name="theme-color" content="#F5F3EE" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#0E0F11" media="(prefers-color-scheme: dark)" />
-    <script is:inline>
-      // Apply theme and motion preferences before first paint (and after every page swap).
+    <script is:inline define:vars={{ themeIds }}>
+      // Apply theme, mode and motion preferences before first paint (and after every page swap).
       (function () {
         function apply(doc) {
           var r = doc.documentElement;
           try {
             var t = localStorage.getItem("ib-theme");
+            var mo = localStorage.getItem("ib-mode");
             var m = localStorage.getItem("ib-motion");
-            if (t && t !== "system") r.setAttribute("data-theme", t); else r.removeAttribute("data-theme");
+            // Before themes, the mode was kept under ib-theme.
+            if (!mo && (t === "light" || t === "dark")) mo = t;
+            if (mo === "light" || mo === "dark") r.setAttribute("data-mode", mo); else r.removeAttribute("data-mode");
+            if (t && t !== "pencil" && themeIds.indexOf(t) >= 0) r.setAttribute("data-theme", t); else r.removeAttribute("data-theme");
             if (m && m !== "system") r.setAttribute("data-motion", m); else r.removeAttribute("data-motion");
           } catch (e) {}
           r.classList.add("js");

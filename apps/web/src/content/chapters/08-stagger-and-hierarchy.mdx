@@ -33,7 +33,7 @@ export const snippetList = { // the snippets' list, for "Open in Lab": five rows
   },
 };
 
-When several things arrive at once, the eye has to decide where to look first. Motion can decide for it. Start the same move on each item a moment after the one before, and the eye follows the wave: first, second, third. That offset is a stagger.
+When several things arrive at once, the eye has to decide where to look first. Motion can decide for it. Start the same move on each item a moment after the one before, and the eye follows the wave: first, second, third. That offset is a stagger. It is the overlap from [chapter 7](/chapters/07-the-twelve-translated), applied to a whole list.
 
 A stagger is an instruction: read this, then this, then this. It also ranks things, because what moves first is seen first. Get the order right and a list reads as easily as a sentence. Make the gaps too long and people sit and wait for your list to finish arriving.
 
@@ -66,7 +66,7 @@ Three lists. Only the gap between one row and the next is different. Don't count
     { motion: { ...row, stagger: 150 }, caption: "280ms rows · 150ms stagger · done at 880ms" }
   ]}
   answer={1}
-  explain="A lands as one block: five rows but no order, so your eye has to pick a place to start. C starts each row just as the one before it settles, so you watch five separate arrivals and wait for the last. B is one motion that runs down the list. It leads the eye from top to bottom, and it's finished in not much more time than a single row takes."
+  explain="A lands as one block: five rows but no order, so your eye has to pick a place to start. C starts each row when the one before has nearly landed, so you watch five separate arrivals and wait for the last. B is one motion that runs down the list. It leads the eye from top to bottom, and it's finished in not much more time than a single row takes."
 />
 
 <Beat kind="more">Small steps</Beat>
@@ -75,7 +75,7 @@ Three lists. Only the gap between one row and the next is different. Don't count
   <p><b>Stagger.</b> The same move on several items, each one started a fixed step after the one before. The step is the time between two starts, not the length of the move.</p>
 </Margin>
 
-Now the numbers. In the FEEL, every row took 280ms. Only the step between starts changed: 0ms, 30ms and 150ms.
+Now the numbers. In the test above, every row took 280ms. Only the step between starts changed: 0ms, 30ms and 150ms.
 
 <Margin kind="history">
   <p>On paper, an animator's exposure sheet (the X-sheet, or dope sheet) runs down the page: one row per frame, with columns for the soundtrack, each layer of drawings, and the camera. A software timeline turns it on its side.</p>
@@ -92,11 +92,11 @@ Nothing about a row got slower. Each one still takes 280ms. The *list* got slowe
 | 60–80ms | 3.6–4.8 | a visible cascade |
 | 150ms and up | 9 and up | a wait |
 
-For most lists, keep the step between 20 and 40ms. Figure 8.2 uses 40ms, about two and a half frames. Many small things, like the cells of a grid, sit at the low end. A few large ones, like cards, can take the high end.
+These ranges are a taste, not a rule; they come from where the eye stops seeing separate starts. For most lists, keep the step between 20 and 40ms. Figure 8.2 uses 40ms, about two and a half frames. Many small things, like the cells of a grid, sit at the low end. A few large ones, like cards, can take the high end.
 
 <Beat kind="more">The count multiplies it</Beat>
 
-The last item starts (n − 1) steps after the first. The step is small, but it's multiplied by the number of items, and the list is only done when its last item lands. With a 280ms move:
+With n items, the last one starts (n − 1) steps after the first. The step is small, but it's multiplied by the number of items, and the list is only done when its last item lands. With a 280ms move:
 
 | Items | 30ms step: last one lands | 80ms step: last one lands |
 |---|---|---|
@@ -120,7 +120,7 @@ A stagger ranks things. The first to move is the first to be seen, so it had bet
 
 - **A container leads its contents.** The panel arrives, then what is in it. Contents that arrive before their container have nowhere to land.
 - **A heading leads its body.** The title, then the lines under it.
-- **The news leads the context.** When one thing changes, it moves first, or it moves alone.
+- **The news gets its own move.** When one thing changes, it moves alone and settles last, while the context moves as a block.
 
 Here a new row arrives at the top of a list.
 
@@ -157,7 +157,7 @@ This is the list from figure 8.2 in the Exposure sheet. The **Step** slider re-s
 
 A stagger is nothing but a delay: each item waits its index times the step. In CSS that's `animation-delay`, and each item has to know its index. Write it into the markup as a custom property, `style="--i: 2"`, and multiply: `calc(var(--i) * 30ms)`.
 
-Or let the browser count. `sibling-index()` gives an element's position among its siblings, starting at 1, and `sibling-count()` gives how many there are. Both are new, and not every browser supports them yet, so put a fallback line above. A browser that doesn't understand a declaration drops it and keeps the one before. That only works if the new line has no `var()` in it: a declaration with a `var()` is accepted when the stylesheet is read and can only fail later, once the variable is filled in. Then it falls back to the property's initial value, not to the line above.
+Or let the browser count. `sibling-index()` gives an element's position among its siblings, starting at 1, and `sibling-count()` gives how many there are. Both are recent additions, so check current support before relying on them, and put a fallback line above. A browser that doesn't understand a declaration drops it and keeps the one before. That only works if the new line has no `var()` in it: a declaration with a `var()` is accepted when the stylesheet is read and can only fail later, once the variable is filled in. Then it falls back to the property's initial value, not to the line above.
 
 Two details matter in every version. Give the animation a fill of `both`, so each item holds its first frame while it waits for its turn; without it, a row sits there fully visible, then vanishes and fades back in. And keep the step small and limited, with a cap or a budget.
 
@@ -168,7 +168,8 @@ Two details matter in every version. Give the animation a fill of `both`, so eac
 /* Each row carries its index in the markup: <li style="--i: 3"> */
 .list li {
   animation: rise 280ms cubic-bezier(.2, .8, .2, 1) both;
-  /* 30ms per row. From the eighth row on, all start together. */
+  /* 30ms per row. --i counts from 0, so min(..., 7) stops the delay
+     growing at the eighth row: every later row starts with it. */
   animation-delay: calc(min(var(--i, 0), 7) * 30ms);
 }
 
@@ -200,7 +201,8 @@ Two details matter in every version. Give the animation a fill of `both`, so eac
 const rows = [...document.querySelectorAll('.list li')];
 
 // 30ms between starts, but the whole cascade never takes
-// more than 240ms: a longer list gets a smaller step.
+// more than 240ms (a budget: about 8 rows at 30ms).
+// A longer list gets a smaller step: 240 divided by the gaps between rows.
 const step = Math.min(30, 240 / Math.max(1, rows.length - 1));
 
 rows.forEach((row, i) => {
@@ -211,7 +213,7 @@ rows.forEach((row, i) => {
     ],
     {
       duration: 280,
-      delay: i * step,
+      delay: i * step, // ms: row i waits i steps
       easing: 'cubic-bezier(.2, .8, .2, 1)',
       fill: 'both', // hold the first frame while waiting
     },
@@ -243,6 +245,8 @@ animate(
 
 </Snippet>
 </div>
+
+A stagger orders things that arrive together. It says nothing about how one thing should arrive or leave, or where from. That is [chapter 9](/chapters/09-enter-exit-change).
 
 <Beat kind="drill">Judge the gap</Beat>
 

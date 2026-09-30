@@ -9,10 +9,10 @@ export const glideCurve = (stops) =>
 export const glide = glideCurve(40);
 
 export const follow = `// Blue: x += (target − x) · K, every frame.
-// Red: damp() with a half-life, in seconds.
+// Red: damp() (built into the sandbox), set by a half-life in seconds.
 const K = 0.1;          // share of gap per frame
 const HALF_LIFE = 0.11; // seconds to close half
-const LAMBDA = Math.LN2 / HALF_LIFE;  // ≈ K at 60Hz
+const LAMBDA = Math.LN2 / HALF_LIFE;  // closes ≈ K a frame at 60Hz
 
 function setup(w, h) {
   return { w, target: w * 0.8, wait: 1.4,
@@ -25,7 +25,7 @@ function update(s, dt) {
     s.target = s.w * (left ? 0.2 : 0.8);
     s.wait = 1.4;
   }
-  s.blue += (s.target - s.blue) * K;
+  s.blue += (s.target - s.blue) * K;  // per frame: the trap
   s.red = damp(s.red, s.target, LAMBDA, dt);
 }
 
@@ -41,9 +41,9 @@ function draw(ctx, s, w, h) {
   circle(ctx, s.red, y, 7, pencils.red);
 }`;
 
-On a canvas nothing moves unless your code moves it. There is no transition to hand the job to. Every frame, you answer one question yourself: where is it now?
+In [chapter 14](/chapters/14-the-loop) you built the loop and learned to move by `dt`. That loop moved things at a speed. Now it has to move them to a place, and on a canvas nothing moves unless your code moves it. There is no transition to hand the job to. Every frame, you answer one question yourself: where is it now?
 
-Two small functions answer it almost every time. One mixes a start and an end. The other bends time, so the mix speeds up and slows down. [Chapter 03](/chapters/03-spacing) showed that easing is spacing. Here you write the spacing yourself, and meet the one line of it that behaves differently on every screen.
+Two small functions answer it almost every time. One, `lerp`, mixes a start and an end. The other, an easing, bends time, so the mix speeds up and slows down. [Chapter 3](/chapters/03-spacing) showed that easing is spacing. Here you write the spacing yourself, and meet the one line of it that behaves differently on every screen.
 
 <Beat kind="see">One line, three screens</Beat>
 
@@ -53,11 +53,11 @@ Each row is a screen that redraws at its own rate: a slow one at the top, a fast
   <Canvas program="smoothing-trap" readout={false} params={{ labels: 0 }} />
 </Figure>
 
-Look down the blue dots. The top one trails behind and the bottom one races ahead: the same code, three different feels. The red dots move as one. In the middle row, blue and red keep level, because the red dot was tuned to match the blue one on that screen.
+Look down the blue dots, then the red. The top blue one trails behind and the bottom one races ahead: the same code, three different feels. The red dots move as one. In the middle row, blue and red keep level, because the red dot was tuned to match the blue one on that screen.
 
 <Beat kind="feel">Which one was designed?</Beat>
 
-Don't count. Just look.
+Don't count. Watch how long each takes to settle, and which one looks unhurried.
 
 <FeelAB
   question="This dot was tuned to glide into place: soft, a little unhurried. Which one is the design?"
@@ -78,7 +78,7 @@ Don't count. Just look.
 
 Every tween does three things each frame, whether the browser runs it or you do.
 
-1. **Where in time?** `t = (now − start) / duration`, clamped to 0…1. It is 0 at the start and 1 at the end.
+1. **Where in time?** `t = (now − start) / duration`, clamped to 0…1. It is 0 at the start and 1 at the end; the clamp holds it at 1 after the end, so the motion stops instead of overshooting.
 2. **Where along the way?** `p = ease(t)`. The easing bends time into progress, also from 0 to 1.
 3. **Where on screen?** `x = lerp(from, to, p)`. The mix turns progress into a value: pixels, degrees, opacity, a colour channel.
 
@@ -100,12 +100,12 @@ An easing is any function where `ease(0)` is 0 and `ease(1)` is 1. What it does 
 </Figure>
 
 - **Linear**, `t`: no bend. Even gaps.
-- **Squared**, `t * t`: at half the time it is a quarter of the way. It leaves from rest and arrives at twice the average speed. That's an ease-in, and the exact shape of a fall from [chapter 04](/chapters/04-weight).
+- **Squared**, `t * t`: at half the time it is a quarter of the way. It leaves from rest and arrives at twice the average speed. That's an ease-in, and the exact shape of a fall from [chapter 4](/chapters/04-weight).
 - **Reversed**, `1 − (1 − t) * (1 − t)`: the same curve turned round. Three-quarters of the way at half the time, then a long settle: an ease-out.
 - **Smoothstep**, `t * t * (3 − 2 * t)`: halfway at half the time, at rest at both ends, and 1.5× the average speed in the middle.
 
 <Margin kind="wild">
-  <p>GSAP names this family by power: <code>power1</code> is Penner's quad (<code>t²</code>), <code>power2</code> his cubic (<code>t³</code>), up to <code>power4</code>, each with <code>.in</code>, <code>.out</code> and <code>.inOut</code>.</p>
+  <p>Robert Penner's easing equations are the set most libraries copy. GSAP names them by power: <code>power1</code> is his quad (<code>t²</code>), <code>power2</code> his cubic (<code>t³</code>), up to <code>power4</code>, each with <code>.in</code>, <code>.out</code> and <code>.inOut</code>.</p>
 </Margin>
 
 Raise the power and the bend gets stronger. `t * t * t` covers an eighth of the way in half the time; `t ** 4`, a sixteenth. Higher powers wait longer, then rush.
@@ -149,9 +149,9 @@ The rest is out of reach of a single bézier: `t ** 4` and higher powers, mirror
 
 A tween knows where it is going and when it will get there. Often you know neither. A marker trails the pointer. A camera follows a player. A needle eases towards a live reading. The target moves every frame, and there is no duration to divide by.
 
-The usual answer is one line, `x += (target − x) * k`. It is lerp with a fixed `t`, run every frame towards wherever the target is now. Each frame it closes the share `k` of the gap that's left. With `k = 0.1`, it closes a tenth of the gap, then a tenth of what's left, and so on. After 7 frames it is just over halfway; after 22, it is 90% of the way.
+The usual answer is one line, `x += (target − x) * k`. It is lerp with a fixed `t`, run every frame towards wherever the target is now. Each frame it closes the share `k` of the gap that's left. `k` is a choice of feel: 0.05 is lazy, 0.1 relaxed, 0.3 snappy. With `k = 0.1`, it closes a tenth of the gap, then a tenth of what's left, and so on. After 7 frames it is just over halfway; after 22, it is 90% of the way.
 
-It never quite arrives, and it doesn't need to. It gets close quickly, slows as it nears, and if the target moves, it simply chases the new one: no clock, no restart. Its curve is an ease-out, the same exponential shape as the glide in [chapter 06](/chapters/06-momentum-and-friction).
+It never quite arrives, and it doesn't need to. It gets close quickly, slows as it nears, and if the target moves, it simply chases the new one: no clock, no restart. Its curve is an ease-out, the same exponential shape as the glide in [chapter 6](/chapters/06-momentum-and-friction).
 
 <Beat kind="more">The frame-rate trap</Beat>
 
@@ -163,19 +163,19 @@ The line works *per frame*, and a frame is not a unit of time. Screens draw at d
 | 60Hz | about 110ms | about 360ms |
 | 120Hz | about 55ms | about 180ms |
 
-Tuned on a 60Hz laptop, it is twice as tight on a 120Hz phone and twice as loose on a page stuck at 30 frames a second. That is Figure 15.1, and the FEEL above. The code never changed.
+Tuned on a 60Hz laptop, it is twice as tight on a 120Hz phone and twice as loose on a page stuck at 30 frames a second. That is figure 15.1, and the feel test above. The code never changed.
 
-The common patch is to scale `k` by the length of the frame: `k * dt * 60`. It's close while frames are short. At 30Hz it closes 20% of the gap per frame where the right share is 19%. It breaks on a long frame. After a half-second stall, from a long task or a tab coming back into view, `k * dt * 60` is 3. Instead of closing the gap, the dot leaps across the target and lands twice as far away on the other side.
+The common patch is to scale `k` by the length of the frame: `k * dt * 60`. It's close while frames are short. At 30Hz it closes 20% of the gap per frame where the right share is 19%. It breaks on a long frame. After a half-second stall, from a long task or a tab coming back into view, and if `dt` isn't clamped as in chapter 14, `k * dt * 60` is 3. Instead of closing the gap, the dot leaps across the target and lands twice as far away on the other side.
 
 <Beat kind="more">Count in seconds</Beat>
 
-Ask what the line does over time instead. Each frame leaves `1 − k` of the gap, so the part left shrinks by the same factor again and again: it is an exponential. Over any stretch of time `dt`, the part left is `e^(−λ·dt)`, and the part to close is one minus that:
+The bug is that `k` counts frames. Ask what the line does over time instead. Each frame leaves `1 − k` of the gap, so after `n` frames the part left is `(1 − k)^n`, the same factor again and again: an exponential. Any positive number is `e` (about 2.718) to some power: `1 − k = e^ln(1 − k)`, where `ln` is the natural logarithm, the power `e` must be raised to. So the part left is `e^(n · ln(1 − k))`. At `fps` frames a second, `t` seconds is `n = t · fps` frames, and the part left is `e^(−λ·t)`, where `λ = −ln(1 − k) · fps`. Nothing there mentions frames any more. So over one frame of length `dt`, the part left is `e^(−λ·dt)` and the part to close is one minus that:
 
 <p><code>x += (target − x) · (1 − e<sup>−λ·dt</sup>)</code></p>
 
-Two frames of `dt / 2` leave `e^(−λ·dt/2) · e^(−λ·dt/2)`, which is `e^(−λ·dt)`: exactly what one frame of `dt` leaves. However time is cut into frames, the dot is where it should be at that moment. And the share closed is always between 0 and 1, so no stall, however long, can throw it past the target. That is the red dot in Figure 15.1.
+Two frames of `dt / 2` leave `e^(−λ·dt/2) · e^(−λ·dt/2)`, which is `e^(−λ·dt)`: exactly what one frame of `dt` leaves. However time is cut into frames, the dot is where it should be at that moment. And the share closed is always between 0 and 1, so no stall, however long, can throw it past the target. That is the red dot in figure 15.1.
 
-`λ` (lambda) is a rate per second. To keep the feel of a `k` tuned at a given frame rate, use `λ = −ln(1 − k) · fps`. For `k = 0.1` at 60fps, `λ` is about 6.32 per second.
+`λ` (lambda) is how fast the gap decays, per second. If you already tuned a `k` at a known frame rate, `λ = −ln(1 − k) · fps` keeps its feel. For `k = 0.1` at 60fps, `λ` is about 6.32 per second.
 
 <Margin kind="def">
   <p><b>Half-life.</b> The time it takes to close half of whatever gap is left. After two half-lives, three-quarters of the gap is closed; after three, seven-eighths.</p>
@@ -258,9 +258,9 @@ const easeInOutCubic = mirror(easeInCubic);
 function tween(el, from, to, duration, ease) {
   const start = performance.now();
   requestAnimationFrame(function frame(now) {
-    const t = clamp01((now - start) / duration);
+    const t = clamp01((now - start) / duration); // 0 → 1; now is in ms
     el.style.transform = `translateX(${lerp(from, to, ease(t))}px)`;
-    if (t < 1) requestAnimationFrame(frame);
+    if (t < 1) requestAnimationFrame(frame);     // stop once t reaches 1
   });
 }
 
@@ -288,7 +288,7 @@ const damp = (x, target, lambda, dt) =>
 
 // Choose the feel in seconds: the time to close half the gap.
 const halfLife = 0.11;
-const lambda = Math.LN2 / halfLife;  // ≈ 6.3 per second
+const lambda = Math.LN2 / halfLife;  // ≈ 6.3 per second (ln 2 = half)
 // Porting x += (target - x) * k, tuned at 60fps?
 //   const lambda = -Math.log(1 - k) * 60;
 
@@ -298,6 +298,8 @@ let x = 0, target = 0, last = null;
 addEventListener('pointermove', (e) => { target = e.clientX; });
 
 function frame(now) {
+  // now: timestamp in ms. The first frame has no previous, so dt is 0
+  // and damp() leaves x where it is.
   const dt = last === null ? 0 : (now - last) / 1000;  // seconds
   last = now;
   x = damp(x, target, lambda, dt);  // any dt is safe: never past the target
@@ -310,6 +312,8 @@ requestAnimationFrame(frame);
 
 </Snippet>
 </div>
+
+Everything here set a position outright: from a formula, or a share of a gap. Nothing had a mass, and nothing remembered how fast it was going. [Chapter 16](/chapters/16-physics-by-hand) adds both, with velocity and acceleration you step yourself.
 
 <Beat kind="drill">Match the curve</Beat>
 

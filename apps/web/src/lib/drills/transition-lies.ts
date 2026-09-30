@@ -29,7 +29,7 @@ const PAIRS: [StateId, StateId][] = [
 export const transitionLies: DrillDef<LiesSpec, number> = {
   id: "transition-lies",
   name: "Which transition lies?",
-  prompt: "Same data, same change. Which transition distorts it?",
+  prompt: "Same data, same change. Follow one bar and watch the axis: which transition distorts it?",
   trains: "Honesty: motion must not distort magnitude or identity",
   unlocksAfter: 23,
   kind: "choice",
@@ -48,7 +48,7 @@ export const transitionLies: DrillDef<LiesSpec, number> = {
       points: ok ? 100 : 0,
       truth: spec.liar,
       answer,
-      verdict: `${ok ? "Yes" : `${spec.liar === 0 ? "A" : "B"} lied`}: ${L.name.toLowerCase()}. ${L.why}`,
+      verdict: `${ok ? "Yes" : `${spec.liar === 0 ? "A" : "B"} lied`}: ${L.name.toLowerCase()}. ${L.why} (Chapter 23.)`,
       meta: { lie: spec.lie },
     };
   },

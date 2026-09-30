@@ -50,7 +50,7 @@ export const whatItSays: DrillDef<WhatItSaysSpec, number> = {
       points: ok ? 100 : 0,
       truth: MEANINGS.indexOf(spec.clip.says),
       answer,
-      verdict: `${ok ? "Yes" : `It says ${spec.clip.says}`}. ${spec.clip.why}`,
+      verdict: `${ok ? "Yes" : `It says ${spec.clip.says}, not ${spec.options[answer]}`}. ${spec.clip.why} (Chapter 1.)`,
       meta: { clip: spec.clip.kind },
     };
   },

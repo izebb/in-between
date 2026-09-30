@@ -28,7 +28,7 @@
   };
   const NOTE: Record<Prop, string> = {
     left: "Moving an element by its position changes the geometry of the page: the browser lays out again, repaints, then composites. Every frame.",
-    width: "A new width means new line breaks and new neighbours' positions: layout, paint and composite, every frame.",
+    width: "A new width rewraps the text and moves the neighbours: layout, paint and composite, every frame.",
     "background-color": "No geometry changes, but the pixels do: the browser repaints the element's layer, then composites.",
     "box-shadow": "Shadows are painted, and blurred ones are expensive to paint. Animate a shadow's opacity on a separate layer instead.",
     transform: "The element's pixels are already painted; the compositor only has to move the layer. No layout, no paint: style, then composite.",

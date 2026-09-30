@@ -7,12 +7,20 @@
  *   4. Concurrency budget: at most a handful of UI animations at once.
  */
 
+import { themes, type ThemeId } from "./tokens";
+
 export type MotionPref = "system" | "full" | "reduce";
-export type ThemePref = "system" | "light" | "dark";
+/** Light or dark, chosen, or the system's. */
+export type ModePref = "system" | "light" | "dark";
+export type { ThemeId };
 
 const MOTION_KEY = "ib-motion";
+const MODE_KEY = "ib-mode";
+/** The look (tokens.json themes). Before themes, this key held the mode; getModePref still reads that. */
 const THEME_KEY = "ib-theme";
 const SOUND_KEY = "ib-sound";
+const THEME_IDS: readonly string[] = themes.map((t) => t.id);
+const isMode = (v: string | null): v is ModePref => v === "system" || v === "light" || v === "dark";
 
 const read = (k: string) => {
   try {
@@ -30,7 +38,16 @@ const write = (k: string, v: string) => {
 };
 
 export const getMotionPref = (): MotionPref => (read(MOTION_KEY) as MotionPref) || "system";
-export const getThemePref = (): ThemePref => (read(THEME_KEY) as ThemePref) || "system";
+export const getModePref = (): ModePref => {
+  const m = read(MODE_KEY);
+  if (isMode(m)) return m;
+  const old = read(THEME_KEY);
+  return isMode(old) ? old : "system";
+};
+export const getThemePref = (): ThemeId => {
+  const t = read(THEME_KEY);
+  return (t && THEME_IDS.includes(t) ? t : "pencil") as ThemeId;
+};
 export const getSoundPref = (): boolean => read(SOUND_KEY) === "on";
 
 const systemReduced = () =>
@@ -47,9 +64,12 @@ export function applyPrefs(doc: Document = document) {
   const m = getMotionPref();
   if (m === "system") root.removeAttribute("data-motion");
   else root.setAttribute("data-motion", m);
-  const t = getThemePref();
-  if (t === "system") root.removeAttribute("data-theme");
-  else root.setAttribute("data-theme", t);
+  const mode = getModePref();
+  if (mode === "system") root.removeAttribute("data-mode");
+  else root.setAttribute("data-mode", mode);
+  const theme = getThemePref();
+  if (theme === "pencil") root.removeAttribute("data-theme");
+  else root.setAttribute("data-theme", theme);
 }
 
 export function setMotionPref(p: MotionPref) {
@@ -57,8 +77,13 @@ export function setMotionPref(p: MotionPref) {
   applyPrefs();
   dispatchEvent(new CustomEvent("ib:prefs"));
 }
-export function setThemePref(p: ThemePref) {
-  write(THEME_KEY, p);
+export function setModePref(p: ModePref) {
+  write(MODE_KEY, p);
+  applyPrefs();
+  dispatchEvent(new CustomEvent("ib:prefs"));
+}
+export function setThemePref(t: ThemeId) {
+  write(THEME_KEY, t);
   applyPrefs();
   dispatchEvent(new CustomEvent("ib:prefs"));
 }
@@ -79,10 +104,10 @@ export function onMotionPolicyChange(cb: (reduced: boolean) => void): () => void
   };
 }
 
-/** Is the page currently dark (lightbox)? */
+/** Is the page currently dark? */
 export function isDark(): boolean {
-  const t = document.documentElement.getAttribute("data-theme");
-  if (t) return t === "dark";
+  const m = document.documentElement.getAttribute("data-mode");
+  if (m) return m === "dark";
   return matchMedia("(prefers-color-scheme: dark)").matches;
 }
 

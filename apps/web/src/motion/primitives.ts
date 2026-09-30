@@ -51,15 +51,16 @@ export const scaleIn = (dir: Dir = "in"): Primitive => ({
   interrupt: "retarget",
 });
 
-/** Height collapse for disclosure content. Uses the measured height. */
-export const collapse = (el: HTMLElement, dir: Dir = "out"): Primitive => {
+/** Height collapse for disclosure content. Uses the measured height. A tall one travels further, so
+ *  it can take a longer token (distance changes the right duration). */
+export const collapse = (el: HTMLElement, dir: Dir = "out", d: keyof typeof duration = "base"): Primitive => {
   const h = `${el.scrollHeight}px`;
   const open = { height: h, opacity: 1 };
   const shut = { height: "0px", opacity: 0 };
   return {
     name: `collapse-${dir}`,
     keyframes: dir === "out" ? [open, shut] : [shut, open],
-    timing: dir === "out" ? exit("base") : enter("base"),
+    timing: dir === "out" ? exit(d) : enter(d),
     interrupt: "reverse",
   };
 };
@@ -102,12 +103,13 @@ export function play(el: Element, p: Primitive, opts: { delay?: number } = {}): 
   // Start from where the element is now, so interruptions never jump. Read it *before* cancelling:
   // once the running animation is cancelled, the computed style is the resting style.
   const current = getComputedStyle(el);
-  const from = { opacity: current.opacity, transform: current.transform };
+  const from = { opacity: current.opacity, transform: current.transform, height: current.height };
   if (live && prim.interrupt !== "finish") prev!.cancel(); // reverse / retarget continue from `from`
   if (!prim.keyframes.length) return null;
   const first = { ...prim.keyframes[0] } as Record<string, string | number>;
   if (continuing && "opacity" in first) first.opacity = from.opacity;
   if (continuing && "transform" in first) first.transform = from.transform;
+  if (continuing && "height" in first) first.height = from.height;
   const anim = el.animate([first as Keyframe, ...prim.keyframes.slice(1)], { ...prim.timing, delay: opts.delay ?? 0 });
   running.set(el, anim);
   return anim;

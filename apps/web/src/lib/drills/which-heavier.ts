@@ -16,7 +16,7 @@ export interface WhichHeavierSpec {
 export const whichHeavier: DrillDef<WhichHeavierSpec, number> = {
   id: "which-heavier",
   name: "Which is heavier?",
-  prompt: "Two balls drop and bounce. Which one is heavier?",
+  prompt: "Two balls drop and bounce. Watch the fall and the rebound: which one is heavier?",
   trains: "Weight: reading mass from timing and spacing",
   unlocksAfter: 4,
   kind: "choice",
@@ -41,7 +41,7 @@ export const whichHeavier: DrillDef<WhichHeavierSpec, number> = {
       truth: spec.heavy,
       answer,
       // Air aside, everything falls alike (chapter 04). The light ball here is one the air holds up, a beach ball.
-      verdict: `${ok ? "Yes" : `The heavy one was ${spec.heavy === 0 ? "A" : "B"}`}: it comes straight down and stays down. The light one drifts, as if the air held it up, and keeps more of its speed at each bounce. A falls at ${d(a)}; B at ${d(b)}.`,
+      verdict: `${ok ? "Yes" : `The heavy one was ${spec.heavy === 0 ? "A" : "B"}`}: it comes straight down and stays down. The light one drifts, as if the air held it up, and keeps more of its speed at each bounce. A falls at ${d(a)}; B at ${d(b)}. Chapter 4 shows why.`,
     };
   },
 };
