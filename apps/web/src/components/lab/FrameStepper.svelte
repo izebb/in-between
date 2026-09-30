@@ -256,7 +256,7 @@ box.animate(
   .trail { position: absolute; inset: 0; pointer-events: none; }
   .xo { position: absolute; left: 0.75rem; top: 0.6rem; background: var(--paper-raised); border: 1px solid var(--rule); padding: 0.2rem 0.45rem; border-radius: 4px; color: var(--ink); }
   .code-col { display: flex; flex-direction: column; height: 100%; }
-  .code-head { display: flex; align-items: center; justify-content: space-between; padding: 0.6rem 0.6rem 0.5rem 0.75rem; border-bottom: 1px solid var(--rule); }
+  .code-head { display: flex; align-items: center; justify-content: space-between; padding: 0.6rem 0.6rem 0.5rem calc(0.75rem + var(--code-head-start, 0px)); border-bottom: 1px solid var(--rule); }
   .code-head .smallcaps { color: var(--graphite-strong); }
   .code-body { flex: 1; position: relative; min-height: 260px; overflow: hidden; }
   .swap { position: absolute; inset: 0; }

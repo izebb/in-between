@@ -29,7 +29,87 @@ export const spring = {
 } as const;
 export const distance = {"rise":4,"nudge":8,"travel":24} as const;
 export const stagger = {"step":30} as const;
-export const color = {"paper":{"light":"#F5F3EE","dark":"#0E0F11"},"paper-raised":{"light":"#FAF9F5","dark":"#15161A"},"ink":{"light":"#16161A","dark":"#ECEAE4"},"graphite":{"light":"#8A8880","dark":"#6B6A66"},"graphite-strong":{"light":"#5E5C56","dark":"#9A9892"},"rule":{"light":"#E2DED5","dark":"#1F2024"},"blue-pencil":{"light":"#3D6BFF","dark":"#7C9BFF"},"red-pencil":{"light":"#FF3B1F","dark":"#FF5A3C"},"glow":{"light":"rgba(255,248,230,0)","dark":"rgba(255,248,230,.06)"}} as const;
+export const color = {"paper":{"light":"#F5F3EE","dark":"#0E0F11"},"paper-raised":{"light":"#FAF9F5","dark":"#15161A"},"paper-float":{"light":"#FEFDFA","dark":"#1C1D22"},"ink":{"light":"#16161A","dark":"#ECEAE4"},"graphite":{"light":"#8A8880","dark":"#6B6A66"},"graphite-strong":{"light":"#5E5C56","dark":"#9A9892"},"rule":{"light":"#E2DED5","dark":"#1F2024"},"blue-pencil":{"light":"#3D6BFF","dark":"#7C9BFF"},"red-pencil":{"light":"#FF3B1F","dark":"#FF5A3C"},"glow":{"light":"rgba(255,248,230,0)","dark":"rgba(255,248,230,.06)"}} as const;
+/** Each theme's name, type and a swatch of its colours in each mode (paper, ink, the two pencils). */
+export const themes = [
+  {
+    "id": "pencil",
+    "name": "Pencil",
+    "fonts": "Geist + Geist Mono",
+    "note": "Paper and ink; a blue pencil for what could be, a red one for what is.",
+    "display": "\"Geist Variable\", \"Geist\", \"Helvetica Neue\", Arial, sans-serif",
+    "light": {
+      "paper": "#F5F3EE",
+      "ink": "#16161A",
+      "blue": "#3D6BFF",
+      "red": "#FF3B1F"
+    },
+    "dark": {
+      "paper": "#0E0F11",
+      "ink": "#ECEAE4",
+      "blue": "#7C9BFF",
+      "red": "#FF5A3C"
+    }
+  },
+  {
+    "id": "glassy",
+    "name": "Glassy",
+    "fonts": "Sora + Manrope",
+    "note": "Frosted panels over soft colour. Round, light and quiet.",
+    "display": "\"Sora Variable\", \"Sora\", system-ui, sans-serif",
+    "light": {
+      "paper": "linear-gradient(135deg, #C3CEFF, #FFCFE0 55%, #C8F5E6)",
+      "ink": "#1B1D29",
+      "blue": "#5B68F5",
+      "red": "#F2457E"
+    },
+    "dark": {
+      "paper": "linear-gradient(135deg, #3B2A8A, #6B1E4F 55%, #0E5A6B)",
+      "ink": "#EEF0FA",
+      "blue": "#8F9BFF",
+      "red": "#FF7AA8"
+    }
+  },
+  {
+    "id": "mono",
+    "name": "Mono",
+    "fonts": "JetBrains Mono",
+    "note": "Your editor: mono type, syntax colour, square corners.",
+    "display": "\"JetBrains Mono Variable\", \"JetBrains Mono\", ui-monospace, monospace",
+    "light": {
+      "paper": "#FFFFFF",
+      "ink": "#1F2328",
+      "blue": "#0969DA",
+      "red": "#CF222E"
+    },
+    "dark": {
+      "paper": "#0D1117",
+      "ink": "#E6EDF3",
+      "blue": "#58A6FF",
+      "red": "#FF7B72"
+    }
+  },
+  {
+    "id": "cartoon",
+    "name": "Cartoon",
+    "fonts": "Fredoka + Nunito",
+    "note": "Thick outlines, bold colour, a friendly round hand.",
+    "display": "\"Fredoka Variable\", \"Fredoka\", system-ui, sans-serif",
+    "light": {
+      "paper": "#FFF4D6",
+      "ink": "#1D1B2E",
+      "blue": "#3D7BFF",
+      "red": "#FF4F6D"
+    },
+    "dark": {
+      "paper": "#241C45",
+      "ink": "#FFF4D6",
+      "blue": "#7FA8FF",
+      "red": "#FF6B85"
+    }
+  }
+] as const;
+export type ThemeId = (typeof themes)[number]["id"];
 export const usage = {"duration":{"instant":"press states, toggles","quick":"hovers, small reveals","base":"panels, cards","scene":"page and chapter transitions"},"easing":{"out":"enter","in":"exit (exits are faster: ~0.7× enter)","inout":"on-screen moves","reveal":"masked text reveals (expo-out): lines rising out of a mask"},"spring":{"snappy":"direct manipulation","soft":"playful confirmations"},"distance":{"rise":"page cut, figure reveal","nudge":"small enters: tooltips, menus","travel":"panels arriving from an edge"}} as const;
 
 export type DurationToken = keyof typeof duration;

@@ -11,3 +11,6 @@
 @import "./figures.css";
 @import "./lab.css";
 @import "./motion.css";
+
+/* Themes other than Pencil reshape the pieces above; unlayered, so they outrank scoped styles. */
+@import "./themes.css";

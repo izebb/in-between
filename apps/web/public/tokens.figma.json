@@ -27,6 +27,15 @@
           }
         },
         {
+          "name": "paper-float",
+          "type": "COLOR",
+          "description": "tool cards floating over the lab stage",
+          "values": {
+            "Paper": "#FEFDFA",
+            "Lightbox": "#1C1D22"
+          }
+        },
+        {
           "name": "ink",
           "type": "COLOR",
           "description": "text, primary strokes",

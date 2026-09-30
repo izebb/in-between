@@ -76,7 +76,7 @@ const byPart = parts.map((p) => ({ part: p, items: chapters.filter((c) => c.part
         <div class="tick-rule" aria-hidden="true" data-reveal-block="rule"></div>
       </div>
       <div class="bench-list" data-persp>
-        {instruments.map((i, ii) => <BenchItem i={i} revealI={ii % 5} />)}
+        {instruments.map((i, ii) => <BenchItem i={i} revealI={ii % 3} />)}
       </div>
     </section>
   </div>

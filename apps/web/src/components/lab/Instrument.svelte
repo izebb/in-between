@@ -2,6 +2,9 @@
   /**
    * The instrument shell. One grammar for every instrument:
    * parameters on the left, stage in the centre, time underneath, code on the right.
+   * On its own lab page, on a wide screen, it goes stage first (lab.css): the stage is the page, and
+   * the parameters, the code and the time bar float over it as cards. The code card has a handle at
+   * its top left that puts it away; the handle stays at the stage's edge to bring it back.
    */
   import type { Snippet } from "svelte";
   import { onMount } from "svelte";
@@ -36,6 +39,9 @@
   let words = $state("");
   let savedNote = $state("");
   let shared = $state(false);
+  let codeOpen = $state(true);
+  const stageFirst = $derived(!embedded && layout === "standard");
+  const CODE_KEY = "ib-lab-code";
 
   const SUGGEST = ["snappy", "heavy", "floaty", "nervous", "calm", "playful", "precise", "sluggish", "bouncy", "crisp", "gentle", "abrupt"];
 
@@ -82,15 +88,35 @@
     }
   }
 
-  onMount(() => prefs.start());
+  // Put the code away, or bring it back; the choice holds on the next instrument too.
+  function toggleCode() {
+    codeOpen = !codeOpen;
+    try {
+      localStorage.setItem(CODE_KEY, codeOpen ? "open" : "closed");
+    } catch {
+      /* private mode: it simply isn't remembered */
+    }
+  }
+
+  onMount(() => {
+    prefs.start();
+    try {
+      if (localStorage.getItem(CODE_KEY) === "closed") codeOpen = false;
+    } catch {
+      /* no storage: the code stays open */
+    }
+  });
 </script>
 
 <section class="instrument-wrap" class:embedded aria-label={`${code} ${name}`}>
   <header class="i-bar">
-    <div class="i-title">
-      <span class="smallcaps">{code}</span>
-      <span class="serif">{name}</span>
-    </div>
+    <!-- On its own page the page's heading names it; the bar keeps only the actions. -->
+    {#if embedded}
+      <div class="i-title">
+        <span class="smallcaps">{code}</span>
+        <span class="serif">{name}</span>
+      </div>
+    {/if}
     <div class="i-actions">
       {#if actions}{@render actions()}{/if}
       {#if savedNote}<span class="smallcaps note" data-motion="fade">{savedNote}</span>{/if}
@@ -116,7 +142,13 @@
       </div>
     </form>
   {/if}
-  <div class="instrument" class:no-code={!codePanel} class:code-first={layout === "code-first"} bind:this={root} style={minHeight ? `min-height:${minHeight}` : undefined}>
+  <div
+    class="instrument"
+    class:no-code={!codePanel}
+    class:code-away={stageFirst && !!codePanel && !codeOpen}
+    class:code-first={layout === "code-first"}
+    class:stage-first={stageFirst}
+    bind:this={root} style={minHeight ? `min-height:${minHeight}` : undefined}>
     <div class="i-params" onpointerover={hoverFrom("knob")} onpointerleave={leave} role="group" aria-label="Parameters">
       {@render params()}
     </div>
@@ -127,7 +159,14 @@
       <div class="i-time">{@render time()}</div>
     {/if}
     {#if codePanel}
-      <div class="i-code">{@render codePanel()}</div>
+      <!-- Put away, it slides off rather than being removed, so code being edited keeps its place. -->
+      <div class="i-code" id={`code-${id}`}>{@render codePanel()}</div>
+      {#if stageFirst}
+        <button class="btn icon ghost tip-host i-handle" type="button" onclick={toggleCode} aria-expanded={codeOpen} aria-controls={`code-${id}`} aria-label={codeOpen ? "Put the code away" : "Show the code"}>
+          <svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="2.5" width="12" height="11" rx="2" /><path d="M6 2.5v11" /><path class="chev" d="M8.5 6l2 2-2 2" /></svg>
+          <span class="tip" class:end={!codeOpen} aria-hidden="true">{codeOpen ? "Put code away" : "Show code"}</span>
+        </button>
+      {/if}
     {/if}
   </div>
 </section>
@@ -140,6 +179,7 @@
   .i-title .serif { font-size: 1.5rem; line-height: 1; }
   .embedded .i-title .serif { font-size: 1.2rem; }
   .i-actions { display: flex; align-items: center; gap: 0.3rem; flex-wrap: wrap; }
+  .instrument-wrap:not(.embedded) .i-bar { justify-content: flex-end; }
   .note { color: var(--graphite-strong); margin-right: 0.3rem; }
   .journal-form { border: 1px solid var(--rule); border-radius: 6px; padding: 0.75rem; display: flex; flex-direction: column; gap: 0.5rem; background: var(--paper-raised); }
   .jf-row { display: flex; gap: 0.4rem; }

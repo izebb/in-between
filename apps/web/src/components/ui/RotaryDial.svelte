@@ -426,7 +426,7 @@
   }
   /* Dark: the light set inverted. Black bakelite over a darker number plate printed in cream (the plate
      is recessed, so it sits in shade), a dark number card, a gunmetal bezel. */
-  :global(:root[data-theme="dark"]) .dial {
+  :global(:root[data-mode="dark"]) .dial {
     --wheel-hi: #2c2d32;
     --wheel-lo: #111215;
     --plate: #0c0d0f;
@@ -449,7 +449,7 @@
     --body-shadow: 0 18px 40px -20px rgb(0 0 0 / 0.8), 0 1px 0 rgb(255 255 255 / 0.08) inset;
   }
   @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .dial {
+    :global(:root:not([data-mode="light"])) .dial {
       --wheel-hi: #2c2d32;
       --wheel-lo: #111215;
       --plate: #0c0d0f;

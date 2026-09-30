@@ -2,7 +2,18 @@
  * Runs on every page (and after every client-side navigation).
  */
 
-import { applyPrefs, getMotionPref, getThemePref, getSoundPref, setMotionPref, setThemePref, setSoundPref } from "./policy";
+import {
+  applyPrefs,
+  getModePref,
+  getMotionPref,
+  getSoundPref,
+  getThemePref,
+  setModePref,
+  setMotionPref,
+  setSoundPref,
+  setThemePref,
+  type ThemeId,
+} from "./policy";
 import { observeFigureReveals, observeInViewOnce } from "./patterns";
 import { installInspector } from "./inspector";
 import { installControls } from "./controls";
@@ -64,28 +75,113 @@ function wireScroller() {
   addEventListener("resize", measure, { signal: placement?.signal });
 }
 
+const MOTION_NOTE = {
+  full: "Everything moves as it was drawn.",
+  reduce: "Movement stops; fades and ghosts stay.",
+};
+
 function wirePrefs() {
   const root = document.querySelector<HTMLElement>("[data-prefs]");
   if (!root) return;
   placePrefs(root);
+  const field = root.querySelector<HTMLButtonElement>("[data-theme-field]")!;
+  const list = root.querySelector<HTMLElement>("[data-theme-list]")!;
+  const options = [...list.querySelectorAll<HTMLElement>("[data-theme-option]")];
+  const note = root.querySelector<HTMLElement>("[data-motion-note]");
+  const tick = root.querySelector<HTMLButtonElement>("[data-pref-switch]");
+
   const sync = () => {
-    const state: Record<string, string> = {
-      theme: getThemePref(),
-      motion: getMotionPref(),
-      sound: getSoundPref() ? "on" : "off",
-    };
+    const state: Record<string, string> = { mode: getModePref(), motion: getMotionPref() };
     root.querySelectorAll<HTMLButtonElement>("button[data-pref]").forEach((b) => {
       b.setAttribute("aria-pressed", String(state[b.dataset.pref!] === b.dataset.value));
     });
+    tick?.setAttribute("aria-checked", String(getSoundPref()));
+    // The field shows the theme on: its swatch, its name in its own face, its type.
+    const theme = getThemePref();
+    options.forEach((o) => o.setAttribute("aria-selected", String(o.dataset.themeOption === theme)));
+    const on = options.find((o) => o.dataset.themeOption === theme) ?? options[0];
+    const sw = field.querySelector<HTMLElement>("[data-theme-swatch]")!;
+    sw.setAttribute("style", on.querySelector(".swatch")!.getAttribute("style") ?? "");
+    const name = field.querySelector<HTMLElement>("[data-theme-name]")!;
+    name.textContent = on.querySelector(".pf-name")!.textContent;
+    name.setAttribute("style", on.querySelector(".pf-name")!.getAttribute("style") ?? "");
+    field.querySelector<HTMLElement>("[data-theme-fonts]")!.textContent = on.dataset.fonts ?? "";
+    if (note) {
+      const m = getMotionPref();
+      const reduced = m === "reduce" || (m === "system" && matchMedia("(prefers-reduced-motion: reduce)").matches);
+      note.textContent = m === "system" ? `Follows your device: ${reduced ? "reduced" : "full"} motion, right now.` : MOTION_NOTE[m];
+    }
   };
+
+  // The theme list: a listbox that opens under the field. Arrows move, Enter or Space chooses,
+  // Escape shuts the list (not the popover), and leaving it shuts it.
+  let active = 0;
+  const mark = (i: number) => {
+    active = (i + options.length) % options.length;
+    options.forEach((o, k) => o.classList.toggle("is-active", k === active));
+    list.setAttribute("aria-activedescendant", options[active].id);
+    options[active].scrollIntoView({ block: "nearest" });
+  };
+  const open = () => {
+    list.hidden = false;
+    field.setAttribute("aria-expanded", "true");
+    mark(Math.max(0, options.findIndex((o) => o.getAttribute("aria-selected") === "true")));
+    list.focus();
+  };
+  const shut = (refocus = true) => {
+    if (list.hidden) return;
+    list.hidden = true;
+    field.setAttribute("aria-expanded", "false");
+    if (refocus) field.focus();
+  };
+  const choose = (i: number) => {
+    setThemePref(options[i].dataset.themeOption as ThemeId);
+    sync();
+    shut();
+  };
+  field.addEventListener("click", () => (list.hidden ? open() : shut()));
+  field.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      e.preventDefault();
+      open();
+    }
+  });
+  list.addEventListener("keydown", (e) => {
+    const keys: Record<string, () => void> = {
+      ArrowDown: () => mark(active + 1),
+      ArrowUp: () => mark(active - 1),
+      Home: () => mark(0),
+      End: () => mark(options.length - 1),
+      Enter: () => choose(active),
+      " ": () => choose(active),
+      Escape: () => shut(),
+    };
+    if (keys[e.key]) {
+      e.preventDefault(); // Escape: this closes the list, not the popover around it
+      e.stopPropagation();
+      keys[e.key]();
+    } else if (e.key === "Tab") shut(false);
+  });
+  options.forEach((o, i) => {
+    o.addEventListener("click", () => choose(i));
+    o.addEventListener("pointermove", () => active !== i && mark(i));
+  });
+  root.addEventListener("pointerdown", (e) => {
+    if (!list.hidden && !(e.target as Element).closest(".pf-select")) shut(false);
+  });
+  root.addEventListener("toggle", (e) => (e as ToggleEvent).newState === "closed" && shut(false));
+
   root.querySelectorAll<HTMLButtonElement>("button[data-pref]").forEach((b) => {
     b.addEventListener("click", () => {
       const v = b.dataset.value!;
-      if (b.dataset.pref === "theme") setThemePref(v as never);
+      if (b.dataset.pref === "mode") setModePref(v as never);
       if (b.dataset.pref === "motion") setMotionPref(v as never);
-      if (b.dataset.pref === "sound") setSoundPref(v === "on");
       sync();
     });
+  });
+  tick?.addEventListener("click", () => {
+    setSoundPref(!getSoundPref());
+    sync();
   });
   sync();
 }

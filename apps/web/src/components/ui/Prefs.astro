@@ -1,35 +1,73 @@
 ---
-// View preferences: theme, motion policy, frame tick. A native popover; no framework.
+/**
+ * View preferences: theme, mode, motion policy, frame tick. A native popover; the theme is a listbox
+ * that opens inside it (motion/boot.ts wires both). Each theme's swatch carries its colours for both
+ * modes, and shows the ones for the mode on screen.
+ */
+import { themes } from "~/motion/tokens";
+
+const sun = "M8 5a3 3 0 1 0 0 6a3 3 0 1 0 0-6zM8 1.5v1.5M8 13v1.5M1.5 8H3M13 8h1.5M3.4 3.4l1.1 1.1M11.5 11.5l1.1 1.1M3.4 12.6l1.1-1.1M11.5 4.5l1.1-1.1";
+const moon = "M13 9.6A5.5 5.5 0 0 1 6.4 3a5.5 5.5 0 1 0 6.6 6.6z";
+const swatch = (t: (typeof themes)[number]) =>
+  `--l-paper:${t.light.paper};--l-ink:${t.light.ink};--l-blue:${t.light.blue};--l-red:${t.light.red};` +
+  `--d-paper:${t.dark.paper};--d-ink:${t.dark.ink};--d-blue:${t.dark.blue};--d-red:${t.dark.red}`;
 ---
 <button class="pref-toggle" popovertarget="prefs" aria-label="View settings">
   <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.25" fill="none" stroke="currentColor" stroke-width="1.25"/><path d="M8 1.75a6.25 6.25 0 0 1 0 12.5z" fill="currentColor"/></svg>
   <span class="pref-label">View</span>
 </button>
 <div id="prefs" popover class="prefs" data-prefs>
-  <div class="prefs-row">
-    <span class="label">Theme</span>
-    <div class="seg" role="group" aria-label="Theme">
-      <button data-pref="theme" data-value="system">System</button>
-      <button data-pref="theme" data-value="light">Paper</button>
-      <button data-pref="theme" data-value="dark">Lightbox</button>
+  <div class="pf">
+    <span class="pf-label" id="pf-theme">Theme</span>
+    <div class="pf-select">
+      <button type="button" class="pf-field" data-theme-field aria-haspopup="listbox" aria-expanded="false" aria-controls="pf-themes" aria-labelledby="pf-theme pf-theme-name">
+        <span class="swatch" data-theme-swatch aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="pf-now">
+          <span class="pf-name" id="pf-theme-name" data-theme-name>Pencil</span>
+          <span class="pf-fonts" data-theme-fonts>Geist + Geist Mono</span>
+        </span>
+        <svg class="pf-chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg>
+      </button>
+      <div class="pf-menu" id="pf-themes" role="listbox" aria-labelledby="pf-theme" tabindex="-1" hidden data-theme-list>
+        {themes.map((t) => (
+          <div class="pf-opt" role="option" id={`pf-t-${t.id}`} aria-selected="false" data-theme-option={t.id} data-fonts={t.fonts}>
+            <span class="swatch" style={swatch(t)} aria-hidden="true"><i></i><i></i><i></i></span>
+            <span class="pf-text">
+              <span class="pf-name" style={`font-family:${t.display}`}>{t.name}</span>
+              <span class="pf-fonts">{t.fonts}</span>
+              <span class="pf-note">{t.note}</span>
+            </span>
+            <svg class="pf-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7"/></svg>
+          </div>
+        ))}
+      </div>
     </div>
   </div>
-  <div class="prefs-row">
-    <span class="label">Motion</span>
+  <div class="pf">
+    <span class="pf-label">Mode</span>
+    <div class="seg" role="group" aria-label="Mode">
+      <button data-pref="mode" data-value="light"><svg viewBox="0 0 16 16" aria-hidden="true"><path d={sun}/></svg>Light</button>
+      <button data-pref="mode" data-value="dark"><svg viewBox="0 0 16 16" aria-hidden="true"><path d={moon}/></svg>Dark</button>
+      <button data-pref="mode" data-value="system"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="5.5"/><path class="f" d="M8 2.5a5.5 5.5 0 0 1 0 11z"/></svg>System</button>
+    </div>
+  </div>
+  <div class="pf">
+    <span class="pf-label">Motion</span>
     <div class="seg" role="group" aria-label="Motion">
       <button data-pref="motion" data-value="system">System</button>
       <button data-pref="motion" data-value="full">Full</button>
       <button data-pref="motion" data-value="reduce">Reduced</button>
     </div>
+    <p class="pf-note" data-motion-note aria-live="polite"></p>
   </div>
-  <div class="prefs-row">
-    <span class="label">Frame tick</span>
-    <div class="seg" role="group" aria-label="Frame tick sound">
-      <button data-pref="sound" data-value="off">Off</button>
-      <button data-pref="sound" data-value="on">On</button>
-    </div>
+  <div class="pf pf-row">
+    <span class="pf-col">
+      <span class="pf-label" id="pf-tick">Frame tick</span>
+      <span class="pf-note">A soft tick on each frame as you step.</span>
+    </span>
+    <button type="button" class="pf-switch" role="switch" aria-checked="false" aria-labelledby="pf-tick" data-pref-switch="sound"></button>
   </div>
-  <p class="prefs-hint">Hold <kbd>Alt</kbd> over anything that moves to inspect its timing and curve.</p>
+  <p class="prefs-hint"><kbd>Alt</kbd><span>Hold over anything that moves to see its timing and curve.</span></p>
 </div>
 
 <style>
@@ -39,16 +77,25 @@
     top: calc(var(--header-h) - 6px);
     right: var(--gutter);
     margin: 0;
-    width: min(330px, calc(100vw - 2 * var(--gutter)));
-    padding: 0.9rem 1rem 1rem;
-    border: 1px solid var(--rule);
-    border-radius: 8px;
-    background: var(--paper-raised);
+    width: min(352px, calc(100vw - 2 * var(--gutter)));
+    padding: 1.1rem 1.1rem 1rem;
+    border: var(--line) solid var(--outline);
+    border-radius: var(--radius-m);
+    background: var(--paper-float);
+    backdrop-filter: var(--blur);
+    -webkit-backdrop-filter: var(--blur);
     color: var(--ink);
-    box-shadow: 0 10px 40px -18px rgb(0 0 0 / 0.35);
+    box-shadow: var(--shadow-float);
+    /* It sits in the header, whose links are set in capitals: the popover is set as text. The theme
+       list hangs out of it, so it doesn't clip (a popover scrolls by default). */
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    letter-spacing: normal;
+    text-transform: none;
+    overflow: visible;
     display: none;
     flex-direction: column;
-    gap: 0.75rem;
+    gap: 1.1rem;
     opacity: 0;
     translate: 0 calc(-1 * var(--dist-nudge));
     transition:
@@ -70,7 +117,86 @@
   @starting-style {
     .prefs:popover-open { opacity: 0; translate: 0 calc(-1 * var(--dist-nudge)); }
   }
-  .prefs-row { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; }
-  .prefs-hint { font-size: var(--text-sm); color: var(--graphite-strong); line-height: 1.45; border-top: 1px solid var(--rule); padding-top: 0.75rem; }
+  .pf { display: flex; flex-direction: column; gap: 0.55rem; }
+  .pf-row { flex-direction: row; align-items: center; justify-content: space-between; gap: 1rem; }
+  .pf-col { display: flex; flex-direction: column; gap: 0.2rem; }
+  .pf-label { font-family: var(--font-display); font-size: 0.875rem; font-weight: 500; }
+  .pf-note { font-size: 0.72rem; line-height: 1.5; color: var(--graphite-strong); }
+  .pf-note:empty { display: none; }
+
+  /* The theme: a field that opens a listbox of the themes, each named in its own display face. */
+  .pf-select { position: relative; }
+  .pf-field {
+    display: flex; align-items: center; gap: 0.65rem;
+    width: 100%; min-height: 44px; box-sizing: border-box;
+    padding: 0.35rem 0.75rem 0.35rem 0.5rem;
+    border: var(--line) solid var(--rule);
+    border-radius: var(--radius-s);
+    background: var(--paper-raised);
+    color: var(--ink);
+    text-align: left;
+    transition: border-color var(--dur-quick) var(--ease-out);
+  }
+  .pf-field:hover, .pf-field[aria-expanded="true"] { border-color: var(--graphite); }
+  .pf-now { display: flex; flex-direction: column; gap: 0.1rem; min-width: 0; }
+  .pf-name { font-family: var(--font-display); font-size: 0.95rem; font-weight: 500; line-height: 1.15; }
+  .pf-fonts { font-family: var(--font-mono); font-size: 0.66rem; color: var(--graphite); }
+  .pf-chev { width: 14px; height: 14px; margin-left: auto; flex: none; fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; transition: rotate var(--dur-quick) var(--ease-out); }
+  .pf-field[aria-expanded="true"] .pf-chev { rotate: 180deg; }
+  .pf-menu {
+    position: absolute; left: 0; right: 0; top: calc(100% + 6px); z-index: 2;
+    display: flex; flex-direction: column; gap: 2px;
+    padding: 5px;
+    border: var(--line) solid var(--outline);
+    border-radius: var(--radius-m);
+    /* A frosted float can't blur the panel it sits in (the panel's own blur walls it off), so the
+       float is laid over solid paper: the rows beneath stay out of the list. */
+    background: linear-gradient(var(--paper-float), var(--paper-float)), var(--paper);
+    box-shadow: var(--shadow-float);
+    outline: none;
+  }
+  .pf-menu[hidden] { display: none; }
+  .pf-menu:not([hidden]) { animation: pf-in var(--dur-quick) var(--ease-out) both; }
+  @keyframes pf-in { from { opacity: 0; translate: 0 calc(-1 * var(--dist-rise)); } }
+  .pf-opt { display: flex; align-items: flex-start; gap: 0.65rem; padding: 0.55rem 0.6rem; border-radius: var(--radius-s); cursor: pointer; transition: background-color var(--dur-instant) var(--ease-out); }
+  .pf-opt:hover, .pf-opt.is-active { background: color-mix(in srgb, var(--ink) 6%, transparent); }
+  .pf-menu:focus-visible .pf-opt.is-active { box-shadow: inset 0 0 0 1px var(--blue-pencil); }
+  .pf-opt .swatch { margin-top: 1px; }
+  .pf-text { display: flex; flex-direction: column; gap: 0.1rem; flex: 1; min-width: 0; }
+  .pf-opt .pf-note { margin-top: 0.15rem; font-size: 0.68rem; }
+  .pf-check { width: 14px; height: 14px; margin-top: 2px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; visibility: hidden; }
+  .pf-opt[aria-selected="true"] .pf-check { visibility: visible; }
+
+  /* A theme's swatch: its paper, with its ink and its two pencils, in the mode on screen. */
+  .swatch { display: inline-flex; align-items: center; gap: 3px; flex: none; height: 22px; padding: 0 6px; border-radius: 5px; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 14%, transparent); background: var(--l-paper); }
+  .swatch i { width: 7px; height: 7px; border-radius: 50%; }
+  .swatch i:nth-child(1) { background: var(--l-ink); }
+  .swatch i:nth-child(2) { background: var(--l-blue); }
+  .swatch i:nth-child(3) { background: var(--l-red); }
+  :global(:root[data-mode="dark"]) .swatch { background: var(--d-paper); }
+  :global(:root[data-mode="dark"]) .swatch i:nth-child(1) { background: var(--d-ink); }
+  :global(:root[data-mode="dark"]) .swatch i:nth-child(2) { background: var(--d-blue); }
+  :global(:root[data-mode="dark"]) .swatch i:nth-child(3) { background: var(--d-red); }
+  @media (prefers-color-scheme: dark) {
+    :global(:root:not([data-mode="light"])) .swatch { background: var(--d-paper); }
+    :global(:root:not([data-mode="light"])) .swatch i:nth-child(1) { background: var(--d-ink); }
+    :global(:root:not([data-mode="light"])) .swatch i:nth-child(2) { background: var(--d-blue); }
+    :global(:root:not([data-mode="light"])) .swatch i:nth-child(3) { background: var(--d-red); }
+  }
+
+  /* Mode and motion: the site's segmented control, three equal parts across the popover. */
+  .prefs .seg { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); padding: 3px; }
+  .prefs .seg > button { display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; min-height: 30px; font-family: var(--font-body); font-size: 0.8rem; letter-spacing: 0; }
+  .prefs .seg svg { width: 14px; height: 14px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
+  .prefs .seg svg .f { fill: currentColor; stroke: none; }
+
+  /* Frame tick: a switch. */
+  .pf-switch { position: relative; flex: none; width: 40px; height: 23px; border-radius: 999px; background: color-mix(in srgb, var(--ink) 14%, transparent); transition: background-color var(--dur-quick) var(--ease-out); }
+  .pf-switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 17px; height: 17px; border-radius: 50%; background: var(--paper-float); box-shadow: 0 1px 3px rgb(0 0 0 / 0.25); transition: translate var(--spring-snappy-dur) var(--spring-snappy); }
+  .pf-switch[aria-checked="true"] { background: var(--ink); }
+  .pf-switch[aria-checked="true"]::after { translate: 17px 0; background: var(--paper); }
+
+  .prefs-hint { display: flex; align-items: center; gap: 0.6rem; padding-top: 0.85rem; border-top: 1px solid var(--rule); font-size: 0.72rem; line-height: 1.45; color: var(--graphite-strong); }
+  .prefs-hint kbd { flex: none; }
   @media (max-width: 520px) { .pref-label { display: none; } }
 </style>

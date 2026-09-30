@@ -268,7 +268,7 @@
   .select { width: 100%; font-size: var(--text-sm); padding: 0.3rem 0.4rem; border: 1px solid var(--rule); border-radius: 5px; background: var(--paper); color: var(--ink); }
   .note { font-size: var(--text-sm); color: var(--graphite-strong); line-height: 1.45; }
   .code-col { display: flex; flex-direction: column; height: 100%; }
-  .code-head { padding: 0.7rem 0.75rem; border-bottom: 1px solid var(--rule); }
+  .code-head { padding: 0.7rem 0.75rem 0.7rem calc(0.75rem + var(--code-head-start, 0px)); border-bottom: 1px solid var(--rule); }
   .code-head .smallcaps { color: var(--graphite-strong); }
   pre { margin: 0; padding: 0.8rem 0.9rem; font-size: 11.5px; line-height: 1.6; white-space: pre-wrap; color: var(--ink); overflow: auto; }
 </style>

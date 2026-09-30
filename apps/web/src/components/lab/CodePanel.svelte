@@ -320,19 +320,27 @@
       {/each}
     </div>
     <div class="cp-actions">
-      <button class="btn ghost small" type="button" onclick={copy}>{#key copied}<span data-motion="fade">{copied ? "Copied" : "Copy"}</span>{/key}</button>
+      <button class="btn icon ghost tip-host" type="button" onclick={copy} aria-label="Copy the code">
+        {#if copied}
+          <svg class="ico" viewBox="0 0 16 16" aria-hidden="true" data-motion="fade"><path d="M3.5 8.5l3 3 6-7" /></svg>
+        {:else}
+          <svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" /><path d="M10.5 5.5V3.5a1 1 0 0 0 -1 -1H3.5a1 1 0 0 0 -1 1v6a1 1 0 0 0 1 1h2" /></svg>
+        {/if}
+        <span class="tip" class:show={copied} aria-hidden="true">{#key copied}<span data-motion="fade">{copied ? "Copied" : "Copy"}</span>{/key}</span>
+      </button>
+      <span class="visually-hidden" aria-live="polite">{copied ? "Copied" : ""}</span>
     </div>
   </div>
   <div class="cp-editor" bind:this={host}>
     <div class="morph-layer" bind:this={morphLayer} aria-hidden="true"></div>
   </div>
   <div class="cp-foot">
-    <!-- The panel's state is news: each change of it fades in, rather than swapping text in place. -->
+    <!-- The panel's state is news: each change of it fades in, rather than swapping text in place.
+         Bound to the knobs is how it starts, and says nothing; only a change from that is shown. -->
     <span class="status smallcaps" data-status={status} aria-live="polite">
       {#key status}<span data-motion="fade">
-        {#if status === "synced"}Bound to the knobs · drag any number
-        {:else if status === "edited"}Edited · numbers still bound
-        {:else}Detached · runs as written{/if}
+        {#if status === "edited"}Edited · numbers still bound
+        {:else if status === "detached"}Detached · runs as written{/if}
       </span>{/key}
     </span>
     <span class="foot-actions">
@@ -348,7 +356,8 @@
 
 <style>
   .code-panel { display: flex; flex-direction: column; height: 100%; min-height: 0; position: relative; }
-  .cp-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding: 0.6rem 0.6rem 0.5rem 0.75rem; border-bottom: 1px solid var(--rule); }
+  /* --code-head-start: room the instrument keeps at the start for its own handle (lab.css). */
+  .cp-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding: 0.6rem 0.6rem 0.5rem calc(0.75rem + var(--code-head-start, 0px)); border-bottom: 1px solid var(--rule); }
   .tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
   .cp-editor { position: relative; flex: 1; min-height: 220px; overflow: hidden; }
   .cp-editor :global(.cm-editor) { height: 100%; }

@@ -5,6 +5,7 @@
     color-scheme: light;
     --paper: #F5F3EE;
     --paper-raised: #FAF9F5;
+    --paper-float: #FEFDFA;
     --ink: #16161A;
     --graphite: #8A8880;
     --graphite-strong: #5E5C56;
@@ -16,6 +17,18 @@
     --font-display: "Geist Variable", "Geist", "Helvetica Neue", Arial, sans-serif;
     --font-body: "Geist Mono Variable", "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
     --font-mono: "Geist Mono Variable", "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+    /* Shape: what a theme reshapes. The outline of a control follows the rule unless a theme says. */
+    --radius-s: 5px; /* buttons, inputs, small controls */
+    --radius-m: 8px; /* plates, cards, popovers */
+    --radius-l: 16px; /* the lab stage, large panels */
+    --line: 1px; /* the outline of a control or a panel */
+    --blur: none; /* what shows through a translucent panel */
+    --shadow-float: 0 10px 40px -18px rgb(0 0 0 / 0.35); /* things that float: popovers, menus, tool cards */
+    --shadow-card: none; /* cards and plates at rest */
+    --art: none; /* art behind the whole page */
+    --art-size: auto; /* the art's tile */
+    --outline: var(--rule);
 
     /* Durations (§1.6). Exits run at 0.7× the enter. */
     --dur-instant: 90ms; /* press states, toggles */
@@ -50,10 +63,12 @@
     --stagger-step: 30ms;
   }
 
-  :root[data-theme="dark"] {
+  /* Mode: light or dark, chosen or the system's. */
+  :root[data-mode="dark"] {
     color-scheme: dark;
     --paper: #0E0F11;
     --paper-raised: #15161A;
+    --paper-float: #1C1D22;
     --ink: #ECEAE4;
     --graphite: #6B6A66;
     --graphite-strong: #9A9892;
@@ -64,10 +79,11 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
+    :root:not([data-mode="light"]) {
       color-scheme: dark;
       --paper: #0E0F11;
       --paper-raised: #15161A;
+      --paper-float: #1C1D22;
       --ink: #ECEAE4;
       --graphite: #6B6A66;
       --graphite-strong: #9A9892;
@@ -78,12 +94,211 @@
     }
   }
 
-  /* On paper it is always paper: printed pages take the light colours, whatever the screen's theme. */
+  /* Theme: Glassy (Sora + Manrope). Frosted panels over soft colour. Round, light and quiet. */
+  :root[data-theme="glassy"] {
+    color-scheme: light;
+    --font-display: "Sora Variable", "Sora", system-ui, sans-serif;
+    --font-body: "Manrope Variable", "Manrope", system-ui, sans-serif;
+    --font-mono: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, monospace;
+    --radius-s: 10px;
+    --radius-m: 18px;
+    --radius-l: 26px;
+    --line: 1px;
+    --blur: blur(20px) saturate(160%);
+    --paper: #EEF1F8;
+    --paper-raised: rgba(255,255,255,.55);
+    --paper-float: rgba(255,255,255,.66);
+    --ink: #1B1D29;
+    --graphite: #8A8FA3;
+    --graphite-strong: #555A6E;
+    --rule: rgba(27,29,41,.11);
+    --blue-pencil: #5B68F5;
+    --red-pencil: #F2457E;
+    --glow: rgba(255,255,255,0);
+    --outline: rgba(255,255,255,.8);
+    --shadow-float: 0 24px 60px -24px rgba(44,52,110,.38);
+    --shadow-card: 0 14px 36px -22px rgba(44,52,110,.32);
+    --art: radial-gradient(40% 55% at 12% 22%, #C3CEFF 0, transparent 70%), radial-gradient(34% 50% at 88% 14%, #FFCFE0 0, transparent 70%), radial-gradient(45% 55% at 62% 96%, #C8F5E6 0, transparent 70%);
+    --art-size: auto;
+  }
+  :root[data-theme="glassy"][data-mode="dark"] {
+    color-scheme: dark;
+    --paper: #0B0D18;
+    --paper-raised: rgba(255,255,255,.06);
+    --paper-float: rgba(32,34,56,.62);
+    --ink: #EEF0FA;
+    --graphite: #7B80A0;
+    --graphite-strong: #A6ABC8;
+    --rule: rgba(255,255,255,.1);
+    --blue-pencil: #8F9BFF;
+    --red-pencil: #FF7AA8;
+    --glow: rgba(160,140,255,.06);
+    --outline: rgba(255,255,255,.14);
+    --shadow-float: 0 24px 60px -24px rgba(0,0,0,.7);
+    --shadow-card: 0 14px 36px -22px rgba(0,0,0,.6);
+    --art: radial-gradient(40% 55% at 12% 22%, rgba(98,70,255,.5) 0, transparent 70%), radial-gradient(34% 50% at 88% 14%, rgba(255,80,150,.32) 0, transparent 70%), radial-gradient(45% 55% at 62% 96%, rgba(0,190,170,.3) 0, transparent 70%);
+    --art-size: auto;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root[data-theme="glassy"]:not([data-mode="light"]) {
+      color-scheme: dark;
+      --paper: #0B0D18;
+      --paper-raised: rgba(255,255,255,.06);
+      --paper-float: rgba(32,34,56,.62);
+      --ink: #EEF0FA;
+      --graphite: #7B80A0;
+      --graphite-strong: #A6ABC8;
+      --rule: rgba(255,255,255,.1);
+      --blue-pencil: #8F9BFF;
+      --red-pencil: #FF7AA8;
+      --glow: rgba(160,140,255,.06);
+      --outline: rgba(255,255,255,.14);
+      --shadow-float: 0 24px 60px -24px rgba(0,0,0,.7);
+      --shadow-card: 0 14px 36px -22px rgba(0,0,0,.6);
+      --art: radial-gradient(40% 55% at 12% 22%, rgba(98,70,255,.5) 0, transparent 70%), radial-gradient(34% 50% at 88% 14%, rgba(255,80,150,.32) 0, transparent 70%), radial-gradient(45% 55% at 62% 96%, rgba(0,190,170,.3) 0, transparent 70%);
+      --art-size: auto;
+    }
+  }
+
+  /* Theme: Mono (JetBrains Mono). Your editor: mono type, syntax colour, square corners. */
+  :root[data-theme="mono"] {
+    color-scheme: light;
+    --font-display: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, monospace;
+    --font-body: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, monospace;
+    --font-mono: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, monospace;
+    --radius-s: 3px;
+    --radius-m: 4px;
+    --radius-l: 6px;
+    --line: 1px;
+    --blur: none;
+    --paper: #FFFFFF;
+    --paper-raised: #F6F8FA;
+    --paper-float: #FFFFFF;
+    --ink: #1F2328;
+    --graphite: #818B98;
+    --graphite-strong: #59636E;
+    --rule: #D1D9E0;
+    --blue-pencil: #0969DA;
+    --red-pencil: #CF222E;
+    --glow: rgba(255,255,255,0);
+    --outline: #D1D9E0;
+    --shadow-float: 0 8px 24px rgba(140,149,159,.2);
+    --shadow-card: none;
+    --art: none;
+    --art-size: auto;
+  }
+  :root[data-theme="mono"][data-mode="dark"] {
+    color-scheme: dark;
+    --paper: #0D1117;
+    --paper-raised: #161B22;
+    --paper-float: #1C2128;
+    --ink: #E6EDF3;
+    --graphite: #6E7681;
+    --graphite-strong: #9198A1;
+    --rule: #30363D;
+    --blue-pencil: #58A6FF;
+    --red-pencil: #FF7B72;
+    --glow: rgba(255,255,255,0);
+    --outline: #30363D;
+    --shadow-float: 0 8px 24px rgba(1,4,9,.8);
+    --shadow-card: none;
+    --art: none;
+    --art-size: auto;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root[data-theme="mono"]:not([data-mode="light"]) {
+      color-scheme: dark;
+      --paper: #0D1117;
+      --paper-raised: #161B22;
+      --paper-float: #1C2128;
+      --ink: #E6EDF3;
+      --graphite: #6E7681;
+      --graphite-strong: #9198A1;
+      --rule: #30363D;
+      --blue-pencil: #58A6FF;
+      --red-pencil: #FF7B72;
+      --glow: rgba(255,255,255,0);
+      --outline: #30363D;
+      --shadow-float: 0 8px 24px rgba(1,4,9,.8);
+      --shadow-card: none;
+      --art: none;
+      --art-size: auto;
+    }
+  }
+
+  /* Theme: Cartoon (Fredoka + Nunito). Thick outlines, bold colour, a friendly round hand. */
+  :root[data-theme="cartoon"] {
+    color-scheme: light;
+    --font-display: "Fredoka Variable", "Fredoka", system-ui, sans-serif;
+    --font-body: "Nunito Variable", "Nunito", system-ui, sans-serif;
+    --font-mono: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, monospace;
+    --radius-s: 12px;
+    --radius-m: 16px;
+    --radius-l: 24px;
+    --line: 2px;
+    --blur: none;
+    --paper: #FFF4D6;
+    --paper-raised: #FFFFFF;
+    --paper-float: #FFFFFF;
+    --ink: #1D1B2E;
+    --graphite: #8E88A8;
+    --graphite-strong: #4B4768;
+    --rule: #E6D7AE;
+    --blue-pencil: #3D7BFF;
+    --red-pencil: #FF4F6D;
+    --glow: rgba(255,255,255,0);
+    --outline: #1D1B2E;
+    --shadow-float: 5px 5px 0 #1D1B2E;
+    --shadow-card: 4px 4px 0 #1D1B2E;
+    --art: radial-gradient(circle at 2px 2px, rgba(29,27,46,.13) 1.5px, transparent 2px);
+    --art-size: 22px 22px;
+  }
+  :root[data-theme="cartoon"][data-mode="dark"] {
+    color-scheme: dark;
+    --paper: #241C45;
+    --paper-raised: #2F2656;
+    --paper-float: #362C62;
+    --ink: #FFF4D6;
+    --graphite: #9A90C4;
+    --graphite-strong: #D2C9F0;
+    --rule: #3F3570;
+    --blue-pencil: #7FA8FF;
+    --red-pencil: #FF6B85;
+    --glow: rgba(255,255,255,0);
+    --outline: #0D0920;
+    --shadow-float: 5px 5px 0 #0D0920;
+    --shadow-card: 4px 4px 0 #0D0920;
+    --art: radial-gradient(circle at 2px 2px, rgba(255,244,214,.1) 1.5px, transparent 2px);
+    --art-size: 22px 22px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root[data-theme="cartoon"]:not([data-mode="light"]) {
+      color-scheme: dark;
+      --paper: #241C45;
+      --paper-raised: #2F2656;
+      --paper-float: #362C62;
+      --ink: #FFF4D6;
+      --graphite: #9A90C4;
+      --graphite-strong: #D2C9F0;
+      --rule: #3F3570;
+      --blue-pencil: #7FA8FF;
+      --red-pencil: #FF6B85;
+      --glow: rgba(255,255,255,0);
+      --outline: #0D0920;
+      --shadow-float: 5px 5px 0 #0D0920;
+      --shadow-card: 4px 4px 0 #0D0920;
+      --art: radial-gradient(circle at 2px 2px, rgba(255,244,214,.1) 1.5px, transparent 2px);
+      --art-size: 22px 22px;
+    }
+  }
+
+  /* On paper it is always paper: printed pages take Pencil's light colours, whatever the screen's theme. */
   @media print {
     :root:root:root {
       color-scheme: light;
       --paper: #F5F3EE;
       --paper-raised: #FAF9F5;
+      --paper-float: #FEFDFA;
       --ink: #16161A;
       --graphite: #8A8880;
       --graphite-strong: #5E5C56;

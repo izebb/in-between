@@ -78,3 +78,26 @@ export function outline(text: string, tracking = -0.025, { weight = 500, tabular
   const space = Math.round(f.charToGlyph(" ").advanceWidth * scale + track);
   return { em: EM, top: Math.floor(top), bottom: Math.ceil(bottom), words, space };
 }
+
+/** A number as outline figures, ready to draw: OutlineNumber.astro, or an island that is handed it. */
+export interface Numeral {
+  viewBox: string;
+  /** The SVG's size in em, and a negative margin that takes back its padding. */
+  style: string;
+  /** One path per figure. */
+  letters: string[];
+}
+
+export function numeral(text: string): Numeral {
+  // Bold, tabular figures: an outline needs body between its two edges, or the straight figures (1, 4)
+  // read as wireframes; and the tabular 1 has its foot.
+  const o = outline(text, 0, { weight: 700, tabular: true });
+  const PAD = 40;
+  const w = o.words[0];
+  const h = o.bottom - o.top + 2 * PAD;
+  return {
+    viewBox: `${-PAD} ${o.top - PAD} ${w.width + 2 * PAD} ${h}`,
+    style: `width:${(w.width + 2 * PAD) / o.em}em;height:${h / o.em}em;margin:${-PAD / o.em}em`,
+    letters: w.letters,
+  };
+}

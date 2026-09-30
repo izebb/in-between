@@ -4,6 +4,7 @@
    * Over sessions the cloud should tighten toward the line: the visible proof of intuition forming.
    */
   import type { DrillDef } from "~/lib/drills/types";
+  import { sessionMeasure } from "~/lib/drills";
   import type { DrillSession } from "~/lib/store";
   import { resize } from "~/lib/actions";
 
@@ -22,18 +23,11 @@
   const Y = (v: number) => M.t + plot - ((L(v) - L(lo)) / (L(hi) - L(lo))) * plot;
   const ticks = $derived([50, 100, 200, 500, 1000, 2000].filter((t) => t >= lo && t <= hi));
 
-  // Mean absolute % error per session: the line that should fall.
-  const trend = $derived(
-    sorted.map((s) => {
-      const e = s.trials.map((t) => Math.abs(t.answer - t.truth) / Math.max(1, t.truth));
-      return e.length ? (e.reduce((a, b) => a + b, 0) / e.length) * 100 : 0;
-    }),
-  );
-  const accuracyTrend = $derived(sorted.map((s) => (s.trials.length ? (s.trials.filter((t) => t.correct).length / s.trials.length) * 100 : 0)));
-  const line = $derived(def.kind === "estimate" ? trend : accuracyTrend);
+  // Per session: the mean error, the line that should fall; or the share right, the line that should rise.
+  const line = $derived(sorted.map((s) => sessionMeasure(def.kind, s)));
   const TW = $derived(w < 560 ? w - 20 : w * 0.4);
   const TH = 120;
-  const tMax = $derived(def.kind === "estimate" ? Math.max(40, ...trend) : 100);
+  const tMax = $derived(def.kind === "estimate" ? Math.max(40, ...line) : 100);
   const tx = (i: number) => 10 + (line.length <= 1 ? TW / 2 : (i / (line.length - 1)) * (TW - 20));
   const ty = (v: number) => 14 + (1 - v / tMax) * (TH - 34);
   const last = $derived(sorted.length - 1);

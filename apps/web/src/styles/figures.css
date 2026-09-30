@@ -4,11 +4,11 @@
     --ghost-stroke: 1.25px;
   }
   /* Lightbox: figures sit on a faint plate, lit from below. */
-  :root[data-theme="dark"] {
+  :root[data-mode="dark"] {
     --plate-bg: radial-gradient(120% 110% at 50% 108%, rgba(255, 248, 230, 0.075), transparent 62%), linear-gradient(var(--glow), var(--glow)), var(--paper);
   }
   @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
+    :root:not([data-mode="light"]) {
       --plate-bg: radial-gradient(120% 110% at 50% 108%, rgba(255, 248, 230, 0.075), transparent 62%), linear-gradient(var(--glow), var(--glow)), var(--paper);
     }
   }

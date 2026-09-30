@@ -20,9 +20,11 @@
     source?: string;
     /** Focus a drill's pool (Blind A/B pairs by topic). */
     topic?: string;
+    /** Name the drill over the runner, with what it trains. Off where its row already says both (the Eye trainer). */
+    heading?: boolean;
     onfinish?: (s: DrillSession) => void;
   }
-  let { drill, mode = "round", trials = 5, seconds = 75, source = "eye-trainer", topic, onfinish }: Props = $props();
+  let { drill, mode = "round", trials = 5, seconds = 75, source = "eye-trainer", topic, heading = true, onfinish }: Props = $props();
 
   const def = $derived(drills[drill]);
   const Trial = $derived(trialComponents[drill]);
@@ -143,11 +145,14 @@
   <div class="runner"><p class="fine">This drill is still being built. It will appear here and in the Eye trainer.</p></div>
 {:else}
 <div class="runner" data-drill={drill}>
-  <header class="r-head">
-    <div class="r-title">
-      <span class="smallcaps">Eye trainer · {def.kind === "estimate" ? "estimate" : "choose"}</span>
-      <span class="serif">{def.name}</span>
-    </div>
+  {#if heading || phase !== "intro"}
+  <header class="r-head" class:bare={!heading}>
+    {#if heading}
+      <div class="r-title">
+        <span class="smallcaps">Eye trainer · {def.kind === "estimate" ? "estimate" : "choose"}</span>
+        <span class="serif">{def.name}</span>
+      </div>
+    {/if}
     {#if phase !== "intro"}
       <div class="r-stats mono">
         {#if mode === "round"}<span title="Time left"><b>{mmss(timeLeft)}</b></span>{:else}<span><b>{Math.min(results.length + (phase === "trial" ? 1 : 0), trials)}</b>/{trials}</span>{/if}
@@ -157,10 +162,11 @@
       </div>
     {/if}
   </header>
+  {/if}
 
   {#if phase === "intro"}
     <div class="r-intro">
-      <p>{def.prompt} <span class="trains">{def.trains}.</span></p>
+      <p>{def.prompt}{#if heading} <span class="trains">{def.trains}.</span>{/if}</p>
       <p class="fine">{mode === "round" ? `A round lasts ${seconds} seconds.` : `${trials} trials.`} Judge with your eyes first; the numbers come after.</p>
       <button class="btn solid" type="button" onclick={start}>Start</button>
     </div>
@@ -192,7 +198,8 @@
       {/if}
       <div class="again">
         <button class="btn solid" type="button" onclick={start}>Another round</button>
-        <a class="btn ghost" href="/lab/eye-trainer#calibration">Your calibration over time</a>
+        <!-- In the Eye trainer the calibration is already beside the runner. -->
+        {#if source !== "eye-trainer"}<a class="btn ghost" href={`/lab/eye-trainer?drill=${drill}`}>Your calibration over time</a>{/if}
       </div>
     </div>
   {/if}
@@ -202,6 +209,7 @@
 <style>
   .runner { display: flex; flex-direction: column; gap: 0.9rem; }
   .r-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+  .r-head.bare { justify-content: flex-end; }
   .r-title { display: flex; flex-direction: column; gap: 0.15rem; }
   .r-title .smallcaps { color: var(--graphite-strong); }
   .r-title .serif { font-size: 1.6rem; line-height: 1.05; }
